@@ -17,8 +17,9 @@ def read_polar_dir():
         all_info[start] = d
     return all_info
 
-def get_datetime(data, field):
-    tz = data["timeZoneOffset"] if "timeZoneOffset" in data else -420
+def get_datetime(data, field, tz=None):
+    if tz is None:
+        tz = data["timeZoneOffset"] if "timeZoneOffset" in data else -420
     return datetime.fromisoformat(f"{data[field]}{tz/60:+03.0f}:00").astimezone(timezone.utc)
 
 def read_polar_data(f):
@@ -127,6 +128,19 @@ def merge_data(polar, youtube):
 
         print("\n\n\n")
 
+def convert_to_utc(data):
+    data["startTime"] = str(get_datetime(data, "startTime"))
+    if "stopTime" in data:
+        data["stopTime"] = str(get_datetime(data, "stopTime"))
+    for i in data["exercises"]:
+        if "startTime" in i:
+            i["startTime"] = str(get_datetime(i, "startTime", data["timeZoneOffset"]))
+        if "stopTime" in i:
+            i["stopTime"] = str(get_datetime(i, "stopTime", data["timeZoneOffset"]))
+        if "samples" in i and "heartRate" in i["samples"]:
+            for j in i["samples"]["heartRate"]:
+                j["dateTime"] = str(get_datetime(j, "dateTime", data["timeZoneOffset"]))
+
 
 def write_out(polar, location):
     if not os.path.exists(location):
@@ -136,13 +150,9 @@ def write_out(polar, location):
 
         if DEBUG:
             pp.pprint(v)
-        v["startTime"] = str(get_datetime(v, "startTime"))
-        if "stopTime" in v:
-            v["stopTime"] = str(get_datetime(v, "stopTime"))
+        convert_to_utc(v)
         with open(os.path.join(location, v["filename"]), 'w') as f:
              f.write(json.dumps(v))
-
-
 
 if __name__ == "__main__":
     polar = read_polar_dir()
