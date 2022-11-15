@@ -33,6 +33,7 @@ class YoutubeVid:
             raise Exception(f"Unable to find id in url: {url}")
         return m.group(1)
 
+    @staticmethod
     def api_key():
         return get_secret("youtube_api_key")
 
@@ -45,7 +46,7 @@ class YoutubeVid:
 
     @staticmethod
     def get_data(url):
-        # https://www.googleapis.com/youtube/v3/videos?id=Mvo2snJGhtM&key=AIzaSyAfI65NHBKi10chwT4i3BPb8GcQvg4kM3o&part=snippet,contentDetails
+        # https://www.googleapis.com/youtube/v3/videos?id=Mvo2snJGhtM&key=<key>&part=snippet,contentDetails
         youtube_client = build(
             "youtube", "v3", developerKey=YoutubeVid.api_key())
 
@@ -62,6 +63,21 @@ class YoutubeVid:
         if len(results["items"]) != 1:
             raise Exception(f"Unexpectedly shaped youtube data object: {url} : {vid_id} \n {results}")
         return results["items"][0]
+
+    def _strip_words(self, words, val):
+        for j in words:
+            val = re.sub(r"\b" + j + r"\b", "", val)
+            val = re.sub(r"\s+", " ", val)
+        return val.strip()
+
+    def _remove_helper_words(self, i):
+        for t in ["s", "and", "with", "for"]:
+            if i.startswith(f"{t} "):
+                i = i[len(t):]
+            if i.endswith(f" {t}"):
+                i = i[:-len(t)]
+            i = i.strip()
+        return i
 
     @property
     def tags(self):
@@ -81,18 +97,8 @@ class YoutubeVid:
             if i in YTConsts.dedupes:
                 i = YTConsts.dedupes[i]
             else:
-                for j in strip_words:
-                    i = re.sub(j + r"\b", "", i)
-                    i = re.sub(r"\s+", " ", i)
-
-                i = i.strip()
-
-                for t in ["s", "and", "with", "for"]:
-                    if i.startswith(f"{t} "):
-                        i = i[len(t):]
-                    if i.endswith(f" {t}"):
-                        i = i[:-len(t)]
-                    i = i.strip()
+                i = self._strip_words(strip_words, i)
+                i = self._remove_helper_words(i)
 
             if i in YTConsts.ignore_tags:
                 continue
@@ -105,49 +111,58 @@ class YoutubeVid:
                 strip_words = sorted(strip_words, key=len, reverse=True)
 
 
-        self._tags = self.enrich_tags(tags)
+        self._tags = self._enrich_tags(tags)
 
         return self._tags
 
-    def enrich_tags(self, tags):
+    def _add_from_description(self):
+        tags = set()
         for i in YTConsts.possible_tags:
             if i in tags:
                 continue
             elif (i in self.data["snippet"]["title"] or
                   i in self.data["snippet"]["description"]):
                 tags.add(i)
+        return tags
 
-        for r in range(2):
-            to_remove = set()
-            to_add = set()
-            for tag in tags:
-                if tag in YTConsts.expands:
-                    to_add.update(YTConsts.expands[tag])
-                    to_remove.add(tag)
-                if tag in YTConsts.dedupes:
-                    to_add.add(YTConsts.dedupes[tag])
-                    to_remove.add(tag)
-                if tag.startswith("no ") and tag[3:] in tags:
-                    to_remove.add(tag[3:])
-                if tag.endswith("s") and tag[:-1] in tags:
-                    to_remove.add(tag[:-1])
+    def _semantically_update(self, tags):
+        to_remove = set()
+        to_add = set()
+        for tag in tags:
+            if tag in YTConsts.expands:
+                to_add.update(YTConsts.expands[tag])
+                to_remove.add(tag)
+            if tag in YTConsts.dedupes:
+                to_add.add(YTConsts.dedupes[tag])
+                to_remove.add(tag)
+            if tag.startswith("no ") and tag[3:] in tags:
+                to_remove.add(tag[3:])
+            if tag.endswith("s") and tag[:-1] in tags:
+                to_remove.add(tag[:-1])
 
-            if "no equipment" in tags:
-                to_remove.add("weights")
-
-            tags.update(to_add)
-            tags = tags - to_remove
-
+        if "no equipment" in tags:
+            to_remove.add("weights")
 
         for k, v in YTConsts.mappings.items():
             if k in tags and v not in tags:
-                tags.add(v)
+                to_add.add(v)
+
+        return to_remove, to_add
+
+    def _gen_tag_from_duration(self):
+        in_mins = self.duration.total_seconds() / 60
+        return f"{int(in_mins/10)*10}-{math.ceil(in_mins/10)*10}min"
+
+    def _enrich_tags(self, tags):
+        tags.update(self._add_from_description())
+
+        for r in range(2):
+            to_remove, to_add = self._semantically_update(tags)
+            tags.update(to_add)
+            tags = tags - to_remove
 
         tags.add(self.channel_title)
-
-        in_mins = self.duration.total_seconds() / 60
-        tags.add(
-            f"{int(in_mins/10)*10}-{math.ceil(in_mins/10)*10}min")
+        tags.add(self._gen_tag_from_duration())
 
         return tags
 
@@ -176,12 +191,12 @@ class YoutubeVid:
             m = YTConsts.chapters_regex.match(i)
             if m is None:
                 continue
-            cleaned = self.clean_exercise(m.group(2)).strip()
+            cleaned = self._clean_exercise(m.group(2)).strip()
             if len(cleaned) > 3:
                 self._exercises.add(cleaned)
         return self._exercises
 
-    def clean_exercise(self, val):
+    def _clean_exercise(self, val):
         # remove extra words
         for e in YTConsts.exercises_strip:
             val = re.sub(r"(" + e + ")\b", "", val)
@@ -200,7 +215,7 @@ class YoutubeVid:
         val = re.sub(" x[0-9]", "", val)
         # make sure we start with the exercise, i.e. remove bulletpoints (-, *, etc)
         val = re.sub("^\W+", "", val)
-
+        # standardise on '+' instead of '&' in descriptions
         val = val.replace("&", "+")
 
         return val.strip()
@@ -210,21 +225,32 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
     def __init__(self, url, data=None):
         super().__init__(url, data)
 
-    def enrich_tags(self, tags):
-        tags = super(tags)
+    def _enrich_tags(self, tags):
+        tags = super()._enrich_tags(tags)
+        tags.update(self._hiit_intervals)
+        return tags
 
+    def _hiit_intervals(self):
         # e.g. 40s work + 20s rest
         on_off = re.compile("(\d{2}s.+\d{2}s rest)")
         res = on_off.search(self.data["snippet"]["description"])
-        if res is not None:
-            result = res.group(1)
-            result = result.replace(" of", "")
-            result = result.replace("workout", "work")
-            if len(res.group(1)) > 20:
-                result = result[:20]
-            tags.add(result.strip())
+        if res is None:
+            return set()
 
-        return tags
+        result = res.group(1)
+        result = result.replace(" of", "")
+        result = result.replace("workout", "work")
+        if len(res.group(1)) > 20:
+            result = result[:20]
+        return {result.strip()}
+
+    def _get_start_of_exercise_list(self):
+        description = self.data["snippet"]["description"].lower()
+        wu = "workout breakdown"
+        loc = description.find(wu)
+        if loc < 0:
+            return self._exercises
+        start = description.find("\n", loc)
 
     @property
     def exercises(self):
@@ -234,12 +260,7 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
         description = self.data["snippet"]["description"].lower()
 
         self._exercises = set()
-
-        wu = "workout breakdown"
-        loc = description.find(wu)
-        if loc < 0:
-            return self._exercises
-        start = description.find("\n", loc)
+        start = self._get_start_of_exercise_list()
 
         des = description[start:].split("\n")
 
@@ -262,7 +283,7 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
             res = YTConsts.chapters_regex.match(des[i])
             val = res.group(2).strip() if res is not None else des[i]
 
-            val = self.clean_exercise(val)
+            val = self._clean_exercise(val)
             if len(val) > 3:
                 self._exercises.add(val)
 
