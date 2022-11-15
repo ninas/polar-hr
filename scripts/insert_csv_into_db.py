@@ -189,10 +189,9 @@ def insert_rows(conn, data):
         except Exception as e:
             print(e)
 
-def view_all_tags(data):
+def view_all_exercises(data):
     seen_vids = set()
-    source_tags = defaultdict(set)
-    final_tags = set()
+    all_exercises = set()
     for i in data:
         if "note" not in i:
             print("Note not found")
@@ -205,22 +204,26 @@ def view_all_tags(data):
 
             seen_vids.add(v)
             try:
-                vid = YoutubeVid(v)
+                vid = YoutubeVid.new_video(v)
                 print(vid.title)
                 print(v)
-                print(vid.tags)
-                for k,v in vid.source_tags.items():
-                    source_tags[k].update(v)
-                final_tags.update(vid.tags)
+                print(vid.exercises)
                 print("")
+                all_exercises.update(vid.exercises)
             except Exception as e:
                 print("Errored: ",e)
 
     print("")
-    for i in sorted(final_tags):
-        print(i,source_tags[i])
+    for i in sorted(all_exercises):
+        print(i)
     print("\n\n\n")
 
+    words = set()
+    for i in all_exercises:
+        words.update(set(i.split(" ")))
+
+    for i in sorted(words):
+        print(i)
 
 
 
@@ -237,6 +240,6 @@ if __name__ == "__main__":
         data = read_files()
 
         #insert_rows(conn, data)
-        view_all_tags(data)
+        view_all_exercises(data)
     finally:
         conn.close()

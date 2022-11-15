@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS sources (
   url TEXT NOT NULL UNIQUE,
   sourceType SOURCE_TYPE,
   name TEXT,
+  channel TEXT,
   length INTERVAL,
   notes TEXT,
   extraInfo JSON
