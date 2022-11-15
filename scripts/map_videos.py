@@ -147,10 +147,13 @@ def write_out(polar, location):
         os.makedirs(location)
 
     for k,v in polar.items():
+        if "note" in v and len(v["note"].split()) > 1:
+            print(v["note"], v["filename"])
 
         if DEBUG:
             pp.pprint(v)
         convert_to_utc(v)
+        continue
         with open(os.path.join(location, v["filename"]), 'w') as f:
              f.write(json.dumps(v))
 
