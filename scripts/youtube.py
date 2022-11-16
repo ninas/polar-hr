@@ -71,7 +71,7 @@ class YoutubeVid:
         return val.strip()
 
     def _remove_helper_words(self, i):
-        for t in ["s", "and", "with", "for"]:
+        for t in ["s", "and", "with", "for", ","]:
             if i.startswith(f"{t} "):
                 i = i[len(t):]
             if i.endswith(f" {t}"):
@@ -147,19 +147,23 @@ class YoutubeVid:
             if k in tags and v not in tags:
                 to_add.add(v)
 
-        return to_remove, to_add
+        tags.update(to_add)
+        tags = tags - to_remove
+        return tags
 
     def _gen_tag_from_duration(self):
         in_mins = self.duration.total_seconds() / 60
-        return f"{int(in_mins/10)*10}-{math.ceil(in_mins/10)*10}min"
+        start = int(in_mins/10)*10
+        end = math.ceil(in_mins/10)*10
+        if start == end:
+            end += 10
+        return f"{start}-{end}min"
 
     def _enrich_tags(self, tags):
         tags.update(self._add_from_description())
 
         for r in range(2):
-            to_remove, to_add = self._semantically_update(tags)
-            tags.update(to_add)
-            tags = tags - to_remove
+            tags = self._semantically_update(tags)
 
         tags.add(self.channel_title)
         tags.add(self._gen_tag_from_duration())
@@ -227,7 +231,7 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
 
     def _enrich_tags(self, tags):
         tags = super()._enrich_tags(tags)
-        tags.update(self._hiit_intervals)
+        tags.update(self._hiit_intervals())
         return tags
 
     def _hiit_intervals(self):
@@ -244,13 +248,12 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
             result = result[:20]
         return {result.strip()}
 
-    def _get_start_of_exercise_list(self):
+    def _get_start_of_exercise_list(self, wu):
         description = self.data["snippet"]["description"].lower()
-        wu = "workout breakdown"
         loc = description.find(wu)
         if loc < 0:
-            return self._exercises
-        start = description.find("\n", loc)
+            return None
+        return description.find("\n", loc)
 
     @property
     def exercises(self):
@@ -260,7 +263,13 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
         description = self.data["snippet"]["description"].lower()
 
         self._exercises = set()
-        start = self._get_start_of_exercise_list()
+        start = None
+        for option in ["workout breakdown", "intro", "warm up"]:
+            start = self._get_start_of_exercise_list(option)
+            if start is not None:
+                break
+        if start is None:
+            return self._exercises
 
         des = description[start:].split("\n")
 
@@ -276,7 +285,7 @@ class HeatherRobertsonYoutubeVid(YoutubeVid):
                 i += 1
                 continue
             elif ("cool down" in des[i] or
-                  len(des[i]) > 150 or
+                  len(des[i]) > 60 or
                   "equipment needed" in des[i]):
                 break
 
