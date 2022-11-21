@@ -1,9 +1,10 @@
-import os,json, pprint
+import os, json, pprint
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 
 pp = pprint.PrettyPrinter(indent=4)
 DEBUG = False
+
 
 def read_polar_dir():
     dd = lambda x: defaultdict(list)
@@ -17,10 +18,14 @@ def read_polar_dir():
         all_info[start] = d
     return all_info
 
+
 def get_datetime(data, field, tz=None):
     if tz is None:
         tz = data["timeZoneOffset"] if "timeZoneOffset" in data else -420
-    return datetime.fromisoformat(f"{data[field]}{tz/60:+03.0f}:00").astimezone(timezone.utc)
+    return datetime.fromisoformat(f"{data[field]}{tz/60:+03.0f}:00").astimezone(
+        timezone.utc
+    )
+
 
 def read_polar_data(f):
     with open(f"/home/nina/code/polar/polar/{f}") as fi:
@@ -33,6 +38,7 @@ def read_youtube_data():
     with open("/home/nina/code/polar/history/watch-history.json") as f:
         contents = json.load(f)
     return contents
+
 
 def preprocess_yt(data):
     search_data = defaultdict(list)
@@ -53,12 +59,13 @@ def preprocess_yt(data):
 
     return search_data
 
+
 def merge_data(polar, youtube):
     for dt, v in polar.items():
 
         if DEBUG:
             for i in v["exercises"]:
-                i["samples"]= "..."
+                i["samples"] = "..."
         if "note" in v:
             print(f"Merge: Note already exists - {v['note']}\n")
 
@@ -83,8 +90,9 @@ def merge_data(polar, youtube):
                 latest_before_end = vid
                 continue
 
-
-            if vid["time"] - latest_before_end["time"] > timedelta(minutes=5) and vid["time"] - start > timedelta(minutes=10):
+            if vid["time"] - latest_before_end["time"] > timedelta(minutes=5) and vid[
+                "time"
+            ] - start > timedelta(minutes=10):
                 watched_vids.append(latest_before_end)
                 if DEBUG:
                     print("possibly watched two videos!")
@@ -106,10 +114,14 @@ def merge_data(polar, youtube):
 
         watched_vids.append(latest_before_end)
 
-        polar[dt]["note"] = '; '.join([i['titleUrl'] for i in watched_vids])
+        polar[dt]["note"] = " , ".join([i["titleUrl"] for i in watched_vids])
         if len(watched_vids) > 1:
             polar[dt]["note"] = f"Multiple videos: {polar[dt]['note']}"
-        name = v["name"] if "name" in v else ', '.join([i["sport"] for i in v["exercises"]])
+        name = (
+            v["name"]
+            if "name" in v
+            else ", ".join([i["sport"] for i in v["exercises"]])
+        )
         print(f"Updated {dt}: exercise type - {name}: {polar[dt]['note']}")
         for i in watched_vids:
             print(f"\t{i['title']} - \t\t{i['time']}")
@@ -127,6 +139,7 @@ def merge_data(polar, youtube):
             pp.pprint(after_start)
 
         print("\n\n\n")
+
 
 def convert_to_utc(data):
     data["startTime"] = str(get_datetime(data, "startTime"))
@@ -146,19 +159,52 @@ def write_out(polar, location):
     if not os.path.exists(location):
         os.makedirs(location)
 
-    for k,v in polar.items():
-        if "note" in v and len(v["note"].split()) > 1:
-            print(v["note"], v["filename"])
-
+    for k, v in polar.items():
         if DEBUG:
+            if "note" in v and len(v["note"].split()) > 1:
+                print(v["note"], v["filename"])
             pp.pprint(v)
         convert_to_utc(v)
-        continue
-        with open(os.path.join(location, v["filename"]), 'w') as f:
-             f.write(json.dumps(v))
+        with open(os.path.join(location, v["filename"]), "w") as f:
+            f.write(json.dumps(v))
+
+
+def append_mapping(filename, note):
+    with open("mapping", "a") as f:
+        f.write(f"{filename} {note}\n")
+
+
+def read_mappings():
+    mapping = {}
+    with open("mapping") as f:
+        for i in f:
+            vals = i.split(" ")
+            if len(vals) > 2:
+                val = " ".join(vals[1:])
+            mapping[vals[0]] = val
+    return mapping
+
+
+def confirm_notes(data):
+    mapping = read_mappings()
+    for k, v in data.items():
+        if "note" not in v:
+            continue
+        inp = (
+            mapping[v["filename"]]
+            if v["filename"] in mapping
+            else input(f"{v['note']} ")
+        )
+        if len(inp) > 0:
+            inp = inp.split("\n")[0]
+            v["note"] = inp
+            if v["filename"] not in mapping:
+                append_mapping(v["filename"], v["note"])
+
 
 if __name__ == "__main__":
     polar = read_polar_dir()
     youtube = preprocess_yt(read_youtube_data())
     merge_data(polar, youtube)
+    confirm_notes(polar)
     write_out(polar, "output")
