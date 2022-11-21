@@ -17,6 +17,7 @@ class TestWorkout(unittest.TestCase):
     def data(self):
         return {
             "duration": "PT100S",
+            "startTime": "2022-10-31 22:25:13+00:00",
             "exercises": [
                 {
                     "zones": {
@@ -70,11 +71,14 @@ class TestWorkout(unittest.TestCase):
         mock_cloud_storage.side_effect = Exception("something")
         self.assertRaises(Exception, self.workout.insert_row)
 
+    def test_missing_data(self):
+        del(self.workout.data["exercises"][0]["samples"])
+        self.assertEqual(self.workout.insert_row(), None)
+
     @patch("workout.models.Workouts")
     @patch("workout.upload_to_cloud_storage")
     @patch("workout.Source.load_source")
     def test_failed_insert(self, mock_src, mock_cloud_store, mock_workout_model):
-
         self.workout.note_data = {"sources": ["something"]}
         self.workout._populate_model = MagicMock()
         # If we error inserting a row, print info and move on

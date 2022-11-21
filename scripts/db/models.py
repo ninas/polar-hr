@@ -84,7 +84,7 @@ class Sources(BaseModel):
 class Workouts(BaseModel):
     avghr = IntegerField(null=True)
     calories = IntegerField(null=True)
-    endtime = DateTimeTZField()
+    endtime = DateTimeTZField(null=True)
     equipment = ManyToManyField(Equipment, backref="workouts")
     maxhr = IntegerField(null=True)
     minhr = IntegerField(null=True)

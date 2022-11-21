@@ -22,7 +22,7 @@ class Workout(DBInterface):
     def _populate_model(self, data):
         workout_model = models.Workouts(
             calories=self._val_or_none(["kiloCalories"], int),
-            endtime=self._val_or_none(["stopTime"], datetime.fromisoformat),
+            endtime=self.end_time,
             starttime=self.start_time,
         )
         path = ["exercises", 0]
@@ -41,6 +41,10 @@ class Workout(DBInterface):
     @property
     def samples(self):
         return self._val_or_none(["exercises", 0, "samples"])
+
+    @property
+    def end_time(self):
+        return self._val_or_none(["stopTime"])
 
     @property
     def equipment(self):
@@ -66,6 +70,9 @@ class Workout(DBInterface):
 
     @override
     def insert_row(self):
+        if self.start_time is None or self.samples is None:
+            # Not much we can do with this, skip it
+            return None
         wkout = self._find(
             self.db, models.Workouts, models.Workouts.starttime, self.start_time
         )
