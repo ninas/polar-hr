@@ -1,245 +1,77 @@
-from google.cloud import secretmanager
-import psycopg2
-from collections import defaultdict
-import os, json, datetime, re
-import googleapiclient
-from googleapiclient.errors import HttpError
-from utils import get_secret
-from youtube import YoutubeVid
+import os, json
 
-def insert_workout_row(conn, data):
-    # Check if row exists
-    print("Checking if row exists")
-    wrk = val_in_db(
-        conn,
-        "workout",
-        [("startTime",
-          datetime.datetime.fromisoformat(data["startTime"]))]
-    )
-    if wrk is not None:
-        print(f"{data['startTime']}: Already in DB")
-        return
-
-    vids, related = parse_note(data["note"])
-
-    print(vids,related)
-    for i in vids:
-        source_id = source_row(conn, i)
-
-    sql = "INSERT INTO workout (num) VALUES (%s)"
-
-def source_row(conn, url):
-    if not YoutubeVid.is_youtube_vid(url):
-        raise Exception(f"Unknown source type: {url}")
-
-    vid = YoutubeVid(url)
-
-    # insert the source row itself
-    insert_row_if_not_exists(
-        conn,
-        "sources",
-        "url, sourceType, name, length, extraInfo",
-        [
-            url,
-            "Youtube",
-            vid.title,
-            vid.duration,
-            None
-        ],
-        [("url", url)]
-    )
-    source_data = val_in_db(conn, "sources", [("url", url)])
-    source_id = source_data[0]
-    print(source_id)
-
-    # now insert tags
-    print(vid.tags)
-    for i in vid.tags:
-        insert_row_if_not_exists(
-            conn,
-            "tags",
-            "name, sourceID",
-            [i, source_id],
-            [
-                ("name", i),
-                ("sourceID", source_id)
-            ]
-        )
-
-    # and exercises
-    print(vid.exercises)
-    for i in vid.exercises:
-        insert_row_if_not_exists(
-            conn,
-            "exercises",
-            "name, sourceID",
-            [i, source_id],
-            [
-                ("name", i),
-                ("sourceID", source_id)
-            ]
-        )
-
-    print("\n\n")
-
-    return source_id
+from utils import get_secret, upload_to_cloud_storage
+import db.models as models
+from workout import Workout
 
 
-def insert_row(conn, table, names, params):
-    vals = ", ".join(["%s"] * len(params))
-    sql = f"INSERT INTO {table} ({names}) VALUES ({vals})"
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute(cur.mogrify(sql, params))
+def process_new_workout(db, data):
+    if "note" not in data:
+        print(f"No extra info attached {data['filename']}")
+    print(data["filename"])
+    workout = Workout(db, data)
+    workout.insert_row()
 
-def insert_row_if_not_exists(conn, table, names, params, conditions):
-    vals = ", ".join(["%s"] * len(params))
-    cond = " AND ".join([f"{k} = %s" for k, v in conditions])
-    sql = (f"INSERT INTO {table}({names}) "
-           f"SELECT {vals} "
-           f"WHERE NOT EXISTS ( "
-           f"SELECT 1 FROM {table} WHERE {cond} )")
-    params.extend([v for k, v in conditions])
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute(cur.mogrify(sql, params))
-
-
-
-
-
-def val_in_db(conn, table, params):
-    condition = " AND ".join([f"{k} = %s" for k, v in params])
-    sql = f"SELECT * FROM {table} WHERE {condition}"
-    vals = [v for k, v in params]
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute(cur.mogrify(sql,
-                                    vals))
-            result = cur.fetchone()
-    return result
-
-def parse_note(data):
-    attributes = {
-        "equipment": [],
-    }
-    components = data.split(";")
-    vids = components[0][15:].split(" ") \
-        if components[0].startswith("Multiple") \
-        else [components[0]]
-
-    index = 1
-    while index < len(components):
-        title, rest = components[index].split(":")
-        if title == "weights":
-            for i in rest.split(","):
-                dd = {"type": "Weights", "num": 2}
-                i = i.trim()
-                if i.startswith("one"):
-                    dd["num"] = 1
-                    i = i[5:]
-                dd["magnitude"] = i
-                attributes["equipment"].append(dd)
-        elif title == "bands":
-            for i in rest.split(","):
-                attributes["equipment"].append({
-                    "type": "Band",
-                    "num": "1",
-                    "magnitude": i
-                })
-        elif title == "note" or title == "notes":
-            attributes["note"] = rest
-
-        index += 1
-
-    return vids, attributes
 
 def read_files():
     all_info = []
-    for f in os.listdir("/home/nina/code/polar/output"):
+    for f in os.listdir("/home/nina/code/polar/polar-hr/output"):
         if not f.startswith("training"):
             continue
 
-        with open(f"/home/nina/code/polar/output/{f}") as fi:
+        with open(f"/home/nina/code/polar/polar-hr/output/{f}") as fi:
             all_info.append(json.load(fi))
-    return all_info
 
-def insert_equipment(conn):
-    equipment = []
-    for i in ["light", "medium", "heavy", "very heavy"]:
-        equipment.append(("Band", i, 1,))
+    srt = lambda x: x["filename"]
+    return sorted(all_info, key=srt)
 
-    for i in ["3", "5", "8", "10", "12", "15", "20", "25"]:
-        equipment.append(("Weights", i, 1,))
-        equipment.append(("Weights", i, 2,))
 
-    with conn:
-        with conn.cursor() as cur:
-            for val in equipment:
-                cur.execute("INSERT INTO equipment (equipmentType, magnitude, quantity) VALUES (%s, %s, %s)", val)
+def tables():
+    return [
+        models.HRZones,
+        models.Equipment,
+        models.Tags,
+        models.Exercises,
+        models.Sources,
+        models.Sources.exercises.get_through_model(),
+        models.Sources.tags.get_through_model(),
+        models.Workouts,
+        models.Workouts.sources.get_through_model(),
+        models.Workouts.equipment.get_through_model(),
+    ]
 
-def insert_rows(conn, data):
-    for i in data:
-        if "note" not in i:
-            print("Note not found")
-            continue
-        print("FOUND")
-        try:
-            insert_workout_row(conn, i)
-        except Exception as e:
-            print(e)
 
-def view_all_exercises(data):
-    seen_vids = set()
-    all_exercises = set()
-    for i in data:
-        if "note" not in i:
-            print("Note not found")
-            continue
-        print("FOUND")
-        vids, related = parse_note(i["note"])
-        for v in vids:
-            if v in seen_vids:
-                continue
+def create_tables(database):
+    with database.atomic():
+        database.create_tables(tables())
+    # insert_equipment(database)
 
-            seen_vids.add(v)
-            try:
-                vid = YoutubeVid.new_video(v)
-                print(vid.title)
-                print(v)
-                print(vid.exercises)
-                print("")
-                all_exercises.update(vid.exercises)
-            except Exception as e:
-                print("Errored: ",e)
 
-    print("")
-    for i in sorted(all_exercises):
-        print(i)
-    print("\n\n\n")
+def drop_tables_and_types(database):
+    types = []
+    for table in tables():
+        for name, field in table._meta.fields.items():
+            if isinstance(field, models.EnumField):
+                types.append(field)
 
-    words = set()
-    for i in all_exercises:
-        words.update(set(i.split(" ")))
-
-    for i in sorted(words):
-        print(i)
-
+    with database.atomic():
+        database.drop_tables(tables(), cascade=True)
+        for field in types:
+            field.delete_type()
 
 
 if __name__ == "__main__":
-    conn = psycopg2.connect(
+
+    models.database.init(
+        "workout_data",
         host="34.28.182.87",
-        database="workout_data",
         user="admin",
-        password=get_secret("db_workout"))
-
-    try:
-        #insert_equipment(conn)
-
-        data = read_files()
-
-        #insert_rows(conn, data)
-        view_all_exercises(data)
-    finally:
-        conn.close()
+        password=get_secret("db_workout"),
+    )
+    database = models.database
+    database.connect()
+    #drop_tables_and_types(database)
+    #create_tables(database)
+    data = read_files()
+    for i in data:
+        process_new_workout(database, i)
