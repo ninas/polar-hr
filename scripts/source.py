@@ -15,10 +15,15 @@ class Source(DBInterface):
 
     @staticmethod
     def normalise_url(url):
+        if Source.get_source_type(url) == models.SourceType.YOUTUBE:
+            vid_id = utils.youtube_vid_id(url)
+            return f"https://www.youtu.be/{vid_id}"
         return url
 
     @staticmethod
     def get_source_type(url):
+        if "youtu" in url:
+            return models.SourceType.YOUTUBE
         return models.SourceType.UNKNOWN
 
     @staticmethod
@@ -30,6 +35,10 @@ class Source(DBInterface):
         if res is not None:
             return ExistingSource(db, url, res)
 
+        if Source.get_source_type(url) == models.SourceType.YOUTUBE:
+            from youtube import Youtube
+
+            return Youtube.load_source(db, url)
         print("Unknown source")
         return UnknownSource(db, url)
 
