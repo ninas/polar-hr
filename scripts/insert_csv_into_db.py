@@ -1,4 +1,5 @@
 import os, json
+import click
 
 from utils import get_secret, upload_to_cloud_storage
 import db.models as models
@@ -60,8 +61,11 @@ def drop_tables_and_types(database):
             field.delete_type()
 
 
-if __name__ == "__main__":
-
+@click.command()
+@click.option(
+    "--clean", is_flag=True, default=False, help="Drop and recreate all tables"
+)
+def main(clean):
     models.database.init(
         "workout_data",
         host="34.28.182.87",
@@ -70,8 +74,13 @@ if __name__ == "__main__":
     )
     database = models.database
     database.connect()
-    #drop_tables_and_types(database)
-    #create_tables(database)
+    if clean:
+        drop_tables_and_types(database)
+        create_tables(database)
     data = read_files()
     for i in data:
         process_new_workout(database, i)
+
+
+if __name__ == "__main__":
+    main()

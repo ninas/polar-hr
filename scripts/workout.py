@@ -28,7 +28,7 @@ class Workout(DBInterface):
         path = ["exercises", 0]
         workout_model.sport = self._val_or_none(path + ["sport"])
         # For some reason Polar subs these two
-        if workout_model.sport == "CROSSFIT":
+        if workout_model.sport == "CROSS_FIT":
             workout_model.sport = "HIIT"
 
         path.append("heartRate")
