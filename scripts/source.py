@@ -74,43 +74,41 @@ class Source(DBInterface):
 
     @override
     def insert_row(self):
+        all_tags = set()
+        if self.creator:
+            all_tags.update(set(
+                self._insert_tags([self.creator], models.TagType.CREATOR)
+            ))
+
+        if len(self.exercises) > 0:
+            print("Gonna insert exercises")
+
+            all_tags.update(set(
+                self._insert_tags(self.exercises, models.TagType.EXERCISE)
+            ))
+
+        if len(self.tags) > 0:
+            print("Gonna insert tags")
+            all_tags.update(set(
+                self._insert_tags(self.tags, models.TagType.TAG)
+            ))
+
         with self.db.atomic():
             self.model = models.Sources.create(
                 url=self.url,
                 sourcetype=self.source_type,
                 name=self.title,
-                creator=self.creator,
                 length=self.duration,
                 extra_info=self.extra_info,
+                creator=self.creator,
             )
 
-            if len(self.tags) > 0:
-                print("Gonna insert tags")
-                self.model.tags.add(
-                    self._insert_basic_model_data(self.tags, models.Tags)
-                )
-            if len(self.exercises) > 0:
-                print("Gonna insert exercises")
-                self.model.exercises.add(
-                    self._insert_basic_model_data(self.exercises, models.Exercises)
-                )
-
+            self.model.tags.add(list(all_tags))
             self.model.save()
+
 
         return self.model
 
-    def _insert_basic_model_data(self, data, type_model):
-        insert_data = [{"name": val} for val in data]
-        with self.db.atomic():
-            inserts = type_model.insert_many(insert_data).on_conflict_ignore().execute()
-
-        all_models = [type_model.get(type_model.name == i["name"]) for i in insert_data]
-        if inserts is not None:
-            new_inserts = set(i[0] for i in inserts)
-            for i in all_models:
-                if i.id in new_inserts:
-                    print("New:", i.name)
-        return all_models
 
 
 class UnknownSource(Source):

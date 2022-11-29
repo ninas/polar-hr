@@ -110,7 +110,7 @@ class Youtube(Source):
     @property
     @override
     def creator(self):
-        return self.data["snippet"]["channelTitle"]
+        return self.data["snippet"]["channelTitle"].lower()
 
     @property
     @override
@@ -203,9 +203,7 @@ class Youtube(Source):
         for r in range(2):
             tags = self._semantically_update(tags)
 
-        tags.add(self.creator)
         tags.add(self._gen_tag_from_duration())
-
         return tags
 
     def _clean_exercise(self, val):
