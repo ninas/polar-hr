@@ -38,6 +38,7 @@ def tables():
         models.Workouts,
         models.Workouts.sources.get_through_model(),
         models.Workouts.equipment.get_through_model(),
+        models.Workouts.tags.get_through_model()
     ]
 
 

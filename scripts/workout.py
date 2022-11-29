@@ -16,6 +16,7 @@ class Workout(DBInterface):
         self.hr_zones = None
         self._sources = None
         self._equipment = None
+        self._sport = None
         self.start_time = self._val_or_none(["startTime"], datetime.fromisoformat)
         self.note_data = self._parse_note(self._val_or_none(["note"]))
 
@@ -24,19 +25,27 @@ class Workout(DBInterface):
             calories=self._val_or_none(["kiloCalories"], int),
             endtime=self.end_time,
             starttime=self.start_time,
+            sport=self.sport
         )
-        path = ["exercises", 0]
-        workout_model.sport = self._val_or_none(path + ["sport"])
-        # For some reason Polar subs these two
-        if workout_model.sport == "CROSS_FIT":
-            workout_model.sport = "HIIT"
-
-        path.append("heartRate")
+        path = ["exercises", 0, "heartRate"]
         workout_model.avghr = self._val_or_none(path + ["avg"], int)
         workout_model.maxhr = self._val_or_none(path + ["max"], int)
         workout_model.minhr = self._val_or_none(path + ["min"], int)
 
         return workout_model
+
+    @property
+    def sport(self):
+        if self._sport is not None:
+            return self._sport
+        sport = self._val_or_none(["exercises", 0, "sport"])
+        # For some reason Polar subs these two
+        if sport == "CROSS_FIT":
+            sport = "HIIT"
+        if sport == "STRENGTH_TRAINING":
+            sport = "STRENGTH"
+        self._sport = sport.lower().replace("_", " ")
+        return self._sport
 
     @property
     def samples(self):
@@ -54,17 +63,17 @@ class Workout(DBInterface):
         if "equipment" not in self.note_data:
             return self._equipment
 
-        for k, v in self.note_data["equipment"].items():
-            for vals in v:
-                with self.db.atomic():
+        with self.db.atomic():
+            for k, v in self.note_data["equipment"].items():
+                for vals in v:
                     equip, created = models.Equipment.get_or_create(
                         equipmenttype=k,
                         magnitude=vals["magnitude"],
                         quantity=vals["quantity"],
                     )
-                if created:
-                    print(f"New equipment type inserted: {equip}")
-                self._equipment.append(equip)
+                    if created:
+                        print(f"New equipment type inserted: {equip}")
+                    self._equipment.append(equip)
 
         return self._equipment
 
@@ -88,6 +97,14 @@ class Workout(DBInterface):
             self.model.samples = samples_name
 
         try:
+
+            equipment = self.equipment
+            tag_models = set()
+            tag_models.update(set(self._insert_tags([self.sport,], models.TagType.SPORT)))
+            tags = self._equipment_to_tags()
+            if len(tags) > 0:
+                tag_models.update(set(self._insert_tags(tags, models.TagType.EQUIPMENT)))
+
             self.sources = []
             if "sources" in self.note_data:
                 for url in self.note_data["sources"]:
@@ -95,13 +112,13 @@ class Workout(DBInterface):
                     src.insert_row()
                     self.sources.append(src.model)
 
-            equipment = self.equipment
 
             with self.db.atomic():
                 self.model.save()
 
                 self.model.sources.add(self.sources)
                 self.model.equipment.add(equipment)
+                self.model.tags.add(list(tag_models))
                 self.model.save()
 
             self.hr_zones = self._create_hr_zones(self.model)
@@ -114,6 +131,26 @@ class Workout(DBInterface):
             print(f"\tStart time: {self.start_time}")
             print(e)
             print(traceback.format_exc())
+
+    def _equipment_to_tags(self):
+        tags = set()
+        has_weights = False
+        has_bands = False
+        for e in self.equipment:
+            if e.equipmenttype == models.EquipmentType.WEIGHTS:
+                tags.add(f"{e.magnitude}lbs")
+                has_weights = True
+            elif e.equipmenttype == models.EquipmentType.BANDS:
+                tags.add(f"{e.magnitude} band")
+                has_bands = True
+
+        if has_weights:
+            tags.add("weights")
+        if has_bands:
+            tags.add("mini-band")
+
+        return tags
+
 
     def _create_hr_zones(self, workout_obj):
         zone_data = self._val_or_none(
