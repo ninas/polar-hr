@@ -1,6 +1,6 @@
 from google.cloud import secretmanager
 from google.cloud import storage
-from youtube_consts import YTConsts
+from .youtube_consts import YTConsts
 import json
 
 SAMPLES_BUCKET = "polar-workout-samples"

@@ -1,9 +1,10 @@
 import os, json
 import click
 
-from utils import get_secret, upload_to_cloud_storage
-import db.models as models
-from workout import Workout
+
+from .utils import get_secret, upload_to_cloud_storage
+from db import models
+from .workout import Workout
 
 
 def process_new_workout(db, data):
@@ -72,14 +73,14 @@ def main(clean):
         user="admin",
         password=get_secret("db_workout"),
     )
-    database = models.database
-    database.connect()
+    models.database.connect()
+
     if clean:
-        drop_tables_and_types(database)
-        create_tables(database)
+        drop_tables_and_types(models.database)
+        create_tables(models.database)
     data = read_files()
     for i in data:
-        process_new_workout(database, i)
+        process_new_workout(models.database, i)
 
 
 if __name__ == "__main__":

@@ -3,10 +3,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from overrides import override
 
-import utils
-from youtube_consts import YTConsts
-import db.models as models
-from source import Source
+from .utils import get_secret, youtube_vid_id
+from .youtube_consts import YTConsts
+from db import models
+from .source import Source
 
 
 class Youtube(Source):
@@ -25,7 +25,7 @@ class Youtube(Source):
     def api_key():
         if Youtube._secret is not None:
             return Youtube._secret
-        Youtube._secret = utils.get_secret("youtube_api_key")
+        Youtube._secret = get_secret("youtube_api_key")
         return Youtube._secret
 
     @staticmethod
@@ -34,7 +34,7 @@ class Youtube(Source):
         secret = Youtube.api_key()
         youtube_client = build("youtube", "v3", developerKey=secret)
 
-        vid_id = utils.youtube_vid_id(url)
+        vid_id = youtube_vid_id(url)
         try:
             results = (
                 youtube_client.videos()

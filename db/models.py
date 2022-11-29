@@ -1,6 +1,6 @@
 from peewee import *
 from playhouse.postgres_ext import *
-from db.enum_field import EnumField, ExtendedEnum
+from .enum_field import EnumField, ExtendedEnum
 
 database = PostgresqlExtDatabase(None)
 
@@ -25,6 +25,13 @@ class ZoneType(ExtendedEnum):
     EIGHTY_90 = "EIGHTY_90"
     NINETY_100 = "NINETY_100"
 
+class TagType(ExtendedEnum):
+    TAG = "TAG"
+    EXERCISE = "EXERCISE"
+    SPORT = "SPORT"
+    CREATOR = "CREATOR"
+    EQUIPMENT = "EQUIPMENT"
+
 
 # tables
 
@@ -45,23 +52,19 @@ class BaseModel(Model):
             if type(field[1]) == EnumField:
                 field[1].post_field_create(cls)
 
-    """
     def __str__(self):
-        return
-        to_print = []
-        for i in dir(self):
-            if not callable(i) and (i[:2] != "__" and i[-2:] != "__"):
-                to_print.append(f"{getattr(self, i)}")
-        return f"{self.__name__}({', '.join(to_print)})"
-    """
+        fields = []
+        for field in self._meta.fields.items():
+            fields.append(f"\t{field[0]} {field[1]}: {getattr(self, field[0])}")
 
+        fields_str = "\n".join(fields)
 
-class Exercises(BaseModel):
-    name = TextField(unique=True)
+        return f"{self.__class__.__name__}\n({fields_str})"
 
 
 class Tags(BaseModel):
     name = TextField(unique=True)
+    tagtype = EnumField(TagType, constraints=[SQL("DEFAULT 'TAG'")])
 
 
 class Equipment(BaseModel):
@@ -77,7 +80,6 @@ class Sources(BaseModel):
     name = TextField(null=True)
     sourcetype = EnumField(SourceType)
     url = TextField(unique=True)
-    exercises = ManyToManyField(Exercises, backref="sources")
     tags = ManyToManyField(Tags, backref="sources")
 
 
@@ -93,6 +95,7 @@ class Workouts(BaseModel):
     sources = ManyToManyField(Sources, backref="workouts")
     sport = CharField(default="Unknown")
     starttime = DateTimeTZField(unique=True)
+    tags = ManyToManyField(Tags, backref="workouts")
 
 
 class HRZones(BaseModel):

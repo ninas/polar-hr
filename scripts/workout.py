@@ -1,12 +1,12 @@
 from collections import defaultdict
 import isodate, traceback
-from utils import upload_to_cloud_storage
+from .utils import upload_to_cloud_storage
 from datetime import timedelta, datetime
 from overrides import override
 
-from db_interface import DBInterface
-from source import Source
-import db.models as models
+from .db_interface import DBInterface
+from .source import Source
+from db import models
 
 
 class Workout(DBInterface):

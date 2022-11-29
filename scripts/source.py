@@ -1,8 +1,10 @@
-import db.models as models
-import utils
+import math
+
+from db import models
+from .utils import youtube_vid_id
 from overrides import override
 
-from db_interface import DBInterface
+from .db_interface import DBInterface
 
 
 class Source(DBInterface):
@@ -16,7 +18,7 @@ class Source(DBInterface):
     @staticmethod
     def normalise_url(url):
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            vid_id = utils.youtube_vid_id(url)
+            vid_id = youtube_vid_id(url)
             return f"https://www.youtu.be/{vid_id}"
         return url
 
@@ -36,7 +38,7 @@ class Source(DBInterface):
             return ExistingSource(db, url, res)
 
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            from youtube import Youtube
+            from .youtube import Youtube
 
             return Youtube.load_source(db, url)
         print("Unknown source")
