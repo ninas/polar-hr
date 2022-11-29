@@ -71,7 +71,7 @@ class Youtube(Source):
         if self._tags is not None:
             return self._tags
 
-        tags = set()
+        tags = super().tags
         strip_words = sorted(
             list(copy.deepcopy(YTConsts.strip_words)), key=len, reverse=True
         )
@@ -189,21 +189,12 @@ class Youtube(Source):
         tags = tags - to_remove
         return tags
 
-    def _gen_tag_from_duration(self):
-        in_mins = self.duration.total_seconds() / 60
-        start = int(in_mins / 10) * 10
-        end = math.ceil(in_mins / 10) * 10
-        if start == end:
-            end += 10
-        return f"{start}-{end}min"
-
     def _enrich_tags(self, tags):
         tags.update(self._add_from_description())
 
         for r in range(2):
             tags = self._semantically_update(tags)
 
-        tags.add(self._gen_tag_from_duration())
         return tags
 
     def _clean_exercise(self, val):
