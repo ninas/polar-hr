@@ -1,4 +1,5 @@
 from overrides import EnforceOverrides
+from db import models
 
 
 class DBInterface(EnforceOverrides):
@@ -37,3 +38,19 @@ class DBInterface(EnforceOverrides):
             else:
                 return None
         return typ(d) if typ is not None else d
+
+    def _insert_tags(self, data, type_data):
+        insert_data = [{
+            "name": val,
+            "tagtype": type_data
+        } for val in data]
+        with self.db.atomic():
+            inserts = models.Tags.insert_many(insert_data).on_conflict_ignore().execute()
+
+            all_models = models.Tags.select().where(models.Tags.name << data).execute()
+        if inserts is not None and len(inserts) > 0:
+            new_inserts = set(i[0] for i in inserts)
+            for i in all_models:
+                if i.id in new_inserts:
+                    print("New:", i.name)
+        return all_models
