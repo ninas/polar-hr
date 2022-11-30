@@ -113,6 +113,7 @@ class YTConsts:
         "round booty",
         "rounder butt",
         "routine",
+        "routines",
         "series",
         "sholder",
         "six pack workout",
