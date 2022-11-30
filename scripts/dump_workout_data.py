@@ -4,7 +4,7 @@ from functools import cached_property, cache
 from collections import defaultdict
 from overrides import override
 
-from utils. workout_data import WorkoutData
+from utils.workout_data import WorkoutData
 from db.workout import models
 
 
@@ -18,6 +18,7 @@ class WorkoutDataWithFilename(WorkoutData):
         d = super().as_dict()
         d["filename"] = self.filename
         return d
+
 
 class DumpWorkoutData(WorkoutDataWithFilename):
     def __init__(self, input_data, filename):
@@ -40,7 +41,9 @@ class DumpWorkoutData(WorkoutDataWithFilename):
     @cached_property
     @override(check_signature=False)
     def sport(self):
-        self._i_data["sport"] = self._i_data.get("name", self._i_data["exercises"][0].get("sport", "Unknown"))
+        self._i_data["sport"] = self._i_data.get(
+            "name", self._i_data["exercises"][0].get("sport", "Unknown")
+        )
         return super().sport
 
     @property
@@ -54,12 +57,15 @@ class DumpWorkoutData(WorkoutDataWithFilename):
         self._i_data["heart_rate"] = self._i_data["exercises"][0].get("heartRate", None)
         return super().heart_rate_range
 
-
     @cached_property
     @override(check_signature=False)
     def hr_zones(self):
         # their stuff is so inconsistent
-        hr = "heartRate" if "heartRate" in self._i_data["exercises"][0]["zones"] else "heart_rate"
+        hr = (
+            "heartRate"
+            if "heartRate" in self._i_data["exercises"][0]["zones"]
+            else "heart_rate"
+        )
         to_return = []
         for zone in self._i_data["exercises"][0]["zones"][hr]:
             to_return.append(

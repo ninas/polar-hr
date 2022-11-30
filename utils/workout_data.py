@@ -70,7 +70,6 @@ class WorkoutData(EnforceOverrides):
     def _timezone_offset(self):
         return self._i_data.get("start_time_utc_offset", -420)
 
-
     def get_datetime(self, field, tz=None):
         dt = datetime.min
         if field in self._i_data:
@@ -82,9 +81,7 @@ class WorkoutData(EnforceOverrides):
                 tz = self._timezone_offset
             dt = datetime.fromisoformat(f"{dt}{tz/60:+03.0f}:00")
 
-        return dt.astimezone(
-            timezone.utc
-        )
+        return dt.astimezone(timezone.utc)
 
     @cache
     def as_dict(self):
@@ -99,5 +96,5 @@ class WorkoutData(EnforceOverrides):
             "samples": self.samples,
             "note": self.note,
             "sources": self.sources,
-            "equipment": self.equipment
+            "equipment": self.equipment,
         }

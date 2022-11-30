@@ -64,7 +64,9 @@ class Workout(DBInterface):
         if self._data.samples is not None:
             # Let's put the sample in a blob store rather than the db
             # If this fails, we want to fail inserting the record, so let exception propagate
-            samples_name = upload_to_cloud_storage(str(self._data.start_time), self._data.samples)
+            samples_name = upload_to_cloud_storage(
+                str(self._data.start_time), self._data.samples
+            )
             self.model.samples = samples_name
 
         try:
@@ -105,9 +107,7 @@ class Workout(DBInterface):
 
         except Exception as e:
             print("Failed to insert workout:")
-            print(
-                f"\tFilename: {self._data.filename}"
-            )
+            print(f"\tFilename: {self._data.filename}")
             print(f"\tStart time: {self._data.start_time}")
             print(e)
             print(traceback.format_exc())
@@ -135,7 +135,9 @@ class Workout(DBInterface):
     @cache
     def _insert_hr_zones(self):
         if self.model is None:
-            raise Exception("Unable to insert heart rate zones until workout mdoel created")
+            raise Exception(
+                "Unable to insert heart rate zones until workout mdoel created"
+            )
 
         zone_data = self._data.hr_zones
         if len(zone_data) != 5:

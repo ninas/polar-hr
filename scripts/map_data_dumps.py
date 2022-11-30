@@ -153,6 +153,7 @@ def read_mappings():
             mapping[vals[0]] = val
     return mapping
 
+
 """
 def confirm_notes(data):
     mapping = read_mappings()
@@ -180,5 +181,5 @@ if __name__ == "__main__":
     polar = read_polar_dir()
     youtube = preprocess_yt(read_youtube_data())
     merge_data(polar, youtube)
-    #confirm_notes(polar)
+    # confirm_notes(polar)
     write_out(polar, "output")
