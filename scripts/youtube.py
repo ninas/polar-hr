@@ -2,6 +2,7 @@ import re, copy, math, isodate
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from overrides import override
+from functools import cache, cached_property
 
 from utils.gcp_utils import get_secret
 from .youtube_consts import YTConsts
@@ -21,6 +22,7 @@ class Youtube(Source):
             return HeatherRobertsonYoutube(db, url, data)
         return Youtube(db, url, data)
 
+    @cache
     @staticmethod
     def youtube_vid_id(url):
         m = YTConsts.id_regex.match(url)
@@ -28,12 +30,10 @@ class Youtube(Source):
             raise Exception(f"Unable to find id in url: {url}")
         return m.group(1).strip()
 
+    @cache
     @staticmethod
     def api_key():
-        if Youtube._secret is not None:
-            return Youtube._secret
-        Youtube._secret = get_secret("youtube_api_key")
-        return Youtube._secret
+        return get_secret("youtube_api_key")
 
     @staticmethod
     def get_data(url):
@@ -64,20 +64,14 @@ class Youtube(Source):
     def source_type(self):
         return models.SourceType.YOUTUBE
 
-    @property
-    @override
+    @cached_property
+    @override(check_signature=False)
     def data(self):
-        if self._data is not None:
-            return self._data
-        self._data = Youtube.get_data(self.url)
-        return self._data
+        return Youtube.get_data(self.url)
 
-    @property
-    @override
+    @cached_property
+    @override(check_signature=False)
     def tags(self):
-        if self._tags is not None:
-            return self._tags
-
         tags = super().tags
         strip_words = sorted(
             list(copy.deepcopy(YTConsts.strip_words)), key=len, reverse=True
@@ -93,7 +87,7 @@ class Youtube(Source):
                 i = YTConsts.dedupes[i]
             else:
                 i = self._strip_words(strip_words, i)
-                i = self._remove_helper_words(i)
+                i = Youtube._remove_helper_words(i)
 
             if i in YTConsts.ignore_tags:
                 continue
@@ -105,9 +99,7 @@ class Youtube(Source):
                     strip_words.append(i[:-1])
                 strip_words = sorted(strip_words, key=len, reverse=True)
 
-        self._tags = self._enrich_tags(tags)
-
-        return self._tags
+        return self._enrich_tags(tags)
 
     @property
     @override
@@ -119,29 +111,27 @@ class Youtube(Source):
     def creator(self):
         return self.data["snippet"]["channelTitle"].lower()
 
-    @property
-    @override
+    @cached_property
+    @override(check_signature=False)
     def duration(self):
         return isodate.parse_duration(self.data["contentDetails"]["duration"])
 
-    @property
-    @override
+    @cached_property
+    @override(check_signature=False)
     def exercises(self):
-        if self._exercises is not None:
-            return self._exercises
 
         description = self.data["snippet"]["description"].lower()
 
-        self._exercises = set()
+        exercises = set()
 
         for i in description.split("\n"):
             m = YTConsts.chapters_regex.match(i)
             if m is None:
                 continue
-            cleaned = self._clean_exercise(m.group(2)).strip()
+            cleaned = Youtube._clean_exercise(m.group(2)).strip()
             if len(cleaned) > 3:
-                self._exercises.add(cleaned)
-        return self._exercises
+                exercises.add(cleaned)
+        return exercises
 
     def _strip_words(self, words, val):
         for j in words:
@@ -149,7 +139,9 @@ class Youtube(Source):
             val = re.sub(r"\s+", " ", val)
         return val.strip()
 
-    def _remove_helper_words(self, i):
+    @cache
+    @staticmethod
+    def _remove_helper_words(i):
         for t in ["s", "and", "with", "for", ","]:
             if i.startswith(f"{t} "):
                 i = i[len(t) :]
@@ -170,16 +162,27 @@ class Youtube(Source):
                 tags.add(i)
         return tags
 
+    @cache
+    @staticmethod
+    def _semantically_update_tag(tag):
+        to_add = set()
+        to_remove = set()
+        if tag in YTConsts.expands:
+            to_add.update(YTConsts.expands[tag])
+            to_remove.add(tag)
+        if tag in YTConsts.dedupes:
+            to_add.add(YTConsts.dedupes[tag])
+            to_remove.add(tag)
+        return to_add, to_remove
+
     def _semantically_update(self, tags):
         to_remove = set()
         to_add = set()
         for tag in tags:
-            if tag in YTConsts.expands:
-                to_add.update(YTConsts.expands[tag])
-                to_remove.add(tag)
-            if tag in YTConsts.dedupes:
-                to_add.add(YTConsts.dedupes[tag])
-                to_remove.add(tag)
+            t_a, t_r = Youtube._semantically_update_tag(tag)
+            to_add.update(t_a)
+            to_remove.update(t_r)
+
             if tag.startswith("no ") and tag[3:] in tags:
                 to_remove.add(tag[3:])
             if tag.endswith("s") and tag[:-1] in tags:
@@ -204,7 +207,9 @@ class Youtube(Source):
 
         return tags
 
-    def _clean_exercise(self, val):
+    @cache
+    @staticmethod
+    def _clean_exercise(val):
         # remove extra words
         for e in YTConsts.exercises_strip:
             val = re.sub(r"(" + e + r")\b", "", val)
@@ -230,22 +235,20 @@ class Youtube(Source):
 
 
 class HeatherRobertsonYoutube(Youtube):
-    @property
-    @override
-    def exercises(self):
-        if self._exercises is not None:
-            return self._exercises
 
+    @cached_property
+    @override(check_signature=False)
+    def exercises(self):
         description = self.data["snippet"]["description"].lower()
 
-        self._exercises = set()
+        exercises = set()
         start = None
         for option in ["workout breakdown", "intro", "warm up"]:
             start = self._get_start_of_exercise_list(option)
             if start is not None:
                 break
         if start is None:
-            return self._exercises
+            return exercises
 
         des = description[start:].split("\n")
 
@@ -274,13 +277,13 @@ class HeatherRobertsonYoutube(Youtube):
                 i += 1
                 continue
 
-            val = self._clean_exercise(val)
+            val = HeatherRobertsonYoutube._clean_exercise(val)
             if len(val) > 3:
-                self._exercises.add(val)
+                exercises.add(val)
 
             i += 1
 
-        return self._exercises
+        return exercises
 
     @override
     def _enrich_tags(self, tags):

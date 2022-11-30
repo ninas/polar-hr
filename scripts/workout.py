@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import cache, cached_property
 import isodate, traceback
 
 from utils.gcp_utils import upload_to_cloud_storage
@@ -15,9 +16,6 @@ class Workout(DBInterface):
     def __init__(self, db, data):
         super().__init__(db, data)
         self.hr_zones = None
-        self._sources = None
-        self._equipment = None
-        self._sport = None
         self.start_time = self._val_or_none(["startTime"], datetime.fromisoformat)
         self.note_data = self._parse_note(self._val_or_none(["note"]))
 
@@ -35,34 +33,29 @@ class Workout(DBInterface):
 
         return workout_model
 
-    @property
+    @cached_property
     def sport(self):
-        if self._sport is not None:
-            return self._sport
         sport = self._val_or_none(["exercises", 0, "sport"])
         # For some reason Polar subs these two
         if sport == "CROSS_FIT":
             sport = "HIIT"
         if sport == "STRENGTH_TRAINING":
             sport = "STRENGTH"
-        self._sport = sport.lower().replace("_", " ")
-        return self._sport
+        return sport.lower().replace("_", " ")
 
-    @property
+    @cached_property
     def samples(self):
         return self._val_or_none(["exercises", 0, "samples"])
 
-    @property
+    @cached_property
     def end_time(self):
         return self._val_or_none(["stopTime"])
 
-    @property
+    @cached_property
     def equipment(self):
-        if self._equipment is not None:
-            return self._equipment
-        self._equipment = []
+        equipment = []
         if "equipment" not in self.note_data:
-            return self._equipment
+            return equipment
 
         with self.db.atomic():
             for k, v in self.note_data["equipment"].items():
@@ -74,9 +67,9 @@ class Workout(DBInterface):
                     )
                     if created:
                         print(f"New equipment type inserted: {equip}")
-                    self._equipment.append(equip)
+                    equipment.append(equip)
 
-        return self._equipment
+        return equipment
 
     @override
     def insert_row(self):
@@ -133,6 +126,7 @@ class Workout(DBInterface):
             print(e)
             print(traceback.format_exc())
 
+    @cache
     def _equipment_to_tags(self):
         tags = set()
         has_weights = False
@@ -153,6 +147,7 @@ class Workout(DBInterface):
         return tags
 
 
+    @cache
     def _create_hr_zones(self, workout_obj):
         zone_data = self._val_or_none(
             ["exercises", 0, "zones", "heart_rate"], data=self.data

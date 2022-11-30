@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "polar_hr"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.11"
 google-cloud-storage = "^2.6.0"
 google-cloud-secret-manager = "^2.12.6"
 peewee = "^3.15.4"

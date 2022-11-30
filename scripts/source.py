@@ -1,4 +1,5 @@
 import math
+from functools import cache, cached_property
 
 from db import models
 from overrides import override
@@ -11,9 +12,6 @@ class Source(DBInterface):
     def __init__(self, db, url, data):
         super().__init__(db, data)
         self.url = Source.normalise_url(url)
-        self._tags = None
-        self._exercises = None
-        self._tags = None
 
     @staticmethod
     def normalise_url(url):
@@ -29,6 +27,7 @@ class Source(DBInterface):
             return models.SourceType.YOUTUBE
         return models.SourceType.UNKNOWN
 
+    @cache
     @staticmethod
     def load_source(db, url):
         url = Source.normalise_url(url)
@@ -59,12 +58,10 @@ class Source(DBInterface):
 
     @property
     def tags(self):
-        if self._tags is not None:
-            return self._tags
-        self._tags = set()
+        tags = set()
         if self.duration is not None:
-            self._tags.add(self._gen_tag_from_duration())
-        return self._tags
+            tags.add(self._gen_tag_from_duration())
+        return tags
 
     @property
     def exercises(self):
@@ -100,7 +97,7 @@ class Source(DBInterface):
             ))
 
         with self.db.atomic():
-            self.model = models.Sources.create(
+            self.model, created = models.Sources.get_or_create(
                 url=self.url,
                 sourcetype=self.source_type,
                 name=self.title,
@@ -108,7 +105,8 @@ class Source(DBInterface):
                 extra_info=self.extra_info,
                 creator=self.creator,
             )
-
+            if not created:
+                return self.model
             self.model.tags.add(list(all_tags))
             self.model.save()
 

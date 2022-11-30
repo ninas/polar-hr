@@ -1,17 +1,20 @@
 from overrides import EnforceOverrides
+import abc
+from functools import cached_property
 from db import models
 
 
-class DBInterface(EnforceOverrides):
+class DBInterface(EnforceOverrides, abc.ABC):
     def __init__(self, db, data):
         self.db = db
         self._data = data
         self.model = None
 
-    @property
+    @cached_property
     def data(self):
         return self._data
 
+    @abc.abstractmethod
     def insert_row(self):
         pass
 
