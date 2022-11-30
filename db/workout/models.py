@@ -9,13 +9,13 @@ database = PostgresqlExtDatabase(None)
 
 
 class EquipmentType(ExtendedEnum):
-    WEIGHTS = "Weights"
-    BANDS = "Bands"
+    WEIGHTS = "weights"
+    BANDS = "bands"
 
 
 class SourceType(ExtendedEnum):
-    YOUTUBE = "Youtube"
-    UNKNOWN = "Unknown"
+    YOUTUBE = "youtube"
+    UNKNOWN = "unknown"
 
 
 class ZoneType(ExtendedEnum):

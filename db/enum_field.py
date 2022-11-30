@@ -66,7 +66,7 @@ class EnumField(Field):
         return SQL(f"e_{self.name}")
 
 
-class ExtendedEnum(Enum):
+class ExtendedEnum(str, Enum):
     @classmethod
     def list(cls):
         return [c.value for c in cls]

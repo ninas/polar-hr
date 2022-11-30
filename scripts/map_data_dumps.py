@@ -1,6 +1,7 @@
 import os, json, pprint
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
+from .dump_workout_data import DumpWorkoutData
 
 pp = pprint.PrettyPrinter(indent=4)
 DEBUG = False
@@ -19,19 +20,11 @@ def read_polar_dir():
     return all_info
 
 
-def get_datetime(data, field, tz=None):
-    if tz is None:
-        tz = data["timeZoneOffset"] if "timeZoneOffset" in data else -420
-    return datetime.fromisoformat(f"{data[field]}{tz/60:+03.0f}:00").astimezone(
-        timezone.utc
-    )
-
-
 def read_polar_data(f):
     with open(f"/home/nina/code/polar/polar/{f}") as fi:
         contents = json.load(fi)
-        contents["filename"] = f
-    return get_datetime(contents, "startTime"), contents
+        dump_wd = DumpWorkoutData(contents, f)
+    return dump_wd.start_time, dump_wd
 
 
 def read_youtube_data():
@@ -60,64 +53,22 @@ def preprocess_yt(data):
     return search_data
 
 
-def flatten_data(data):
-    print(data["filename"])
-
-    new_data = {
-        "start_time": data["startTime"],
-        "duration": data["duration"],
-        "end_time": data["stopTime"],
-        "sport": data["exercises"][0]["sport"],
-        "hr_zones": [],
-        "filename": data["filename"],
-    }
-
-    new_data["calories"] = data["kiloCalories"] if "kilocalories" in data else 0
-    new_data["heart_rate"] = (
-        data["exercises"][0]["heartRate"]
-        if "heartRate" in data
-        else {"min": 0, "max": 0, "avg": 0}
-    )
-
-    if "note" in data:
-        new_data["note"] = data["note"]
-    # their stuff is so inconsistent
-    hr = "heartRate" if "heartRate" in data["exercises"][0]["zones"] else "heart_rate"
-    for zone in data["exercises"][0]["zones"][hr]:
-        new_data["hr_zones"].append(
-            {
-                "upper_limit": zone["higherLimit"],
-                "lower_limit": zone["lowerLimit"],
-                "in_zone": zone["inZone"],
-                "index": zone["zoneIndex"],
-            }
-        )
-
-    new_data["samples"] = [
-        i["value"] if "value" in i else 0 for i in data["exercises"][0]["samples"]
-    ]
-
-    return new_data
-
-
 def merge_data(polar, youtube):
     for dt, v in polar.items():
 
-        if DEBUG:
-            for i in v["exercises"]:
-                i["samples"] = "..."
-        if "note" in v:
+        if v.note is not None:
             print(f"Merge: Note already exists - {v['note']}\n")
-
             continue
         if dt.date() not in youtube:
             print(f"Merge: No potential youtube video found for time {dt}")
             continue
+        if DEBUG:
+            print(v.filename)
 
         latest_before_end = None
         watched_vids = []
-        end = get_datetime(v, "stopTime")
-        start = get_datetime(v, "startTime")
+        end = v.end_time
+        start = v.start_time
         after_start = []
 
         for vid in youtube[dt.date()]:
@@ -154,17 +105,11 @@ def merge_data(polar, youtube):
 
         watched_vids.append(latest_before_end)
 
-        polar[dt]["note"] = " , ".join([i["titleUrl"] for i in watched_vids])
-        if len(watched_vids) > 1:
-            polar[dt]["note"] = f"Multiple videos: {polar[dt]['note']}"
-        name = (
-            v["name"]
-            if "name" in v
-            else ", ".join([i["sport"] for i in v["exercises"]])
-        )
-        print(f"Updated {dt}: exercise type - {name}: {polar[dt]['note']}")
-        for i in watched_vids:
-            print(f"\t{i['title']} - \t\t{i['time']}")
+        polar[dt]._sources = [i["titleUrl"] for i in watched_vids]
+        print(f"Updated {dt}: exercise type - {v.sport}: {polar[dt].sources}")
+        if DEBUG:
+            for i in watched_vids:
+                print(f"\t{i['title']} - \t\t{i['time']}")
         print("")
         print(f"Polar start: {dt}")
         print(f"Video start: {watched_vids[0]['time']}")
@@ -181,32 +126,16 @@ def merge_data(polar, youtube):
         print("\n\n\n")
 
 
-def convert_to_utc(data):
-    data["startTime"] = str(get_datetime(data, "startTime"))
-    if "stopTime" in data:
-        data["stopTime"] = str(get_datetime(data, "stopTime"))
-    for i in data["exercises"]:
-        if "startTime" in i:
-            i["startTime"] = str(get_datetime(i, "startTime", data["timeZoneOffset"]))
-        if "stopTime" in i:
-            i["stopTime"] = str(get_datetime(i, "stopTime", data["timeZoneOffset"]))
-        if "samples" in i and "heartRate" in i["samples"]:
-            for j in i["samples"]["heartRate"]:
-                j["dateTime"] = str(get_datetime(j, "dateTime", data["timeZoneOffset"]))
-
-
 def write_out(polar, location):
     if not os.path.exists(location):
         os.makedirs(location)
 
     for k, v in polar.items():
         if DEBUG:
-            if "note" in v and len(v["note"].split()) > 1:
-                print(v["note"], v["filename"])
+            print(v.note, v.filename)
             pp.pprint(v)
-        convert_to_utc(v)
-        with open(os.path.join(location, v["filename"]), "w") as f:
-            f.write(json.dumps(flatten_data(v)))
+        with open(os.path.join(location, v.filename), "w") as f:
+            f.write(json.dumps(v.as_dict(), indent=4, sort_keys=True))
 
 
 def append_mapping(filename, note):
@@ -224,32 +153,32 @@ def read_mappings():
             mapping[vals[0]] = val
     return mapping
 
-
+"""
 def confirm_notes(data):
     mapping = read_mappings()
     print(mapping)
 
-    sort_func = lambda x: polar[x]["filename"]
+    sort_func = lambda x: polar[x].filename
     for k in sorted(data.keys(), key=sort_func):
         v = data[k]
         if "note" not in v:
             continue
-        print(v["filename"])
+        print(v.filename)
         inp = (
-            mapping[v["filename"]]
-            if v["filename"] in mapping
-            else input(f"{v['note']} ")
+            mapping[v.filename]
+            if v.filename in mapping
+            else input(f"{v.sources} ; {v.equipment} ; {v.note} ")
         )
         if len(inp) > 0:
             inp = inp.split("\n")[0]
             v["note"] = inp
             if v["filename"] not in mapping:
                 append_mapping(v["filename"], v["note"])
-
+"""
 
 if __name__ == "__main__":
     polar = read_polar_dir()
     youtube = preprocess_yt(read_youtube_data())
     merge_data(polar, youtube)
-    confirm_notes(polar)
-    write_out(polar, "output_flattened")
+    #confirm_notes(polar)
+    write_out(polar, "output")
