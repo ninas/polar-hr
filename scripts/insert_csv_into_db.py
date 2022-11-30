@@ -5,12 +5,13 @@ import click
 from utils.gcp_utils import get_secret, upload_to_cloud_storage
 from db.workout import models
 from .workout import Workout
+from .dump_workout_data import WorkoutDataWithFilename
 
 
 def process_new_workout(db, data):
-    if "note" not in data:
-        print(f"No extra info attached {data['filename']}")
-    print(data["filename"])
+    print(data.filename)
+    if len(data.sources) == 0:
+        print(f"No source info attached")
     workout = Workout(db, data)
     workout.insert_row()
 
@@ -22,9 +23,9 @@ def read_files():
             continue
 
         with open(f"/home/nina/code/polar/polar-hr/output/{f}") as fi:
-            all_info.append(json.load(fi))
+            all_info.append(WorkoutDataWithFilename(json.load(fi), f))
 
-    srt = lambda x: x["filename"]
+    srt = lambda x: x.filename
     return sorted(all_info, key=srt)
 
 

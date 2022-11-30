@@ -8,10 +8,20 @@ from utils. workout_data import WorkoutData
 from db.workout import models
 
 
-class DumpWorkoutData(WorkoutData):
+class WorkoutDataWithFilename(WorkoutData):
     def __init__(self, input_data, filename):
         super().__init__(input_data)
         self.filename = filename
+
+    @override
+    def as_dict(self):
+        d = super().as_dict()
+        d["filename"] = self.filename
+        return d
+
+class DumpWorkoutData(WorkoutDataWithFilename):
+    def __init__(self, input_data, filename):
+        super().__init__(input_data, filename)
         self._sources = []
         self._equipment = defaultdict(list)
         self._note = None
@@ -139,9 +149,3 @@ class DumpWorkoutData(WorkoutData):
             index += 1
 
         return self._note
-
-    @override
-    def as_dict(self):
-        d = super().as_dict()
-        d["filename"] = self.filename
-        return d

@@ -15,51 +15,27 @@ class Workout(DBInterface):
     @override
     def __init__(self, db, data):
         super().__init__(db, data)
-        self.hr_zones = None
-        self.start_time = datetime.fromisoformat(self.data["start_time"])
-        self.note_data = self._parse_note(
-            self.data["note"] if "note" in self.data else None
-        )
 
-    def _populate_model(self, data):
+    def _populate_model(self):
         workout_model = models.Workouts(
-            calories=int(data["calories"]),
-            endtime=self.end_time,
-            starttime=self.start_time,
-            sport=self.sport,
+            calories=self._data.calories,
+            endtime=self._data.end_time,
+            starttime=self._data.start_time,
+            sport=self._data.sport,
         )
-        workout_model.avghr = int(data["heart_rate"]["avg"])
-        workout_model.maxhr = int(data["heart_rate"]["max"])
-        workout_model.minhr = int(data["heart_rate"]["min"])
+        for k, v in self._data.heart_rate_range.items():
+            setattr(workout_model, f"{k}hr", v)
 
         return workout_model
 
     @cached_property
-    def sport(self):
-        sport = self.data["sport"]
-        # For some reason Polar subs these two
-        if sport == "CROSS_FIT":
-            sport = "HIIT"
-        if sport == "STRENGTH_TRAINING":
-            sport = "STRENGTH"
-        return sport.lower().replace("_", " ")
-
-    @cached_property
-    def samples(self):
-        return self.data["samples"]
-
-    @cached_property
-    def end_time(self):
-        return self.data["end_time"]
-
-    @cached_property
     def equipment(self):
         equipment = []
-        if "equipment" not in self.note_data:
+        if len(self._data.equipment) == 0:
             return equipment
 
         with self.db.atomic():
-            for k, v in self.note_data["equipment"].items():
+            for k, v in self._data.equipment.items():
                 for vals in v:
                     equip, created = models.Equipment.get_or_create(
                         equipmenttype=k,
@@ -74,21 +50,21 @@ class Workout(DBInterface):
 
     @override
     def insert_row(self):
-        if self.start_time is None or self.samples is None:
+        if self._data.start_time is None or self._data.samples is None:
             # Not much we can do with this, skip it
             return None
         wkout = self._find(
-            self.db, models.Workouts, models.Workouts.starttime, self.start_time
+            self.db, models.Workouts, models.Workouts.starttime, self._data.start_time
         )
         if wkout is not None:
             return wkout
 
-        self.model = self._populate_model(self.data)
+        self.model = self._populate_model()
 
-        if self.samples is not None:
+        if self._data.samples is not None:
             # Let's put the sample in a blob store rather than the db
             # If this fails, we want to fail inserting the record, so let exception propagate
-            samples_name = upload_to_cloud_storage(str(self.start_time), self.samples)
+            samples_name = upload_to_cloud_storage(str(self._data.start_time), self._data.samples)
             self.model.samples = samples_name
 
         try:
@@ -99,7 +75,7 @@ class Workout(DBInterface):
                 set(
                     self._insert_tags(
                         [
-                            self.sport,
+                            self._data.sport,
                         ],
                         models.TagType.SPORT,
                     )
@@ -112,11 +88,10 @@ class Workout(DBInterface):
                 )
 
             self.sources = []
-            if "sources" in self.note_data:
-                for url in self.note_data["sources"]:
-                    src = Source.load_source(self.db, url)
-                    src.insert_row()
-                    self.sources.append(src.model)
+            for url in self._data.sources:
+                src = Source.load_source(self.db, url)
+                src.insert_row()
+                self.sources.append(src.model)
 
             with self.db.atomic():
                 self.model.save()
@@ -126,14 +101,14 @@ class Workout(DBInterface):
                 self.model.tags.add(list(tag_models))
                 self.model.save()
 
-            self.hr_zones = self._create_hr_zones(self.model)
+            self._insert_hr_zones()
 
         except Exception as e:
             print("Failed to insert workout:")
             print(
-                f"\tFilename: {self.data['filename'] if 'filename' in self.data else 'None'}"
+                f"\tFilename: {self._data.filename}"
             )
-            print(f"\tStart time: {self.start_time}")
+            print(f"\tStart time: {self._data.start_time}")
             print(e)
             print(traceback.format_exc())
 
@@ -158,8 +133,11 @@ class Workout(DBInterface):
         return tags
 
     @cache
-    def _create_hr_zones(self, workout_obj):
-        zone_data = self.data["hr_zones"]
+    def _insert_hr_zones(self):
+        if self.model is None:
+            raise Exception("Unable to insert heart rate zones until workout mdoel created")
+
+        zone_data = self._data.hr_zones
         if len(zone_data) != 5:
             print("No zone data found")
             return []
@@ -172,7 +150,7 @@ class Workout(DBInterface):
             models.ZoneType.FIFTY_60,
         ]
 
-        full_duration = isodate.parse_duration(self.data["duration"])
+        full_duration = self._data.duration
 
         zones = []
         zero_time = timedelta(seconds=0)
@@ -191,7 +169,7 @@ class Workout(DBInterface):
                     "higherlimit": val["upper_limit"],
                     "duration": dur,
                     "percentspentabove": spent_above,
-                    "workout": workout_obj,
+                    "workout": self.model,
                 }
             )
 
@@ -206,7 +184,7 @@ class Workout(DBInterface):
                 "higherlimit": zones[-1]["lowerlimit"],
                 "duration": dur,
                 "percentspentabove": 100,
-                "workout": workout_obj,
+                "workout": self.model,
             }
         )
 
@@ -214,52 +192,3 @@ class Workout(DBInterface):
             models.HRZones.insert_many(zones).on_conflict_ignore().execute()
 
         return zones
-
-    def _parse_note(self, data):
-        if data is None or len(data) == 0:
-            return {}
-
-        attributes = {
-            "sources": [],
-            "equipment": defaultdict(list),
-        }
-
-        components = data.split(";")
-
-        if components[0].startswith("Multiple"):
-            divider = components[0].find(":")
-            latter = components[0][divider + 1 :]
-            attributes["sources"] = [i.strip() for i in latter.split(",")]
-        else:
-            attributes["sources"].append(components[0].strip())
-
-        index = 1
-        while index < len(components):
-            v = components[index].split(":")
-            if len(v) == 1:
-                index += 1
-                continue
-            title, rest = v
-
-            if "weight" in title:
-                for i in filter(None, rest.split(",")):
-                    dd = {"quantity": 2}
-                    i = i.strip()
-
-                    if i.startswith("one"):
-                        dd["quantity"] = 1
-                        i = i[3:].strip()
-
-                    dd["magnitude"] = i.strip()
-                    attributes["equipment"][models.EquipmentType.WEIGHTS].append(dd)
-            elif "band" in title:
-                for i in filter(None, rest.split(",")):
-                    attributes["equipment"][models.EquipmentType.BANDS].append(
-                        {"quantity": 1, "magnitude": i.strip()}
-                    )
-            elif title == "note" or title == "notes":
-                attributes["note"] = rest
-
-            index += 1
-
-        return attributes

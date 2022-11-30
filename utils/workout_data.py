@@ -72,10 +72,17 @@ class WorkoutData(EnforceOverrides):
 
 
     def get_datetime(self, field, tz=None):
-        if tz is None:
-            tz = self._timezone_offset
-        dt = self._i_data.get(field, datetime.min)
-        return datetime.fromisoformat(f"{dt}{tz/60:+03.0f}:00").astimezone(
+        dt = datetime.min
+        if field in self._i_data:
+            dt = datetime.fromisoformat(self._i_data[field])
+
+        if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+            # We need to add timezone
+            if tz is None:
+                tz = self._timezone_offset
+            dt = datetime.fromisoformat(f"{dt}{tz/60:+03.0f}:00")
+
+        return dt.astimezone(
             timezone.utc
         )
 
