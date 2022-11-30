@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from overrides import override
 
-from .utils import get_secret, youtube_vid_id
+from utils.gcp_utils import get_secret
 from .youtube_consts import YTConsts
 from db import models
 from .source import Source
@@ -22,6 +22,13 @@ class Youtube(Source):
         return Youtube(db, url, data)
 
     @staticmethod
+    def youtube_vid_id(url):
+        m = YTConsts.id_regex.match(url)
+        if m is None:
+            raise Exception(f"Unable to find id in url: {url}")
+        return m.group(1).strip()
+
+    @staticmethod
     def api_key():
         if Youtube._secret is not None:
             return Youtube._secret
@@ -34,7 +41,7 @@ class Youtube(Source):
         secret = Youtube.api_key()
         youtube_client = build("youtube", "v3", developerKey=secret)
 
-        vid_id = youtube_vid_id(url)
+        vid_id = Youtube.youtube_vid_id(url)
         try:
             results = (
                 youtube_client.videos()

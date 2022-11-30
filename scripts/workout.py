@@ -1,6 +1,7 @@
 from collections import defaultdict
 import isodate, traceback
-from .utils import upload_to_cloud_storage
+
+from utils.gcp_utils import upload_to_cloud_storage
 from datetime import timedelta, datetime
 from overrides import override
 

@@ -1,7 +1,6 @@
 import math
 
 from db import models
-from .utils import youtube_vid_id
 from overrides import override
 
 from .db_interface import DBInterface
@@ -19,7 +18,8 @@ class Source(DBInterface):
     @staticmethod
     def normalise_url(url):
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            vid_id = youtube_vid_id(url)
+            from .youtube import Youtube
+            vid_id = Youtube.youtube_vid_id(url)
             return f"https://www.youtu.be/{vid_id}"
         return url
 

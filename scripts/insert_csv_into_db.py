@@ -2,7 +2,7 @@ import os, json
 import click
 
 
-from .utils import get_secret, upload_to_cloud_storage
+from utils.gcp_utils import get_secret, upload_to_cloud_storage
 from db import models
 from .workout import Workout
 

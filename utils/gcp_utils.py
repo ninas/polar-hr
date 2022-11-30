@@ -1,11 +1,12 @@
+from functools import cache
+import json
+
 from google.cloud import secretmanager
 from google.cloud import storage
-from .youtube_consts import YTConsts
-import json
 
 SAMPLES_BUCKET = "polar-workout-samples"
 
-
+@cache
 def get_secret(name):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = f"projects/937046739753/secrets/{name}/versions/latest"
@@ -19,10 +20,3 @@ def upload_to_cloud_storage(blob_name, data, bucket_name=SAMPLES_BUCKET):
     blob = bucket.blob(blob_name)
     blob.upload_from_string(json.dumps(data))
     return f"{bucket_name}/{blob_name}"
-
-
-def youtube_vid_id(url):
-    m = YTConsts.id_regex.match(url)
-    if m is None:
-        raise Exception(f"Unable to find id in url: {url}")
-    return m.group(1).strip()
