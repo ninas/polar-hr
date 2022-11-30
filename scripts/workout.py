@@ -8,7 +8,7 @@ from overrides import override
 
 from .db_interface import DBInterface
 from .source import Source
-from db import models
+from db.workout import models
 
 
 class Workout(DBInterface):

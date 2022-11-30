@@ -6,7 +6,7 @@ from functools import cache, cached_property
 
 from utils.gcp_utils import get_secret
 from .youtube_consts import YTConsts
-from db import models
+from db.workout import models
 from .source import Source
 
 

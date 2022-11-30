@@ -1,7 +1,7 @@
 import math
 from functools import cache, cached_property
 
-from db import models
+from db.workout import models
 from overrides import override
 
 from .db_interface import DBInterface

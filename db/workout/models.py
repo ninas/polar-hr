@@ -1,6 +1,7 @@
 from peewee import *
 from playhouse.postgres_ext import *
-from .enum_field import EnumField, ExtendedEnum
+from ..enum_field import EnumField, ExtendedEnum
+from ..base_model import BaseModel
 
 database = PostgresqlExtDatabase(None)
 
@@ -37,7 +38,7 @@ class TagType(ExtendedEnum):
 # tables
 
 
-class BaseModel(Model):
+class WorkoutBaseModel(BaseModel):
     class Meta:
         database = database
 
@@ -53,28 +54,19 @@ class BaseModel(Model):
             if type(field[1]) == EnumField:
                 field[1].post_field_create(cls)
 
-    def __str__(self):
-        fields = []
-        for field in self._meta.fields.items():
-            fields.append(f"\t{field[0]} {field[1]}: {getattr(self, field[0])}")
 
-        fields_str = "\n".join(fields)
-
-        return f"{self.__class__.__name__}\n({fields_str})"
-
-
-class Tags(BaseModel):
+class Tags(WorkoutBaseModel):
     name = TextField(unique=True)
     tagtype = EnumField(TagType, constraints=[SQL("DEFAULT 'TAG'")])
 
 
-class Equipment(BaseModel):
+class Equipment(WorkoutBaseModel):
     equipmenttype = EnumField(EquipmentType)
     magnitude = TextField()
     quantity = IntegerField(constraints=[SQL("DEFAULT 1")], null=True)
 
 
-class Sources(BaseModel):
+class Sources(WorkoutBaseModel):
     extrainfo = JSONField(null=True)
     length = IntervalField(null=True)
     creator = TextField(null=True)
@@ -84,7 +76,7 @@ class Sources(BaseModel):
     tags = ManyToManyField(Tags, backref="sources")
 
 
-class Workouts(BaseModel):
+class Workouts(WorkoutBaseModel):
     avghr = IntegerField(null=True)
     calories = IntegerField(null=True)
     endtime = DateTimeTZField(null=True)
@@ -99,7 +91,7 @@ class Workouts(BaseModel):
     tags = ManyToManyField(Tags, backref="workouts")
 
 
-class HRZones(BaseModel):
+class HRZones(WorkoutBaseModel):
     zonetype = EnumField(ZoneType)
     lowerlimit = IntegerField()
     higherlimit = IntegerField()

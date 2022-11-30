@@ -3,7 +3,7 @@ import click
 
 
 from utils.gcp_utils import get_secret, upload_to_cloud_storage
-from db import models
+from db.workout import models
 from .workout import Workout
 
 
@@ -18,7 +18,7 @@ def process_new_workout(db, data):
 def read_files():
     all_info = []
     for f in os.listdir("/home/nina/code/polar/polar-hr/output"):
-        if not f.startswith("training"):
+        if not f.startswith("training-session"):
             continue
 
         with open(f"/home/nina/code/polar/polar-hr/output/{f}") as fi:
