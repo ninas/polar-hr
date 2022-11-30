@@ -16,26 +16,27 @@ class Workout(DBInterface):
     def __init__(self, db, data):
         super().__init__(db, data)
         self.hr_zones = None
-        self.start_time = self._val_or_none(["startTime"], datetime.fromisoformat)
-        self.note_data = self._parse_note(self._val_or_none(["note"]))
+        self.start_time = datetime.fromisoformat(self.data["start_time"])
+        self.note_data = self._parse_note(
+            self.data["note"] if "note" in self.data else None
+        )
 
     def _populate_model(self, data):
         workout_model = models.Workouts(
-            calories=self._val_or_none(["kiloCalories"], int),
+            calories=int(data["calories"]),
             endtime=self.end_time,
             starttime=self.start_time,
             sport=self.sport
         )
-        path = ["exercises", 0, "heartRate"]
-        workout_model.avghr = self._val_or_none(path + ["avg"], int)
-        workout_model.maxhr = self._val_or_none(path + ["max"], int)
-        workout_model.minhr = self._val_or_none(path + ["min"], int)
+        workout_model.avghr = int(data["heart_rate"]["avg"])
+        workout_model.maxhr = int(data["heart_rate"]["max"])
+        workout_model.minhr = int(data["heart_rate"]["min"])
 
         return workout_model
 
     @cached_property
     def sport(self):
-        sport = self._val_or_none(["exercises", 0, "sport"])
+        sport = self.data["sport"]
         # For some reason Polar subs these two
         if sport == "CROSS_FIT":
             sport = "HIIT"
@@ -45,11 +46,11 @@ class Workout(DBInterface):
 
     @cached_property
     def samples(self):
-        return self._val_or_none(["exercises", 0, "samples"])
+        return self.data["samples"]
 
     @cached_property
     def end_time(self):
-        return self._val_or_none(["stopTime"])
+        return self.data["end_time"]
 
     @cached_property
     def equipment(self):
@@ -149,10 +150,8 @@ class Workout(DBInterface):
 
     @cache
     def _create_hr_zones(self, workout_obj):
-        zone_data = self._val_or_none(
-            ["exercises", 0, "zones", "heart_rate"], data=self.data
-        )
-        if zone_data is None:
+        zone_data = self.data["hr_zones"]
+        if len(zone_data) != 5:
             print("No zone data found")
             return []
 
@@ -170,17 +169,17 @@ class Workout(DBInterface):
         zero_time = timedelta(seconds=0)
         summed_duration = zero_time
 
-        srt = lambda x: x["zoneIndex"]
+        srt = lambda x: x["index"]
         for index, val in enumerate(sorted(zone_data, key=srt, reverse=True)):
-            dur = isodate.parse_duration(val["inZone"])
+            dur = isodate.parse_duration(val["in_zone"])
             summed_duration += dur
             spent_above = summed_duration / full_duration * 100
 
             zones.append(
                 {
                     "zonetype": zone_names[index],
-                    "lowerlimit": val["lowerLimit"],
-                    "higherlimit": val["higherLimit"],
+                    "lowerlimit": val["lower_limit"],
+                    "higherlimit": val["upper_limit"],
                     "duration": dur,
                     "percentspentabove": spent_above,
                     "workout": workout_obj,

@@ -102,7 +102,6 @@ class Source(DBInterface):
                 sourcetype=self.source_type,
                 name=self.title,
                 length=self.duration,
-                extra_info=self.extra_info,
                 creator=self.creator,
             )
             if not created:
