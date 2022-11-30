@@ -59,6 +59,49 @@ def preprocess_yt(data):
 
     return search_data
 
+def flatten_data(data):
+    print(data["filename"])
+
+    new_data = {
+        "start_time": data["startTime"],
+        "duration": data["duration"],
+        "end_time": data["stopTime"],
+        "sport": data["exercises"][0]["sport"],
+        "hr_zones": [],
+        "filename": data["filename"],
+    }
+
+    new_data["calories"] = (data["kiloCalories"]
+                            if "kilocalories" in data
+                            else 0)
+    new_data["heart_rate"] = (data["exercises"][0]["heartRate"]
+                              if "heartRate" in data
+                              else {
+                                "min": 0,
+                                "max": 0,
+                                "avg": 0
+                              })
+
+    if "note" in data:
+        new_data["note"] = data["note"]
+    # their stuff is so inconsistent
+    hr = "heartRate" if "heartRate" in data["exercises"][0]["zones"] else "heart_rate"
+    for zone in data["exercises"][0]["zones"][hr]:
+        new_data["hr_zones"].append({
+            "upper_limit": zone["higherLimit"],
+            "lower_limit": zone["lowerLimit"],
+            "in_zone": zone["inZone"],
+            "index": zone["zoneIndex"]
+        })
+
+    new_data["samples"] = [
+        i["value"]
+        if "value" in i
+        else 0
+        for i in data["exercises"][0]["samples"]
+    ]
+
+    return new_data
 
 def merge_data(polar, youtube):
     for dt, v in polar.items():
@@ -166,7 +209,7 @@ def write_out(polar, location):
             pp.pprint(v)
         convert_to_utc(v)
         with open(os.path.join(location, v["filename"]), "w") as f:
-            f.write(json.dumps(v))
+            f.write(json.dumps(flatten_data(v)))
 
 
 def append_mapping(filename, note):
@@ -187,9 +230,14 @@ def read_mappings():
 
 def confirm_notes(data):
     mapping = read_mappings()
-    for k, v in data.items():
+    print(mapping)
+
+    sort_func = lambda x: polar[x]["filename"]
+    for k in sorted(data.keys(), key=sort_func):
+        v = data[k]
         if "note" not in v:
             continue
+        print(v["filename"])
         inp = (
             mapping[v["filename"]]
             if v["filename"] in mapping
@@ -207,4 +255,4 @@ if __name__ == "__main__":
     youtube = preprocess_yt(read_youtube_data())
     merge_data(polar, youtube)
     confirm_notes(polar)
-    write_out(polar, "output")
+    write_out(polar, "output_flattened")
