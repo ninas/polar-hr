@@ -17,6 +17,7 @@ class Source(DBInterface):
     def normalise_url(url):
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
             from .youtube import Youtube
+
             vid_id = Youtube.youtube_vid_id(url)
             return f"https://www.youtu.be/{vid_id}"
         return url
@@ -79,22 +80,20 @@ class Source(DBInterface):
     def insert_row(self):
         all_tags = set()
         if self.creator:
-            all_tags.update(set(
-                self._insert_tags([self.creator], models.TagType.CREATOR)
-            ))
+            all_tags.update(
+                set(self._insert_tags([self.creator], models.TagType.CREATOR))
+            )
 
         if len(self.exercises) > 0:
             print("Gonna insert exercises")
 
-            all_tags.update(set(
-                self._insert_tags(self.exercises, models.TagType.EXERCISE)
-            ))
+            all_tags.update(
+                set(self._insert_tags(self.exercises, models.TagType.EXERCISE))
+            )
 
         if len(self.tags) > 0:
             print("Gonna insert tags")
-            all_tags.update(set(
-                self._insert_tags(self.tags, models.TagType.TAG)
-            ))
+            all_tags.update(set(self._insert_tags(self.tags, models.TagType.TAG)))
 
         with self.db.atomic():
             self.model, created = models.Sources.get_or_create(
@@ -108,7 +107,6 @@ class Source(DBInterface):
                 return self.model
             self.model.tags.add(list(all_tags))
             self.model.save()
-
 
         return self.model
 

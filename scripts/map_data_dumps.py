@@ -59,6 +59,7 @@ def preprocess_yt(data):
 
     return search_data
 
+
 def flatten_data(data):
     print(data["filename"])
 
@@ -71,37 +72,33 @@ def flatten_data(data):
         "filename": data["filename"],
     }
 
-    new_data["calories"] = (data["kiloCalories"]
-                            if "kilocalories" in data
-                            else 0)
-    new_data["heart_rate"] = (data["exercises"][0]["heartRate"]
-                              if "heartRate" in data
-                              else {
-                                "min": 0,
-                                "max": 0,
-                                "avg": 0
-                              })
+    new_data["calories"] = data["kiloCalories"] if "kilocalories" in data else 0
+    new_data["heart_rate"] = (
+        data["exercises"][0]["heartRate"]
+        if "heartRate" in data
+        else {"min": 0, "max": 0, "avg": 0}
+    )
 
     if "note" in data:
         new_data["note"] = data["note"]
     # their stuff is so inconsistent
     hr = "heartRate" if "heartRate" in data["exercises"][0]["zones"] else "heart_rate"
     for zone in data["exercises"][0]["zones"][hr]:
-        new_data["hr_zones"].append({
-            "upper_limit": zone["higherLimit"],
-            "lower_limit": zone["lowerLimit"],
-            "in_zone": zone["inZone"],
-            "index": zone["zoneIndex"]
-        })
+        new_data["hr_zones"].append(
+            {
+                "upper_limit": zone["higherLimit"],
+                "lower_limit": zone["lowerLimit"],
+                "in_zone": zone["inZone"],
+                "index": zone["zoneIndex"],
+            }
+        )
 
     new_data["samples"] = [
-        i["value"]
-        if "value" in i
-        else 0
-        for i in data["exercises"][0]["samples"]
+        i["value"] if "value" in i else 0 for i in data["exercises"][0]["samples"]
     ]
 
     return new_data
+
 
 def merge_data(polar, youtube):
     for dt, v in polar.items():

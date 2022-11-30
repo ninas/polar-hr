@@ -26,7 +26,7 @@ class Workout(DBInterface):
             calories=int(data["calories"]),
             endtime=self.end_time,
             starttime=self.start_time,
-            sport=self.sport
+            sport=self.sport,
         )
         workout_model.avghr = int(data["heart_rate"]["avg"])
         workout_model.maxhr = int(data["heart_rate"]["max"])
@@ -95,10 +95,21 @@ class Workout(DBInterface):
 
             equipment = self.equipment
             tag_models = set()
-            tag_models.update(set(self._insert_tags([self.sport,], models.TagType.SPORT)))
+            tag_models.update(
+                set(
+                    self._insert_tags(
+                        [
+                            self.sport,
+                        ],
+                        models.TagType.SPORT,
+                    )
+                )
+            )
             tags = self._equipment_to_tags()
             if len(tags) > 0:
-                tag_models.update(set(self._insert_tags(tags, models.TagType.EQUIPMENT)))
+                tag_models.update(
+                    set(self._insert_tags(tags, models.TagType.EQUIPMENT))
+                )
 
             self.sources = []
             if "sources" in self.note_data:
@@ -106,7 +117,6 @@ class Workout(DBInterface):
                     src = Source.load_source(self.db, url)
                     src.insert_row()
                     self.sources.append(src.model)
-
 
             with self.db.atomic():
                 self.model.save()
@@ -146,7 +156,6 @@ class Workout(DBInterface):
             tags.add("mini-band")
 
         return tags
-
 
     @cache
     def _create_hr_zones(self, workout_obj):

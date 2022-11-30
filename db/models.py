@@ -25,6 +25,7 @@ class ZoneType(ExtendedEnum):
     EIGHTY_90 = "EIGHTY_90"
     NINETY_100 = "NINETY_100"
 
+
 class TagType(ExtendedEnum):
     TAG = "TAG"
     EXERCISE = "EXERCISE"

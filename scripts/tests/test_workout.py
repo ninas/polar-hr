@@ -72,7 +72,7 @@ class TestWorkout(unittest.TestCase):
         self.assertRaises(Exception, self.workout.insert_row)
 
     def test_missing_data(self):
-        del(self.workout.data["exercises"][0]["samples"])
+        del self.workout.data["exercises"][0]["samples"]
         self.assertEqual(self.workout.insert_row(), None)
 
     @patch("workout.models.Workouts")

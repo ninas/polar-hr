@@ -28,12 +28,11 @@ class DBInterface(EnforceOverrides, abc.ABC):
         return None
 
     def _insert_tags(self, data, type_data):
-        insert_data = [{
-            "name": val,
-            "tagtype": type_data
-        } for val in data]
+        insert_data = [{"name": val, "tagtype": type_data} for val in data]
         with self.db.atomic():
-            inserts = models.Tags.insert_many(insert_data).on_conflict_ignore().execute()
+            inserts = (
+                models.Tags.insert_many(insert_data).on_conflict_ignore().execute()
+            )
 
             all_models = models.Tags.select().where(models.Tags.name << data).execute()
         if inserts is not None and len(inserts) > 0:

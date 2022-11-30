@@ -235,7 +235,6 @@ class Youtube(Source):
 
 
 class HeatherRobertsonYoutube(Youtube):
-
     @cached_property
     @override(check_signature=False)
     def exercises(self):

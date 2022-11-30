@@ -6,6 +6,7 @@ from google.cloud import storage
 
 SAMPLES_BUCKET = "polar-workout-samples"
 
+
 @cache
 def get_secret(name):
     client = secretmanager.SecretManagerServiceClient()
