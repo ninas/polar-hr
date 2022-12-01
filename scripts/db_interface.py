@@ -37,7 +37,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
             all_models = models.Tags.select().where(models.Tags.name << data).execute()
         if inserts is not None and len(inserts) > 0:
             new_inserts = set(i[0] for i in inserts)
-            for i in all_models:
+            for i in sorted(all_models, key=lambda x: x.name):
                 if i.id in new_inserts:
                     print("New:", i.name)
         return all_models

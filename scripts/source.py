@@ -96,15 +96,14 @@ class Source(DBInterface):
             all_tags.update(set(self._insert_tags(self.tags, models.TagType.TAG)))
 
         with self.db.atomic():
-            self.model, created = models.Sources.get_or_create(
+            self.model = models.Sources.create(
                 url=self.url,
                 sourcetype=self.source_type,
                 name=self.title,
                 length=self.duration,
                 creator=self.creator,
+                extra_info=self.extra_info,
             )
-            if not created:
-                return self.model
             self.model.tags.add(list(all_tags))
             self.model.save()
 

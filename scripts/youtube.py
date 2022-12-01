@@ -77,7 +77,7 @@ class Youtube(Source):
             list(copy.deepcopy(YTConsts.strip_words)), key=len, reverse=True
         )
 
-        for i in sorted(self.data["snippet"]["tags"], key=len):
+        for i in sorted(self.data["snippet"].get("tags", []), key=len):
             i = i.lower()
 
             if i in YTConsts.ignore_tags:

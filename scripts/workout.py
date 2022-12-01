@@ -91,9 +91,12 @@ class Workout(DBInterface):
 
             self.sources = []
             for url in self._data.sources:
-                src = Source.load_source(self.db, url)
-                src.insert_row()
-                self.sources.append(src.model)
+                try:
+                    src = Source.load_source(self.db, url)
+                    src.insert_row()
+                    self.sources.append(src.model)
+                except Exception as e:
+                    print(f"Unable to add source, got exception: {e}")
 
             with self.db.atomic():
                 self.model.save()

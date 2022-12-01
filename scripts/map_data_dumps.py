@@ -2,9 +2,25 @@ import os, json, pprint
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from .dump_workout_data_store import DumpWorkoutDataStore
+from functools import cache
 
 pp = pprint.PrettyPrinter(indent=4)
 DEBUG = False
+
+ignore_matches = {
+    "training-session-2021-02-13",
+    "training-session-2021-02-17",
+    "training-session-2021-02-18",
+    "training-session-2021-02-23",
+    "training-session-2021-03-15",
+    "training-session-2021-04-01",
+    "training-session-2021-06-16",
+    "training-session-2021-08-24",
+    "training-session-2021-09-06",
+    "training-session-2021-09-10",
+    "training-session-2021-11-11",
+    "training-session-2022-07-21",
+}
 
 
 def read_polar_dir():
@@ -23,6 +39,12 @@ def read_polar_dir():
 def read_polar_data(f):
     with open(f"/home/nina/code/polar/polar/{f}") as fi:
         contents = json.load(fi)
+        if f in read_mappings():
+            print("Applying mapping:")
+            print(f"\t{contents['note']}")
+            contents["note"] = read_mappings()[f]
+            print(f" --> {contents['note']}")
+
         dump_wd = DumpWorkoutDataStore(contents, f)
     return dump_wd.start_time, dump_wd
 
@@ -40,8 +62,6 @@ def preprocess_yt(data):
             continue
         if len(blob["subtitles"]) != 1:
             continue
-        if blob["subtitles"][0]["name"] != "Heather Robertson":
-            continue
 
         dt = datetime.fromisoformat(f"{blob['time'][:-1]}+00:00")
         blob["time"] = dt
@@ -54,16 +74,20 @@ def preprocess_yt(data):
 
 
 def merge_data(polar, youtube):
-    for dt, v in polar.items():
+    for dt in sorted(polar.keys(), key=lambda x: polar[x].filename):
 
-        if v.note is not None:
-            print(f"Merge: Note already exists - {v['note']}\n")
+        v = polar[dt]
+        print(v.filename)
+
+        if v.has_original_note:
+            print(f"Merge: Note already exists\n")
+            continue
+        if v.filename[:27] in ignore_matches:
+            print("Known mismatch, skipping")
             continue
         if dt.date() not in youtube:
             print(f"Merge: No potential youtube video found for time {dt}")
             continue
-        if DEBUG:
-            print(v.filename)
 
         latest_before_end = None
         watched_vids = []
@@ -104,7 +128,8 @@ def merge_data(polar, youtube):
             continue
 
         watched_vids.append(latest_before_end)
-
+        for i in watched_vids:
+            print("CHANNEL: ",i["subtitles"][0]["name"])
         polar[dt]._sources = [i["titleUrl"] for i in watched_vids]
         print(f"Updated {dt}: exercise type - {v.sport}: {polar[dt].sources}")
         if DEBUG:
@@ -143,6 +168,7 @@ def append_mapping(filename, note):
         f.write(f"{filename} {note}\n")
 
 
+@cache
 def read_mappings():
     mapping = {}
     with open("mapping") as f:
@@ -175,7 +201,7 @@ def confirm_notes(data):
             v["note"] = inp
             if v["filename"] not in mapping:
                 append_mapping(v["filename"], v["note"])
-"""
+        """
 
 if __name__ == "__main__":
     polar = read_polar_dir()

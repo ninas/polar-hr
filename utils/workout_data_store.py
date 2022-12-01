@@ -98,3 +98,6 @@ class WorkoutDataStore(EnforceOverrides):
             "sources": self.sources,
             "equipment": self.equipment,
         }
+
+    def __str__(self):
+        return json.dumps(self.as_dict())
