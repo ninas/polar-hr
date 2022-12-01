@@ -52,7 +52,7 @@ class WorkoutDataStore(EnforceOverrides):
 
     @property
     def hr_zones(self):
-        return self._i_data.get("hr_zones", None)
+        return self._i_data.get("heart_rate_zones", None)
 
     @property
     def samples(self):
@@ -92,7 +92,7 @@ class WorkoutDataStore(EnforceOverrides):
             "sport": self.sport,
             "calories": self.calories,
             "heart_rate": self.heart_rate_range,
-            "hr_zones": self.hr_zones,
+            "heart_rate_zones": self.hr_zones,
             "samples": self.samples,
             "note": self.note,
             "sources": self.sources,
