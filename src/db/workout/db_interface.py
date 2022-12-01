@@ -1,7 +1,8 @@
 from overrides import EnforceOverrides
 import abc
 from functools import cached_property
-from db.workout import models
+
+import src.db.workout.models as models
 
 
 class DBInterface(EnforceOverrides, abc.ABC):

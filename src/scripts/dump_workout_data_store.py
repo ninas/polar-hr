@@ -1,11 +1,9 @@
-import os, json, pprint
-from datetime import datetime, timezone, timedelta
 from functools import cached_property, cache
-from collections import defaultdict
 from overrides import override
+from collections import defaultdict
 
 from refresh_function.polar_data_store import PolarDataStore
-from db.workout import models
+from src.db.workout import models
 
 
 class WorkoutDataWithFilenameStore(PolarDataStore):
@@ -20,7 +18,6 @@ class WorkoutDataWithFilenameStore(PolarDataStore):
         return d
 
 
-class DumpWorkoutDataStore(WorkoutDataWithFilenameStore):
     def __init__(self, input_data, filename):
         super().__init__(input_data, filename)
         self.has_original_note = "note" in self._i_data
@@ -129,4 +126,3 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore):
 
             index += 1
 
-        return self._note

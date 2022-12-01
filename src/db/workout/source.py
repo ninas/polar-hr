@@ -1,10 +1,9 @@
 import math
 from functools import cache, cached_property
-
-from db.workout import models
 from overrides import override
 
-from .db_interface import DBInterface
+import src.db.workout.models as models
+from src.db.workout.db_interface import DBInterface
 
 
 class Source(DBInterface):

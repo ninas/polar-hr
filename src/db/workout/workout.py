@@ -1,14 +1,13 @@
 from collections import defaultdict
 from functools import cache, cached_property
 import isodate, traceback
-
-from utils.gcp_utils import upload_to_cloud_storage
 from datetime import timedelta, datetime
 from overrides import override
 
-from .db_interface import DBInterface
-from .source import Source
-from db.workout import models
+from src.utils.gcp_utils import upload_to_cloud_storage
+from src.db.workout.db_interface import DBInterface
+from src.db.workout.source import Source
+import src.db.workout.models as models
 
 
 class Workout(DBInterface):

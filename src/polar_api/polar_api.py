@@ -2,8 +2,8 @@ from requests_oauthlib import OAuth2Session
 import json
 from functools import cache, cached_property
 
-from utils import gcp_utils
-from .polar_data_store import PolarDataStore
+from src.utils import gcp_utils
+from src.polar_api.polar_data_store import PolarDataStore
 
 class PolarAPI:
     POLAR_EXERCISE_URL = "https://www.polaraccesslink.com/v3/exercises?samples=true&zones=true"

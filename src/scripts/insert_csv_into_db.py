@@ -2,10 +2,10 @@ import os, json
 import click
 
 
-from utils.gcp_utils import get_secret, upload_to_cloud_storage
-from db.workout import models
-from .workout import Workout
-from .dump_workout_data_store import WorkoutDataWithFilenameStore
+from src.utils.gcp_utils import get_secret, upload_to_cloud_storage
+from src.db.workout import models
+from src.db.workout.workout import Workout
+from src.scripts.dump_workout_data_store import WorkoutDataWithFilenameStore
 
 
 def process_new_workout(db, data):

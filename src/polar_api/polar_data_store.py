@@ -1,14 +1,12 @@
-import os, json, pprint, sys
-from datetime import datetime, timezone, timedelta
+import sys
 from functools import cached_property, cache
 from collections import defaultdict
 from overrides import override
 
-from utils.workout_data_store import WorkoutDataStore
-from db.workout import models
+from src.db.workout.workout_data_store import WorkoutDataStore
+from src.db.workout import models
 
 
-class PolarDataStore(WorkoutDataStore):
     def __init__(self, input_data):
         self._i_data = input_data
         self._sources = set()
@@ -62,7 +60,6 @@ class PolarDataStore(WorkoutDataStore):
         for k, v in [("maximum", "max"), ("average", "avg")]:
             self._i_data["heart_rate"][v] = self._i_data["heart_rate"].get(k, 0)
 
-        print(self._i_data["heart_rate"])
         return super().heart_rate_range
 
     @cached_property

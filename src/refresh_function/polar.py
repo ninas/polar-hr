@@ -1,14 +1,13 @@
-import json, isodate
 from peewee import fn
 from datetime import timedelta
 from functools import cache
 
-from utils import gcp_utils
-from db.sources import models as source_models
-from db.workout import models as workout_models
-from scripts.workout import Workout
+from src.utils import gcp_utils
+from src.db.sources import models as source_models
+from src.db.workout import models as workout_models
+from src.db.workout.workout import Workout
 
-from .polar_api import PolarAPI
+from src.polar_api.polar_api import PolarAPI
 
 @cache
 def source_db():
