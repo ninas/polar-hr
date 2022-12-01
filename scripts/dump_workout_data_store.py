@@ -4,11 +4,11 @@ from functools import cached_property, cache
 from collections import defaultdict
 from overrides import override
 
-from utils.workout_data_store import WorkoutDataStore
+from refresh_function.polar_data_store import PolarDataStore
 from db.workout import models
 
 
-class WorkoutDataWithFilenameStore(WorkoutDataStore):
+class WorkoutDataWithFilenameStore(PolarDataStore):
     def __init__(self, input_data, filename):
         super().__init__(input_data)
         self.filename = filename
@@ -23,9 +23,6 @@ class WorkoutDataWithFilenameStore(WorkoutDataStore):
 class DumpWorkoutDataStore(WorkoutDataWithFilenameStore):
     def __init__(self, input_data, filename):
         super().__init__(input_data, filename)
-        self._sources = []
-        self._equipment = defaultdict(list)
-        self._note = None
         self.has_original_note = "note" in self._i_data
 
     @cached_property
@@ -95,16 +92,6 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore):
             data.append(i.get("value", 0))
         return data
 
-    @property
-    @override
-    def sources(self):
-        return self._sources
-
-    @property
-    @override
-    def equipment(self):
-        return self._equipment
-
     @cached_property
     @override(check_signature=False)
     def _timezone_offset(self):
@@ -134,21 +121,9 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore):
             title, rest = v
 
             if "weight" in title:
-                for i in filter(None, rest.split(",")):
-                    dd = {"quantity": 2}
-                    i = i.strip()
-
-                    if i.startswith("one"):
-                        dd["quantity"] = 1
-                        i = i[3:].strip()
-
-                    dd["magnitude"] = i.strip()
-                    self._equipment[models.EquipmentType.WEIGHTS].append(dd)
+                self._equipment[models.EquipmentType.WEIGHTS] = self._extract_weights(rest)
             elif "band" in title:
-                for i in filter(None, rest.split(",")):
-                    self.equipment[models.EquipmentType.BANDS].append(
-                        {"quantity": 1, "magnitude": i.strip()}
-                    )
+                self._equipment[models.EquipmentType.BANDS] = self._extract_bands(rest)
             elif title == "note" or title == "notes":
                 self._note = rest
 
