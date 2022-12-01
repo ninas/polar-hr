@@ -9,6 +9,7 @@ from src.db.workout.workout import Workout
 
 from src.polar_api.polar_api import PolarAPI
 
+
 @cache
 def source_db():
     source_models.database.init(
@@ -19,6 +20,7 @@ def source_db():
     )
     source_models.database.connect()
     return source_models.database
+
 
 @cache
 def workout_db():
@@ -31,16 +33,24 @@ def workout_db():
     workout_models.database.connect()
     return workout_models.database
 
+
 def get_sources(earliest):
-    results = source_models.SourceInput.select().where(source_models.SourceInput.created >= earliest).execute()
+    results = (
+        source_models.SourceInput.select()
+        .where(source_models.SourceInput.created >= earliest)
+        .execute()
+    )
     print(results)
     for i in results:
         print(i)
     return results
 
+
 def get_last_saved_workout_date():
     workout_db()
-    return workout_models.Workouts.select(fn.MAX(workout_models.Workouts.starttime)).scalar()
+    return workout_models.Workouts.select(
+        fn.MAX(workout_models.Workouts.starttime)
+    ).scalar()
 
 
 def map_data(data, sources):
@@ -55,16 +65,15 @@ def map_data(data, sources):
         added = False
         for i, source in enumerate(sources[s_i:]):
             if (
-                workout.start_time < source.created and
-                abs(source.created - workout.end_time) < timedelta(minutes=5) and
-                (
-                    len(sources) == i + 1 or
-                    workout.created < sources[i+1].start_time
+                workout.start_time < source.created
+                and abs(source.created - workout.end_time) < timedelta(minutes=5)
+                and (
+                    len(sources) == i + 1 or workout.created < sources[i + 1].start_time
                 )
             ):
                 workout.add_source(source)
                 updated_workouts.append(workout)
-                s_i = i+1
+                s_i = i + 1
                 added = True
                 print(f"Matched!")
                 print(f"Workout: {workout}")
@@ -76,10 +85,12 @@ def map_data(data, sources):
 
     return updated_workouts
 
+
 def save_to_db(workouts):
     for workout in workouts:
         w = Workout(workout_db(), workout)
         w.insert_row()
+
 
 if __name__ == "__main__":
     source_db()

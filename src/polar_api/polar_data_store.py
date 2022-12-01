@@ -21,7 +21,9 @@ class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
             self._note = src.notes
 
         if src.weights is not None:
-            self._equipment[models.EquipmentType.WEIGHTS] = self._extract_weights(src.weights)
+            self._equipment[models.EquipmentType.WEIGHTS] = self._extract_weights(
+                src.weights
+            )
 
         if src.bands is not None:
             self._equipment[models.EquipmentType.BANDS] = self._extract_bands(src.bands)

@@ -5,8 +5,12 @@ from functools import cache, cached_property
 from src.utils import gcp_utils
 from src.polar_api.polar_data_store import PolarDataStore
 
+
 class PolarAPI:
-    POLAR_EXERCISE_URL = "https://www.polaraccesslink.com/v3/exercises?samples=true&zones=true"
+    POLAR_EXERCISE_URL = (
+        "https://www.polaraccesslink.com/v3/exercises?samples=true&zones=true"
+    )
+
     def __init__(self, use_cache=False):
         self.use_cache = use_cache
 
@@ -18,7 +22,7 @@ class PolarAPI:
     def session(self):
         return OAuth2Session(
             self._get_secret("polar_client_id"),
-            token={"access_token": self._get_secret("polar_token")}
+            token={"access_token": self._get_secret("polar_token")},
         )
 
     @property

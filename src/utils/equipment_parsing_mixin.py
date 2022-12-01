@@ -1,10 +1,8 @@
-class EquipmentParsingMixin():
+class EquipmentParsingMixin:
     def _extract_bands(self, val):
         bands = []
         for i in filter(None, val.split(",")):
-            bands.append(
-                {"quantity": 1, "magnitude": i.strip()}
-            )
+            bands.append({"quantity": 1, "magnitude": i.strip()})
         return bands
 
     def _extract_weights(self, val):

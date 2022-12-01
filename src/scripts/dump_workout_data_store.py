@@ -85,6 +85,7 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
         if self.has_original_note:
             self._note = self._parse_original_note()
         return self._note
+
     @property
     @override
     def sources(self):
@@ -94,7 +95,6 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
     @override
     def equipment(self):
         return self._equipment
-
 
     @cached_property
     @override(check_signature=False)
@@ -134,7 +134,9 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
             title, rest = v
 
             if "weight" in title:
-                self._equipment[models.EquipmentType.WEIGHTS] = self._extract_weights(rest)
+                self._equipment[models.EquipmentType.WEIGHTS] = self._extract_weights(
+                    rest
+                )
             elif "band" in title:
                 self._equipment[models.EquipmentType.BANDS] = self._extract_bands(rest)
             elif title == "note" or title == "notes":

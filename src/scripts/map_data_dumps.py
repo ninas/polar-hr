@@ -129,7 +129,7 @@ def merge_data(polar, youtube):
 
         watched_vids.append(latest_before_end)
         for i in watched_vids:
-            print("CHANNEL: ",i["subtitles"][0]["name"])
+            print("CHANNEL: ", i["subtitles"][0]["name"])
         polar[dt]._sources = [i["titleUrl"] for i in watched_vids]
         print(f"Updated {dt}: exercise type - {v.sport}: {polar[dt].sources}")
         if DEBUG:
