@@ -39,12 +39,20 @@ def get_sources(earliest):
         print(i)
     return results
 
+def get_last_saved_workout_date():
+    workout_db()
+    return workout_models.Workouts.select(fn.MAX(workout_models.Workouts.starttime)).scalar()
+
+
 def map_data(data, sources):
     # For each source, we want the workout where it was created after the start time, but before the start time of the next workout
 
     s_i = 0
+    max_start = get_last_saved_workout_date()
     updated_workouts = []
     for workout in data:
+        if max_start >= workout.start_time:
+            continue
         added = False
         for i, source in enumerate(sources[s_i:]):
             if (
