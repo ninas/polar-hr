@@ -5,7 +5,7 @@ import click
 from utils.gcp_utils import get_secret, upload_to_cloud_storage
 from db.workout import models
 from .workout import Workout
-from .dump_workout_data import WorkoutDataWithFilename
+from .dump_workout_data_store import WorkoutDataWithFilenameStore
 
 
 def process_new_workout(db, data):
@@ -23,7 +23,7 @@ def read_files():
             continue
 
         with open(f"/home/nina/code/polar/polar-hr/output/{f}") as fi:
-            all_info.append(WorkoutDataWithFilename(json.load(fi), f))
+            all_info.append(WorkoutDataWithFilenameStore(json.load(fi), f))
 
     srt = lambda x: x.filename
     return sorted(all_info, key=srt)

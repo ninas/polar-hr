@@ -1,7 +1,7 @@
 import os, json, pprint
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
-from .dump_workout_data import DumpWorkoutData
+from .dump_workout_data_store import DumpWorkoutDataStore
 
 pp = pprint.PrettyPrinter(indent=4)
 DEBUG = False
@@ -23,7 +23,7 @@ def read_polar_dir():
 def read_polar_data(f):
     with open(f"/home/nina/code/polar/polar/{f}") as fi:
         contents = json.load(fi)
-        dump_wd = DumpWorkoutData(contents, f)
+        dump_wd = DumpWorkoutDataStore(contents, f)
     return dump_wd.start_time, dump_wd
 
 

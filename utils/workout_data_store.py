@@ -5,7 +5,7 @@ from collections import defaultdict
 from overrides import EnforceOverrides
 
 
-class WorkoutData(EnforceOverrides):
+class WorkoutDataStore(EnforceOverrides):
     def __init__(self, input_data):
         self._i_data = input_data
 

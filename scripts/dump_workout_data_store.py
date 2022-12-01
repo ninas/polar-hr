@@ -4,11 +4,11 @@ from functools import cached_property, cache
 from collections import defaultdict
 from overrides import override
 
-from utils.workout_data import WorkoutData
+from utils.workout_data_store import WorkoutDataStore
 from db.workout import models
 
 
-class WorkoutDataWithFilename(WorkoutData):
+class WorkoutDataWithFilenameStore(WorkoutDataStore):
     def __init__(self, input_data, filename):
         super().__init__(input_data)
         self.filename = filename
@@ -20,7 +20,7 @@ class WorkoutDataWithFilename(WorkoutData):
         return d
 
 
-class DumpWorkoutData(WorkoutDataWithFilename):
+class DumpWorkoutDataStore(WorkoutDataWithFilenameStore):
     def __init__(self, input_data, filename):
         super().__init__(input_data, filename)
         self._sources = []

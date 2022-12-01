@@ -15,6 +15,8 @@ class EnumField(Field):
         super().__init__(*args, **kwargs)
 
     def db_value(self, member):
+        if type(member) == str:
+            return member
         return member.value
 
     def python_value(self, value):
