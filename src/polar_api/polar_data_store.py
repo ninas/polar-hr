@@ -5,8 +5,10 @@ from overrides import override
 
 from src.db.workout.workout_data_store import WorkoutDataStore
 from src.db.workout import models
+from src.utils.equipment_parsing_mixin import EquipmentParsingMixin
 
 
+class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
     def __init__(self, input_data):
         self._i_data = input_data
         self._sources = set()
@@ -76,25 +78,3 @@ from src.db.workout import models
         if m == sys.maxsize:
             return 0
         return m
-
-    def _extract_bands(self, val):
-        bands = []
-        for i in filter(None, val.split(",")):
-            bands.append(
-                {"quantity": 1, "magnitude": i.strip()}
-            )
-        return bands
-
-    def _extract_weights(self, val):
-        equipment = []
-        for i in filter(None, val.split(",")):
-            dd = {"quantity": 2}
-            i = i.strip()
-
-            if i.startswith("one"):
-                dd["quantity"] = 1
-                i = i[3:].strip()
-
-            dd["magnitude"] = i.strip()
-            equipment.append(dd)
-        return equipment

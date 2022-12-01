@@ -2,11 +2,12 @@ from functools import cached_property, cache
 from overrides import override
 from collections import defaultdict
 
-from refresh_function.polar_data_store import PolarDataStore
+from src.db.workout.workout_data_store import WorkoutDataStore
 from src.db.workout import models
+from src.utils.equipment_parsing_mixin import EquipmentParsingMixin
 
 
-class WorkoutDataWithFilenameStore(PolarDataStore):
+class WorkoutDataWithFilenameStore(WorkoutDataStore):
     def __init__(self, input_data, filename):
         super().__init__(input_data)
         self.filename = filename
@@ -18,9 +19,13 @@ class WorkoutDataWithFilenameStore(PolarDataStore):
         return d
 
 
+class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
     def __init__(self, input_data, filename):
         super().__init__(input_data, filename)
+        self._sources = []
+        self._equipment = defaultdict(list)
         self.has_original_note = "note" in self._i_data
+        self._note = self._parse_original_note()
 
     @cached_property
     @override(check_signature=False)
@@ -80,6 +85,16 @@ class WorkoutDataWithFilenameStore(PolarDataStore):
         if self.has_original_note:
             self._note = self._parse_original_note()
         return self._note
+    @property
+    @override
+    def sources(self):
+        return self._sources
+
+    @property
+    @override
+    def equipment(self):
+        return self._equipment
+
 
     @cached_property
     @override(check_signature=False)
@@ -100,6 +115,7 @@ class WorkoutDataWithFilenameStore(PolarDataStore):
         if data is None or len(data) == 0:
             return None
 
+        note = None
         components = data.split(";")
 
         if components[0].startswith("Multiple"):
@@ -126,3 +142,4 @@ class WorkoutDataWithFilenameStore(PolarDataStore):
 
             index += 1
 
+        return note
