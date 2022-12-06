@@ -27,8 +27,8 @@ class Source(DBInterface):
             return models.SourceType.YOUTUBE
         return models.SourceType.UNKNOWN
 
-    @cache
     @staticmethod
+    @cache
     def load_source(db, url):
         url = Source.normalise_url(url)
 

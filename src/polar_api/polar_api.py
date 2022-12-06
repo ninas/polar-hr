@@ -11,8 +11,9 @@ class PolarAPI:
         "https://www.polaraccesslink.com/v3/exercises?samples=true&zones=true"
     )
 
-    def __init__(self, use_cache=False):
+    def __init__(self, use_cache=False, write_cache=False):
         self.use_cache = use_cache
+        self.write_cache = write_cache
 
     @cache
     def _get_secret(self, name):
@@ -33,7 +34,7 @@ class PolarAPI:
                 print(f"Error retrieving workouts: {workouts.status_code}")
             data = workouts.json()
 
-            if not self.use_cache:
+            if self.write_cache:
                 with open("cache", "w") as f:
                     f.write(json.dumps(data, indent=4))
         else:
