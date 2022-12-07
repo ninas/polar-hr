@@ -68,9 +68,9 @@ def drop_tables_and_types(database):
 )
 def main(clean):
     models.database.init(
-        "workout_data",
-        host="34.28.182.87",
-        user="admin",
+        gcp_utils.fetch_config("workout_db/db_name"),
+        host=gcp_utils.fetch_config("workout_db/ip"),
+        user=gcp_utils.fetch_config("workout_db/username"),
         password=get_secret("db_workout"),
     )
     models.database.connect()
