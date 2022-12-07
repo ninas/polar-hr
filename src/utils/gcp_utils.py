@@ -27,4 +27,5 @@ def upload_to_cloud_storage(blob_name, data, bucket_name=SAMPLES_BUCKET):
 def fetch_config(key):
     config_client = runtimeconfig.Client()
     config = config_client.config("workout")
-    return config.get_variable(key).text
+    var = config.get_variable(key)
+    return var.text

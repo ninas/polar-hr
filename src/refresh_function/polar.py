@@ -16,9 +16,9 @@ UNIX_SOCKET_PATH = "/cloudsql/"
 @cache
 def source_db():
     source_models.database.init(
-        gcp_utils.fetch_config("source_db/db_name"),
-        host=UNIX_SOCKET_PATH + gcp_utils.fetch_config("source_db/gcp_path"),
-        user=gcp_utils.fetch_config("source_db/username"),
+        gcp_utils.fetch_config("sources_db/db_name"),
+        host=UNIX_SOCKET_PATH + gcp_utils.fetch_config("sources_db/gcp_path"),
+        user=gcp_utils.fetch_config("sources_db/username"),
         password=gcp_utils.get_secret("db_workout"),
     )
     source_models.database.connect()
