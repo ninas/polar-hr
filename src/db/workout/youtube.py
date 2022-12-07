@@ -22,16 +22,16 @@ class Youtube(Source):
             return HeatherRobertsonYoutube(db, url, data)
         return Youtube(db, url, data)
 
-    @cache
     @staticmethod
+    @cache
     def youtube_vid_id(url):
         m = YTConsts.id_regex.match(url)
         if m is None:
             raise Exception(f"Unable to find id in url: {url}")
         return m.group(1).strip()
 
-    @cache
     @staticmethod
+    @cache
     def api_key():
         return get_secret("youtube_api_key")
 
@@ -139,8 +139,8 @@ class Youtube(Source):
             val = re.sub(r"\s+", " ", val)
         return val.strip()
 
-    @cache
     @staticmethod
+    @cache
     def _remove_helper_words(i):
         for t in ["s", "and", "with", "for", ","]:
             if i.startswith(f"{t} "):
@@ -162,8 +162,8 @@ class Youtube(Source):
                 tags.add(i)
         return tags
 
-    @cache
     @staticmethod
+    @cache
     def _semantically_update_tag(tag):
         to_add = set()
         to_remove = set()
@@ -207,8 +207,8 @@ class Youtube(Source):
 
         return tags
 
-    @cache
     @staticmethod
+    @cache
     def _clean_exercise(val):
         # remove extra words
         for e in YTConsts.exercises_strip:
