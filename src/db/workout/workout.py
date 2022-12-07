@@ -11,9 +11,6 @@ import src.db.workout.models as models
 
 
 class Workout(DBInterface):
-    @override
-    def __init__(self, db, data):
-        super().__init__(db, data)
 
     def _populate_model(self):
         workout_model = models.Workouts(
@@ -51,14 +48,17 @@ class Workout(DBInterface):
     def insert_row(self):
         if self._data.start_time is None or self._data.samples is None:
             # Not much we can do with this, skip it
+            print("exiting workout insert, no data")
             return None
         wkout = self._find(
             self.db, models.Workouts, models.Workouts.starttime, self._data.start_time
         )
         if wkout is not None:
+            print("workout already inserted")
             return wkout
 
         self.model = self._populate_model()
+
 
         if self._data.samples is not None:
             # Let's put the sample in a blob store rather than the db
@@ -67,6 +67,7 @@ class Workout(DBInterface):
                 str(self._data.start_time), self._data.samples
             )
             self.model.samples = samples_name
+            print("uploaded to cloud storage")
 
         try:
 
@@ -82,6 +83,7 @@ class Workout(DBInterface):
                     )
                 )
             )
+            print("inserted tags")
             tags = self._equipment_to_tags()
             if len(tags) > 0:
                 tag_models.update(
@@ -89,14 +91,19 @@ class Workout(DBInterface):
                 )
 
             self.sources = []
+            print("going to insert sources")
             for url in self._data.sources:
                 try:
                     src = Source.load_source(self.db, url)
                     src.insert_row()
                     self.sources.append(src.model)
                 except Exception as e:
-                    print(f"Unable to add source, got exception: {e}")
+                    print("Failed to insert source:")
+                    print(f"\tStart time: {self._data.start_time}")
+                    print(e)
+                    print(traceback.format_exc())
 
+            print("inserted sources")
             with self.db.atomic():
                 self.model.save()
 
@@ -105,11 +112,12 @@ class Workout(DBInterface):
                 self.model.tags.add(list(tag_models))
                 self.model.save()
 
+                print("saved workout")
             self._insert_hr_zones()
+            print("inserted hr zones")
 
         except Exception as e:
             print("Failed to insert workout:")
-            print(f"\tFilename: {self._data.filename}")
             print(f"\tStart time: {self._data.start_time}")
             print(e)
             print(traceback.format_exc())
