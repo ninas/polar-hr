@@ -215,6 +215,14 @@ google-auth = ">=1.25.0,<3.0dev"
 [package.extras]
 grpc = ["grpcio (>=1.38.0,<2.0dev)"]
 
+[[package]]
+name = "google-cloud-runtimeconfig"
+version = "0.33.2"
+description = "Google Cloud RuntimeConfig API client library"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
 [package.dependencies]
 google-cloud-core = ">=1.3.0,<3.0dev"
 
@@ -774,6 +782,10 @@ google-auth-httplib2 = [
 google-cloud-core = [
     {file = "google-cloud-core-2.3.2.tar.gz", hash = "sha256:b9529ee7047fd8d4bf4a2182de619154240df17fbe60ead399078c1ae152af9a"},
     {file = "google_cloud_core-2.3.2-py2.py3-none-any.whl", hash = "sha256:8417acf6466be2fa85123441696c4badda48db314c607cf1e5d543fa8bdc22fe"},
+]
+google-cloud-runtimeconfig = [
+    {file = "google-cloud-runtimeconfig-0.33.2.tar.gz", hash = "sha256:30f9b2be6d854ab5336f5cb98b8c65e42a9e6bab318b12e867b575871362ee1c"},
+    {file = "google_cloud_runtimeconfig-0.33.2-py2.py3-none-any.whl", hash = "sha256:a622ca4b66c620b1cb01dd56ee526eb79968fcceb0ad0e44abf705ad7eb12e36"},
 ]
 google-cloud-secret-manager = [
     {file = "google-cloud-secret-manager-2.12.6.tar.gz", hash = "sha256:7aaba2997f43f8c3b35903efc54c389a802f39853ba81e81e1190f093420ecf6"},

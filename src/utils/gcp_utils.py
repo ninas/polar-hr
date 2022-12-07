@@ -1,8 +1,8 @@
 from functools import cache
 import json
 
-from google.cloud import secretmanager
-from google.cloud import storage
+from google.cloud import secretmanager, storage, runtimeconfig
+
 
 SAMPLES_BUCKET = "polar-workout-samples"
 
@@ -21,3 +21,10 @@ def upload_to_cloud_storage(blob_name, data, bucket_name=SAMPLES_BUCKET):
     blob = bucket.blob(blob_name)
     blob.upload_from_string(json.dumps(data))
     return f"{bucket_name}/{blob_name}"
+
+
+@cache
+def fetch_config(key):
+    config_client = runtimeconfig.Client()
+    config = config_client.config("workout")
+    return config.get_variable(key).text
