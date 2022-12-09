@@ -1,15 +1,23 @@
 from overrides import EnforceOverrides
 import abc
 from functools import cached_property
+import structlog
 
 import src.db.workout.models as models
+from src.db.workout.workout_data_store import WorkoutDataStore
 
 
 class DBInterface(EnforceOverrides, abc.ABC):
-    def __init__(self, db, data):
+    def __init__(self, db, data, logger=None):
         self.db = db
         self._data = data
         self.model = None
+        if logger is None:
+            logger = structlog.get_logger()
+        if isinstance(self._data, WorkoutDataStore):
+            self.logger = logger.bind(
+                workout=self._data.as_dict()
+            )
 
     @cached_property
     def data(self):
@@ -29,6 +37,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
         return None
 
     def _insert_tags(self, data, type_data):
+        self.logger.debug("Inserting tag data", tag_type=type_data, tags=data)
         insert_data = [{"name": val, "tagtype": type_data} for val in data]
         with self.db.atomic():
             inserts = (
@@ -40,5 +49,5 @@ class DBInterface(EnforceOverrides, abc.ABC):
             new_inserts = set(i[0] for i in inserts)
             for i in sorted(all_models, key=lambda x: x.name):
                 if i.id in new_inserts:
-                    print("New:", i.name)
+                    self.logger.info(f"New tag: {i.name}", tag_name=i.name, action="new")
         return all_models

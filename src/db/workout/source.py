@@ -8,9 +8,11 @@ from src.db.workout.db_interface import DBInterface
 
 class Source(DBInterface):
     @override
-    def __init__(self, db, url, data):
-        super().__init__(db, data)
+    def __init__(self, db, url, data, logger=None):
+        super().__init__(db, data, logger)
         self.url = Source.normalise_url(url)
+        self.logger = logger.bind(url=self.url, source_type=self.__class__.__name__)
+        self.logger.info("Instantiated new source")
 
     @staticmethod
     def normalise_url(url):
@@ -28,21 +30,19 @@ class Source(DBInterface):
         return models.SourceType.UNKNOWN
 
     @staticmethod
-    @cache
-    def load_source(db, url):
+    def load_source(db, url, logger=None):
         url = Source.normalise_url(url)
 
         # Check whether it's already in the db first
         res = Source._find(db, models.Sources, models.Sources.url, url)
         if res is not None:
-            return ExistingSource(db, url, res)
+            return ExistingSource(db, url, res, logger)
 
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
             from .youtube import Youtube
 
-            return Youtube.load_source(db, url)
-        print("Unknown source")
-        return UnknownSource(db, url)
+            return Youtube.load_source(db, url, logger)
+        return UnknownSource(db, url, logger)
 
     @property
     def title(self):
@@ -84,14 +84,11 @@ class Source(DBInterface):
             )
 
         if len(self.exercises) > 0:
-            print("Gonna insert exercises")
-
             all_tags.update(
                 set(self._insert_tags(self.exercises, models.TagType.EXERCISE))
             )
 
         if len(self.tags) > 0:
-            print("Gonna insert tags")
             all_tags.update(set(self._insert_tags(self.tags, models.TagType.TAG)))
 
         with self.db.atomic():
@@ -118,14 +115,14 @@ class Source(DBInterface):
 
 
 class UnknownSource(Source):
-    def __init__(self, db, url):
-        super().__init__(db, url, {})
+    def __init__(self, db, url, logger=None):
+        super().__init__(db, url, {}, logger)
 
 
 class ExistingSource(Source):
     @override
-    def __init__(self, db, url, model):
-        super().__init__(db, url, None)
+    def __init__(self, db, url, model, logger=None):
+        super().__init__(db, url, None, logger)
         self.model = model
 
     @override

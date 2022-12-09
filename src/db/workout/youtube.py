@@ -15,12 +15,12 @@ class Youtube(Source):
 
     @staticmethod
     @override
-    def load_source(db, url):
+    def load_source(db, url, logger):
         url = Youtube.normalise_url(url)
         data = Youtube.get_data(url)
         if data["snippet"]["channelTitle"].lower() == "heather robertson":
-            return HeatherRobertsonYoutube(db, url, data)
-        return Youtube(db, url, data)
+            return HeatherRobertsonYoutube(db, url, data, logger)
+        return Youtube(db, url, data, logger)
 
     @staticmethod
     @cache
@@ -42,15 +42,11 @@ class Youtube(Source):
         youtube_client = build("youtube", "v3", developerKey=secret)
 
         vid_id = Youtube.youtube_vid_id(url)
-        try:
-            results = (
-                youtube_client.videos()
-                .list(part="snippet,contentDetails", id=vid_id)
-                .execute()
-            )
-        except HttpError as e:
-            print(f"A HTTP error {e.resp.status} occurred:\n{e.content}")
-            return None
+        results = (
+            youtube_client.videos()
+            .list(part="snippet,contentDetails", id=vid_id)
+            .execute()
+        )
 
         if len(results["items"]) != 1:
             raise Exception(

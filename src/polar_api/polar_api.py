@@ -1,6 +1,7 @@
 from requests_oauthlib import OAuth2Session
 import json
 from functools import cache, cached_property
+import structlog
 
 from src.utils import gcp_utils
 from src.polar_api.polar_data_store import PolarDataStore
@@ -11,9 +12,13 @@ class PolarAPI:
         "https://www.polaraccesslink.com/v3/exercises?samples=true&zones=true"
     )
 
-    def __init__(self, use_cache=False, write_cache=False):
+    def __init__(self, logger=None, use_cache=False, write_cache=False):
         self.use_cache = use_cache
         self.write_cache = write_cache
+        if logger is None:
+            logger = structlog.get_logger()
+        self.logger = logger
+        self.logger.debug(f"Using cache: {self.use_cache}")
 
     @cache
     def _get_secret(self, name):
@@ -31,7 +36,11 @@ class PolarAPI:
         if not self.use_cache:
             workouts = self.session.get(self.POLAR_EXERCISE_URL)
             if workouts.status_code != 200:
-                print(f"Error retrieving workouts: {workouts.status_code}")
+                self.logger.error(
+                    "Error retrieving workouts",
+                    extra={"request": workouts, "status_code": workouts.status_code},
+                )
+                return []
             data = workouts.json()
 
             if self.write_cache:

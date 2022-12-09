@@ -3,6 +3,7 @@ from functools import cache, cached_property
 import isodate, traceback
 from datetime import timedelta, datetime
 from overrides import override
+import structlog
 
 from src.utils.gcp_utils import upload_to_cloud_storage
 from src.db.workout.db_interface import DBInterface
@@ -11,7 +12,6 @@ import src.db.workout.models as models
 
 
 class Workout(DBInterface):
-
     def _populate_model(self):
         workout_model = models.Workouts(
             calories=self._data.calories,
@@ -39,7 +39,9 @@ class Workout(DBInterface):
                         quantity=vals["quantity"],
                     )
                     if created:
-                        print(f"New equipment type inserted: {equip}")
+                        self.logger.info(
+                            "New equipment type inserted", equipment=equip.as_dict(), action="new"
+                        )
                     equipment.append(equip)
 
         return equipment
@@ -48,17 +50,16 @@ class Workout(DBInterface):
     def insert_row(self):
         if self._data.start_time is None or self._data.samples is None:
             # Not much we can do with this, skip it
-            print("exiting workout insert, no data")
+            self.logger.warn("Invalid workout, exiting")
             return None
         wkout = self._find(
             self.db, models.Workouts, models.Workouts.starttime, self._data.start_time
         )
         if wkout is not None:
-            print("workout already inserted")
+            self.logger.debug("Workout already in db; exiting")
             return wkout
 
         self.model = self._populate_model()
-
 
         if self._data.samples is not None:
             # Let's put the sample in a blob store rather than the db
@@ -67,10 +68,11 @@ class Workout(DBInterface):
                 str(self._data.start_time), self._data.samples
             )
             self.model.samples = samples_name
-            print("uploaded to cloud storage")
+            self.logger.debug(
+                "Uploaded to cloud storage", filename=samples_name
+            )
 
         try:
-
             equipment = self.equipment
             tag_models = set()
             tag_models.update(
@@ -83,7 +85,6 @@ class Workout(DBInterface):
                     )
                 )
             )
-            print("inserted tags")
             tags = self._equipment_to_tags()
             if len(tags) > 0:
                 tag_models.update(
@@ -91,19 +92,20 @@ class Workout(DBInterface):
                 )
 
             self.sources = []
-            print("going to insert sources")
             for url in self._data.sources:
                 try:
-                    src = Source.load_source(self.db, url)
+                    src = Source.load_source(self.db, url, self.logger)
                     src.insert_row()
                     self.sources.append(src.model)
                 except Exception as e:
-                    print("Failed to insert source:")
-                    print(f"\tStart time: {self._data.start_time}")
-                    print(e)
-                    print(traceback.format_exc())
+                    self.logger.warn(
+                        "Failed to insert source",
+                        url=Source.normalise_url(url)
+                    )
+                    raise e
 
-            print("inserted sources")
+            self.logger.info("Inserted sources")
+
             with self.db.atomic():
                 self.model.save()
 
@@ -112,15 +114,16 @@ class Workout(DBInterface):
                 self.model.tags.add(list(tag_models))
                 self.model.save()
 
-                print("saved workout")
+            self.logger.info("Saved workout")
             self._insert_hr_zones()
-            print("inserted hr zones")
+            self.logger.info("Inserted hr zones")
 
         except Exception as e:
-            print("Failed to insert workout:")
-            print(f"\tStart time: {self._data.start_time}")
-            print(e)
-            print(traceback.format_exc())
+            self.logger.exception(
+                "Failed to insert workout",
+                start_time=self._data.start_time,
+            )
+            raise e
 
     @cache
     def _equipment_to_tags(self):
@@ -151,7 +154,9 @@ class Workout(DBInterface):
 
         zone_data = self._data.hr_zones
         if len(zone_data) != 5:
-            print("No zone data found")
+            self.logger.warn(
+                "Invalid zone data found", zones=zone_data
+            )
             return []
 
         zone_names = [

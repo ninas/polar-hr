@@ -1,7 +1,6 @@
-import os, json, pprint, isodate
+import json, isodate
 from datetime import datetime, timezone, timedelta
 from functools import cached_property, cache
-from collections import defaultdict
 from overrides import EnforceOverrides
 
 
@@ -98,6 +97,13 @@ class WorkoutDataStore(EnforceOverrides):
             "sources": self.sources,
             "equipment": self.equipment,
         }
+
+    @cache
+    def as_dict_for_logging(self):
+        d = self.as_dict()
+        d["samples"] = "..."
+        return d
+
 
     def __str__(self):
         return json.dumps(self.as_dict())
