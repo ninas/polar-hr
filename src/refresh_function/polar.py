@@ -54,6 +54,7 @@ class Process:
             results = (
                 source_models.SourceInput.select()
                 .where(source_models.SourceInput.created >= earliest)
+                .order_by(source_models.SourceInput.created)
                 .execute()
             )
         return results
