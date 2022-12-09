@@ -18,7 +18,7 @@ def http(request, is_dev=False):
 
         logger.debug(
             "Workouts to be saved",
-            workouts= [workout.as_dict() for workout in workouts]
+            workouts= [workout.as_dict_for_logging() for workout in workouts]
         )
 
         p.save_to_db(workouts)

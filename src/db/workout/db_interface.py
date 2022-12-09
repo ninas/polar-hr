@@ -16,7 +16,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
             logger = structlog.get_logger()
         if isinstance(self._data, WorkoutDataStore):
             self.logger = logger.bind(
-                workout=self._data.as_dict()
+                workout = self._data.log_abridged()
             )
 
     @cached_property

@@ -71,7 +71,7 @@ class Process:
         sources = self.get_sources(data[0].start_time)
 
         self.logger.info("Mapping workouts to sources",
-                        workouts=[i.as_dict_for_logging() for i in data],
+                        workouts=[i.log_abridged() for i in data],
                         sources=[src.as_dict() for src in sources]
         )
         s_i = 0
@@ -97,13 +97,13 @@ class Process:
                     added = True
                     self.logger.info(
                         "Found a match",
-                        workout=workout.as_dict(),
+                        workout=workout.log_abridged(),
                         source=source.as_dict(),
                     )
                     break
 
             if not added:
-                self.logger.info("No match found", workout=workout.as_dict())
+                self.logger.info("No match found", workout=workout.log_abridged())
 
         return updated_workouts
 
