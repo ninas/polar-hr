@@ -13,6 +13,11 @@ def http(request, is_dev=False):
     data = api.exercises
 
     if len(data) > 0:
+        logger.debug(
+            "Polar API returned workouts",
+            workouts=[workout.as_dict_for_logging() for workout in data]
+        )
+
         p = Process(logger)
         workouts = p.map_data(data)
 
