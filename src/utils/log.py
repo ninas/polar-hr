@@ -42,10 +42,8 @@ def config_structlog(is_dev=False):
             del event_dict["event"]
         return event_dict
 
-
     if is_dev:
         structlog.configure_once(
-            wrapper_class=structlog.make_filtering_bound_logger(log_level()),
             processors=[
                 structlog.processors.CallsiteParameterAdder(
                     [structlog.processors.CallsiteParameter.PATHNAME,
@@ -57,6 +55,7 @@ def config_structlog(is_dev=False):
                 structlog.processors.add_log_level,
                 structlog.processors.TimeStamper(fmt="iso"),
                 structlog.dev.ConsoleRenderer(),
+
             ]
         )
     else:
