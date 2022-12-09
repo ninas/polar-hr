@@ -3,6 +3,7 @@ import structlog
 from src.utils import gcp_utils, log
 from polar import *
 
+
 def http(request, is_dev=False):
     structlog.contextvars.bind_contextvars(run_reason="refresh")
     log.config_structlog(is_dev)
@@ -15,7 +16,7 @@ def http(request, is_dev=False):
     if len(data) > 0:
         logger.debug(
             "Polar API returned workouts",
-            workouts=[workout.as_dict_for_logging() for workout in data]
+            workouts=[workout.as_dict_for_logging() for workout in data],
         )
 
         p = Process(logger)
@@ -23,13 +24,12 @@ def http(request, is_dev=False):
 
         logger.debug(
             "Workouts to be saved",
-            workouts= [workout.as_dict_for_logging() for workout in workouts]
+            workouts=[workout.as_dict_for_logging() for workout in workouts],
         )
 
         p.save_to_db(workouts)
     else:
-        logger.info("No workouts returned by the API",
-                    api_response=api)
+        logger.info("No workouts returned by the API", api_response=api)
 
     logger.info("Completed run")
     return ""

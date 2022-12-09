@@ -6,6 +6,7 @@ from google.cloud.logging_v2.handlers import StructuredLogHandler, setup_logging
 from functools import cache
 from src.utils import gcp_utils
 
+
 @cache
 def enable_debug_logging():
     # For the moment, since this is used in a cloud function, don't allow changing this during runtime
@@ -15,13 +16,16 @@ def enable_debug_logging():
 
     return debug
 
+
 @cache
 def log_level():
     return logging.DEBUG if enable_debug_logging() else logging.INFO
 
+
 def set_default_log_level():
     logger = logging.getLogger()
     logger.setLevel(log_level())
+
 
 # Cheating and using this to ensure it is only run once
 @cache
@@ -30,6 +34,7 @@ def init_cloud_logging():
     handler = StructuredLogHandler()
     setup_logging(handler)
     set_default_log_level()
+
 
 @cache
 def config_structlog(is_dev=False):
@@ -46,16 +51,17 @@ def config_structlog(is_dev=False):
         structlog.configure_once(
             processors=[
                 structlog.processors.CallsiteParameterAdder(
-                    [structlog.processors.CallsiteParameter.PATHNAME,
-                    structlog.processors.CallsiteParameter.FUNC_NAME,
-                    structlog.processors.CallsiteParameter.LINENO],
+                    [
+                        structlog.processors.CallsiteParameter.PATHNAME,
+                        structlog.processors.CallsiteParameter.FUNC_NAME,
+                        structlog.processors.CallsiteParameter.LINENO,
+                    ],
                 ),
                 structlog.dev.set_exc_info,
                 structlog.processors.StackInfoRenderer(),
                 structlog.processors.add_log_level,
                 structlog.processors.TimeStamper(fmt="iso"),
                 structlog.dev.ConsoleRenderer(),
-
             ]
         )
     else:
@@ -68,12 +74,13 @@ def config_structlog(is_dev=False):
                 structlog.processors.format_exc_info,
                 structlog.processors.add_log_level,
                 structlog.processors.CallsiteParameterAdder(
-                    [structlog.processors.CallsiteParameter.PATHNAME,
-                    structlog.processors.CallsiteParameter.FUNC_NAME,
-                    structlog.processors.CallsiteParameter.LINENO],
+                    [
+                        structlog.processors.CallsiteParameter.PATHNAME,
+                        structlog.processors.CallsiteParameter.FUNC_NAME,
+                        structlog.processors.CallsiteParameter.LINENO,
+                    ],
                 ),
                 googlify,
-
                 structlog.processors.JSONRenderer(),
-            ]
+            ],
         )

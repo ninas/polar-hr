@@ -15,9 +15,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
         if logger is None:
             logger = structlog.get_logger()
         if isinstance(self._data, WorkoutDataStore):
-            self.logger = logger.bind(
-                workout = self._data.log_abridged()
-            )
+            self.logger = logger.bind(workout=self._data.log_abridged())
 
     @cached_property
     def data(self):
@@ -49,5 +47,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
             new_inserts = set(i[0] for i in inserts)
             for i in sorted(all_models, key=lambda x: x.name):
                 if i.id in new_inserts:
-                    self.logger.info(f"New tag: {i.name}", tag_name=i.name, action="new")
+                    self.logger.info(
+                        f"New tag: {i.name}", tag_name=i.name, action="new"
+                    )
         return all_models

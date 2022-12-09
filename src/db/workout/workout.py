@@ -40,7 +40,9 @@ class Workout(DBInterface):
                     )
                     if created:
                         self.logger.info(
-                            "New equipment type inserted", equipment=equip.as_dict(), action="new"
+                            "New equipment type inserted",
+                            equipment=equip.as_dict(),
+                            action="new",
                         )
                     equipment.append(equip)
 
@@ -68,22 +70,13 @@ class Workout(DBInterface):
                 str(self._data.start_time), self._data.samples
             )
             self.model.samples = samples_name
-            self.logger.debug(
-                "Uploaded to cloud storage", filename=samples_name
-            )
+            self.logger.debug("Uploaded to cloud storage", filename=samples_name)
 
         try:
             equipment = self.equipment
             tag_models = set()
             tag_models.update(
-                set(
-                    self._insert_tags(
-                        [
-                            self._data.sport,
-                        ],
-                        models.TagType.SPORT,
-                    )
-                )
+                set(self._insert_tags([self._data.sport,], models.TagType.SPORT,))
             )
             tags = self._equipment_to_tags()
             if len(tags) > 0:
@@ -99,8 +92,7 @@ class Workout(DBInterface):
                     self.sources.append(src.model)
                 except Exception as e:
                     self.logger.warn(
-                        "Failed to insert source",
-                        url=Source.normalise_url(url)
+                        "Failed to insert source", url=Source.normalise_url(url)
                     )
                     raise e
 
@@ -120,8 +112,7 @@ class Workout(DBInterface):
 
         except Exception as e:
             self.logger.exception(
-                "Failed to insert workout",
-                start_time=self._data.start_time,
+                "Failed to insert workout", start_time=self._data.start_time,
             )
             raise e
 
@@ -154,9 +145,7 @@ class Workout(DBInterface):
 
         zone_data = self._data.hr_zones
         if len(zone_data) != 5:
-            self.logger.warn(
-                "Invalid zone data found", zones=zone_data
-            )
+            self.logger.warn("Invalid zone data found", zones=zone_data)
             return []
 
         zone_names = [

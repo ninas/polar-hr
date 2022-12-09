@@ -11,10 +11,8 @@ class BaseModel(Model):
             fields[field[0]] = getattr(self, field[0])
         return fields
 
-
     def __str__(self):
-        fields = [f"\t{name}: {details}"
-                  for name, details in self.as_dict().items()]
+        fields = [f"\t{name}: {details}" for name, details in self.as_dict().items()]
 
         fields_str = "\n".join(fields)
 
