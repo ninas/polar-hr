@@ -104,6 +104,15 @@ class WorkoutDataStore(EnforceOverrides):
         d["samples"] = "..."
         return d
 
+    @cache
+    def log_abridged(self):
+        return {
+            "start": self.start_time.isoformat(),
+            "end": self.end_time.isoformat(),
+            "sport": self.sport
+        }
+
+
 
     def __str__(self):
         return json.dumps(self.as_dict())
