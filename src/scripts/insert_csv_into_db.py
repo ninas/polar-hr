@@ -29,23 +29,10 @@ def read_files():
     return sorted(all_info, key=srt)
 
 
-def tables():
-    return [
-        models.HRZones,
-        models.Equipment,
-        models.Tags,
-        models.Sources,
-        models.Sources.tags.get_through_model(),
-        models.Workouts,
-        models.Workouts.sources.get_through_model(),
-        models.Workouts.equipment.get_through_model(),
-        models.Workouts.tags.get_through_model(),
-    ]
-
 
 def create_tables(database):
     with database.atomic():
-        database.create_tables(tables())
+        database.create_tables(models.get_all_models())
     # insert_equipment(database)
 
 

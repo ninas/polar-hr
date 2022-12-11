@@ -3,7 +3,7 @@ from playhouse.postgres_ext import *
 from src.db.enum_field import EnumField, ExtendedEnum
 from src.db.base_model import BaseModel
 
-database = PostgresqlExtDatabase(None)
+database = PostgresqlExtDatabase(None, autorollback=True)
 
 # types
 
@@ -98,3 +98,17 @@ class HRZones(WorkoutBaseModel):
     duration = IntervalField()
     percentspentabove = FloatField()
     workout = ForeignKeyField(Workouts)
+
+
+def get_all_models():
+    return [
+        HRZones,
+        Equipment,
+        Tags,
+        Sources,
+        Sources.tags.get_through_model(),
+        Workouts,
+        Workouts.sources.get_through_model(),
+        Workouts.equipment.get_through_model(),
+        Workouts.tags.get_through_model(),
+    ]
