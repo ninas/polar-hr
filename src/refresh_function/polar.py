@@ -4,6 +4,7 @@ from datetime import timedelta
 from functools import cache, cached_property
 
 from src.utils import gcp_utils, log
+from src.utils.db_utils import DBConnection
 from src.db.sources import models as source_models
 from src.db.workout import models as workout_models
 from src.db.workout.workout import Workout
@@ -16,44 +17,10 @@ class Process:
 
     def __init__(self, logger):
         self.logger = logger
-
-    @cache
-    def database_connection_data(self, prefix):
-        return (
-            [gcp_utils.fetch_config(f"{prefix}/db_name")],
-            {
-                "host": self.UNIX_SOCKET_PATH
-                + gcp_utils.fetch_config(f"{prefix}/gcp_path"),
-                "user": gcp_utils.fetch_config(f"{prefix}/username"),
-                "password": gcp_utils.get_secret("db_workout"),
-            },
-        )
-
-    @cache
-    def _connect_to_db(self, name, model):
-        db_name, connection_info = self.database_connection_data(name)
-        self.logger.debug(
-            f"Opening connection to DB {name}",
-            db={
-                "name": db_name[0],
-                "host": connection_info["host"],
-                "user": connection_info["user"],
-            },
-        )
-        model.database.init(db_name[0], **connection_info)
-        model.database.connect()
-        return model.database
-
-    @cached_property
-    def source_db(self):
-        return self._connect_to_db("sources_db", source_models)
-
-    @cached_property
-    def workout_db(self):
-        return self._connect_to_db("workout_db", workout_models)
+        self.db = DBConnection(self.logger)
 
     def get_sources(self, earliest):
-        with self.source_db.atomic():
+        with self.db.source_db.atomic():
             results = (
                 source_models.SourceInput.select()
                 .where(source_models.SourceInput.created >= earliest)
@@ -63,7 +30,7 @@ class Process:
         return results
 
     def get_last_saved_workout_date(self):
-        with self.workout_db.atomic():
+        with self.db.workout_db.atomic():
             return workout_models.Workouts.select(
                 fn.MAX(workout_models.Workouts.starttime)
             ).scalar()
@@ -113,5 +80,5 @@ class Process:
 
     def save_to_db(self, workouts):
         for workout in workouts:
-            w = Workout(self.workout_db, workout)
+            w = Workout(self.db.workout_db, workout)
             w.insert_row()
