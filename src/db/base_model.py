@@ -1,5 +1,6 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+import isodate
 from functools import cache
 from peewee import Model
 
@@ -17,3 +18,13 @@ class BaseModel(Model):
         fields_str = "\n".join(fields)
 
         return f"{self.__class__.__name__}\n({fields_str})"
+
+    def json_friendly(self):
+        fields = self.as_dict()
+        for k, v in fields.items():
+            if isinstance(v, datetime):
+                fields[k] = v.isoformat()
+            if isinstance(v, timedelta):
+                fields[k] = isodate.duration_isoformat(v)
+
+        return fields
