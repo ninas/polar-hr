@@ -1,0 +1,44 @@
+service: everything
+
+provider:
+  name: google
+  stage: dev
+  runtime: python39
+  region: us-central1
+  project: ${file(../secrets.yml):default.project}
+  credentials: ${file(../secrets.yml):default.credentials_path}
+
+frameworkVersion: '3'
+plugins:
+  - serverless-google-cloudfunctions
+  - serverless-python-requirements
+
+
+package:
+  exclude:
+    - node_modules/**
+    - .gitignore
+    - .git/**
+
+functions:
+  everything:
+    handler: everything_http
+    events:
+      - http: path
+  # NOTE: the following uses an "event" event (pubSub event in this case).
+  # Please create the corresponding resources in the Google Cloud
+  # before deploying this service through Serverless
+  #second:
+  #  handler: event
+  #  events:
+  #    - event:
+  #        eventType: providers/cloud.pubsub/eventTypes/topic.publish
+  #        resource: projects/*/topics/my-topic
+# you can define resources, templates etc. the same way you would in a
+# Google Cloud deployment configuration
+#resources:
+#  resources:
+#    - type: storage.v1.bucket
+#      name: my-serverless-service-bucket
+#  imports:
+#    - path: my_template.jinja
