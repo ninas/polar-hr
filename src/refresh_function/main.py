@@ -5,10 +5,7 @@ from polar import *
 
 
 def http(request, is_dev=False):
-    structlog.contextvars.bind_contextvars(run_reason="refresh")
-    log.config_structlog(is_dev)
-
-    logger = structlog.get_logger()
+    logger = log.new_logger("refresh", is_dev)
     logger.info("Starting refresh run")
     api = PolarAPI(logger)
     data = api.exercises

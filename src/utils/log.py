@@ -84,3 +84,9 @@ def config_structlog(is_dev=False):
                 structlog.processors.JSONRenderer(),
             ],
         )
+
+def new_logger(name=None, is_dev=False):
+    if name is not None:
+        structlog.contextvars.bind_contextvars(run_reason=name)
+    config_structlog(is_dev)
+    return structlog.get_logger()
