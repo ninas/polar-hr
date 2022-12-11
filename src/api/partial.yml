@@ -15,6 +15,25 @@ schemes:
 - https
 - http
 paths:
+  /tags:
+    get:
+      tags:
+      - tags
+      summary: Return all tags
+      description: Fetch all tags
+      operationId: allTags
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Tag'
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags
   /everything:
     get:
       tags:
