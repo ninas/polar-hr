@@ -1,7 +1,8 @@
-from overrides import EnforceOverrides
 import abc
 from functools import cached_property
+
 import structlog
+from overrides import EnforceOverrides
 
 import src.db.workout.models as models
 from src.db.workout.workout_data_store import WorkoutDataStore

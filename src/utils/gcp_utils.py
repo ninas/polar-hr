@@ -1,10 +1,9 @@
-from functools import cache
-import json
 import asyncio
+import json
+from functools import cache
 
-from google.cloud import secretmanager, storage, runtimeconfig
 from gcloud.aio.storage import Storage
-
+from google.cloud import runtimeconfig, secretmanager, storage
 
 SAMPLES_BUCKET = "polar-workout-samples"
 

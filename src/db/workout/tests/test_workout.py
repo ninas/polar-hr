@@ -1,9 +1,10 @@
 import unittest
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
-from datetime import timedelta
 from collections import defaultdict
+from datetime import timedelta
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from workout import Workout
+
 import db.models as models
 
 

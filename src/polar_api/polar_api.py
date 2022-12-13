@@ -1,10 +1,11 @@
-from requests_oauthlib import OAuth2Session
 import json
 from functools import cache, cached_property
-import structlog
 
-from src.utils import gcp_utils
+import structlog
+from requests_oauthlib import OAuth2Session
+
 from src.polar_api.polar_data_store import PolarDataStore
+from src.utils import gcp_utils
 
 
 class PolarAPI:

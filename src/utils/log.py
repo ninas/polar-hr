@@ -1,9 +1,10 @@
 import logging
-import structlog
+from functools import cache
 
 import google.cloud.logging
+import structlog
 from google.cloud.logging_v2.handlers import StructuredLogHandler, setup_logging
-from functools import cache
+
 from src.utils import gcp_utils
 
 

@@ -1,9 +1,10 @@
-from playhouse.db_url import connect
 from functools import cache, cached_property
 
-from src.utils import gcp_utils
+from playhouse.db_url import connect
+
 from src.db.sources import models as source_models
 from src.db.workout import models as workout_models
+from src.utils import gcp_utils
 
 
 class DBConnection:

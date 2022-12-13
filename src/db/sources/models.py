@@ -1,5 +1,6 @@
 from peewee import *
 from playhouse.postgres_ext import *
+
 from ..base_model import BaseModel
 
 database = PostgresqlExtDatabase(None)

@@ -1,7 +1,8 @@
 import json
 from datetime import datetime, timedelta
-import isodate
 from functools import cache
+
+import isodate
 from peewee import Model
 
 

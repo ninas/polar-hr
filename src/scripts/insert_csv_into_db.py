@@ -1,11 +1,12 @@
-import os, json
+import json
+import os
+
 import click
 
-
-from src.utils import log, db_utils
 from src.db.workout import models
 from src.db.workout.workout import Workout
 from src.scripts.dump_workout_data_store import WorkoutDataWithFilenameStore
+from src.utils import db_utils, log
 
 
 def process_new_workout(db, data):

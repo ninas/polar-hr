@@ -1,8 +1,10 @@
-from src.db.workout import models
-from src.utils.db_utils import DBConnection
-from src.utils import log
-from flask import make_response
 import json
+
+from flask import make_response
+
+from src.db.workout import models
+from src.utils import log
+from src.utils.db_utils import DBConnection
 
 
 def tags_http(request, is_dev=False):

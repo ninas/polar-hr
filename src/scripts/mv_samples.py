@@ -1,8 +1,8 @@
-import json
 import asyncio
+import json
 
-from src.utils import gcp_utils, log, db_utils
 from src.db.workout import models
+from src.utils import db_utils, gcp_utils, log
 
 
 async def get_sample_set(w):

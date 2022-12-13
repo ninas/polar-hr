@@ -1,8 +1,8 @@
 import unittest
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
 from datetime import timedelta
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-from youtube import Youtube, HeatherRobertsonYoutube
+from youtube import HeatherRobertsonYoutube, Youtube
 from youtube_consts import YTConsts
 
 

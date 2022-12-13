@@ -1,14 +1,16 @@
+import traceback
 from collections import defaultdict
+from datetime import datetime, timedelta
 from functools import cache, cached_property
-import isodate, traceback
-from datetime import timedelta, datetime
-from overrides import override
-import structlog
 
-from src.utils.gcp_utils import upload_to_cloud_storage
+import isodate
+import structlog
+from overrides import override
+
+import src.db.workout.models as models
 from src.db.workout.db_interface import DBInterface
 from src.db.workout.source import Source
-import src.db.workout.models as models
+from src.utils.gcp_utils import upload_to_cloud_storage
 
 
 class Workout(DBInterface):

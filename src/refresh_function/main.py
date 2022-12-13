@@ -1,7 +1,7 @@
 import structlog
+from polar import *
 
 from src.utils import gcp_utils, log
-from polar import *
 
 
 def http(request, is_dev=False):

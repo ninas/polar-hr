@@ -1,7 +1,8 @@
 from peewee import *
 from playhouse.postgres_ext import *
-from src.db.enum_field import EnumField, ExtendedEnum
+
 from src.db.base_model import BaseModel
+from src.db.enum_field import EnumField, ExtendedEnum
 
 database = PostgresqlExtDatabase(None, autorollback=True)
 

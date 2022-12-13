@@ -1,5 +1,6 @@
-from peewee import Field
 from enum import Enum
+
+from peewee import Field
 
 
 class EnumField(Field):

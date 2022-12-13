@@ -1,5 +1,6 @@
 import math
 from functools import cache, cached_property
+
 from overrides import override
 
 import src.db.workout.models as models

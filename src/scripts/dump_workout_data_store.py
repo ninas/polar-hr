@@ -1,9 +1,10 @@
-from functools import cached_property, cache
-from overrides import override
 from collections import defaultdict
+from functools import cache, cached_property
 
-from src.db.workout.workout_data_store import WorkoutDataStore
+from overrides import override
+
 from src.db.workout import models
+from src.db.workout.workout_data_store import WorkoutDataStore
 from src.utils.equipment_parsing_mixin import EquipmentParsingMixin
 
 

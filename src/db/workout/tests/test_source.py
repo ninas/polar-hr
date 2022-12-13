@@ -1,8 +1,9 @@
 import unittest
-from unittest.mock import MagicMock, Mock, patch, PropertyMock
 from datetime import timedelta
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-from source import Source, ExistingSource, UnknownSource
+from source import ExistingSource, Source, UnknownSource
+
 import db.models as models
 
 
