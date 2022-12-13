@@ -23,7 +23,9 @@ def everything_http(request, is_dev=False):
             ("Workouts", "Tags"),
             ("Workouts", "Sources"),
             ("Workouts", "Equipment"),
+
             ("Sources", "Tags"),
+
             ("Sources", "Workouts", "WorkoutsSourcesThrough"),
         ]
         for m in mappings:
@@ -33,7 +35,6 @@ def everything_http(request, is_dev=False):
             through = m[2] if len(m) == 3 else f"{a}{b}Through"
             prefetch(db_objects[a], db_objects[through], db_objects[b])
         prefetch(db_objects["HRZones"], db_objects["Workouts"])
-
         prefetch(db_objects["Samples"], db_objects["Workouts"])
 
         logger.info(f"Total number of tags: {len(db_objects['Tags'])}")
