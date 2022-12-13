@@ -23,7 +23,6 @@ def everything_http(request, is_dev=False):
             ("Workouts", "Tags"),
             ("Workouts", "Sources"),
             ("Workouts", "Equipment"),
-
             ("Sources", "Tags"),
             ("Sources", "Workouts", "WorkoutsSourcesThrough"),
         ]
