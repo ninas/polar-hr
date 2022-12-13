@@ -107,6 +107,8 @@ class Workout(DBInterface):
                 self.model.save()
 
             self.logger.info("Saved workout")
+            self._insert_samples()
+            self.logger.info("Inserted samples")
             self._insert_hr_zones()
             self.logger.info("Inserted hr zones")
 
@@ -135,6 +137,18 @@ class Workout(DBInterface):
             tags.add("mini-band")
 
         return tags
+
+    def _insert_samples(self):
+        if self.model is None:
+            raise Exception(
+                "Unable to insert samples until workout model created"
+            )
+        with self.db.atomic():
+            s = models.Samples.create(
+                samples=self._data.samples,
+                workout=self.model
+            )
+            s.save()
 
     @cache
     def _insert_hr_zones(self):
