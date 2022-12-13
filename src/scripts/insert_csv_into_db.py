@@ -2,7 +2,7 @@ import os, json
 import click
 
 
-from src.utils.gcp_utils import get_secret, upload_to_cloud_storage
+from src.utils import log, db_utils
 from src.db.workout import models
 from src.db.workout.workout import Workout
 from src.scripts.dump_workout_data_store import WorkoutDataWithFilenameStore
@@ -54,20 +54,15 @@ def drop_tables_and_types(database):
     "--clean", is_flag=True, default=False, help="Drop and recreate all tables"
 )
 def main(clean):
-    models.database.init(
-        gcp_utils.fetch_config("workout_db/db_name"),
-        host=gcp_utils.fetch_config("workout_db/ip"),
-        user=gcp_utils.fetch_config("workout_db/username"),
-        password=get_secret("db_workout"),
-    )
-    models.database.connect()
+    logger = log.new_logger(is_dev=True)
+    db = db_utils.DBConnection(logger).workout_db
 
     if clean:
-        drop_tables_and_types(models.database)
-        create_tables(models.database)
+        drop_tables_and_types(db)
+        create_tables(db)
     data = read_files()
     for i in data:
-        process_new_workout(models.database, i)
+        process_new_workout(db, i)
 
 
 if __name__ == "__main__":
