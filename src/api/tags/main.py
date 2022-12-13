@@ -5,7 +5,6 @@ from flask import make_response
 import json
 
 
-
 def tags_http(request, is_dev=False):
     """
     /tags
@@ -20,6 +19,7 @@ def tags_http(request, is_dev=False):
     return_data = [tag.as_dict() for tag in tags]
 
     return json.dumps(return_data)
+
 
 if __name__ == "__main__":
     print(tags_http(None, True))

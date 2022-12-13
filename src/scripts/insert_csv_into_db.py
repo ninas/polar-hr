@@ -29,7 +29,6 @@ def read_files():
     return sorted(all_info, key=srt)
 
 
-
 def create_tables(database):
     with database.atomic():
         database.create_tables(models.get_all_models())

@@ -33,6 +33,7 @@ def fetch_from_cloud_storage(blob_path):
     blob = bucket.blob(blob_name)
     return blob.download_as_text()
 
+
 async def async_fetch_from_cloud_storage(blob_path):
     bucket_name, blob_name = blob_path.split("/")
 
@@ -40,7 +41,7 @@ async def async_fetch_from_cloud_storage(blob_path):
         bucket = storage.get_bucket(bucket_name)
         blob = await bucket.get_blob(blob_name)
         constructed_result = await blob.download()
-        return constructed_result.decode('utf-8')
+        return constructed_result.decode("utf-8")
 
 
 @cache

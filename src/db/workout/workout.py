@@ -76,7 +76,14 @@ class Workout(DBInterface):
             equipment = self.equipment
             tag_models = set()
             tag_models.update(
-                set(self._insert_tags([self._data.sport,], models.TagType.SPORT,))
+                set(
+                    self._insert_tags(
+                        [
+                            self._data.sport,
+                        ],
+                        models.TagType.SPORT,
+                    )
+                )
             )
             tags = self._equipment_to_tags()
             if len(tags) > 0:
@@ -114,7 +121,8 @@ class Workout(DBInterface):
 
         except Exception as e:
             self.logger.exception(
-                "Failed to insert workout", start_time=self._data.start_time,
+                "Failed to insert workout",
+                start_time=self._data.start_time,
             )
             raise e
 
@@ -140,14 +148,9 @@ class Workout(DBInterface):
 
     def _insert_samples(self):
         if self.model is None:
-            raise Exception(
-                "Unable to insert samples until workout model created"
-            )
+            raise Exception("Unable to insert samples until workout model created")
         with self.db.atomic():
-            s = models.Samples.create(
-                samples=self._data.samples,
-                workout=self.model
-            )
+            s = models.Samples.create(samples=self._data.samples, workout=self.model)
             s.save()
 
     @cache

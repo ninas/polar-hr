@@ -109,7 +109,14 @@ class TestYoutube(unittest.TestCase):
                     "leg",
                 }
             ),
-            {"full body", "hiit", "no equipment", "no jumping", "legs", "lower body",},
+            {
+                "full body",
+                "hiit",
+                "no equipment",
+                "no jumping",
+                "legs",
+                "lower body",
+            },
         )
 
     def test_gen_from_duration(self):

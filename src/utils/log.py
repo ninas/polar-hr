@@ -85,6 +85,7 @@ def config_structlog(is_dev=False):
             ],
         )
 
+
 def new_logger(name=None, is_dev=False):
     if name is not None:
         structlog.contextvars.bind_contextvars(run_reason=name)

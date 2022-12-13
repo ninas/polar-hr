@@ -24,7 +24,7 @@ def everything_http(request, is_dev=False):
             ("Workouts", "Sources"),
             ("Workouts", "Equipment"),
             ("Sources", "Tags"),
-            ("Sources", "Workouts", "WorkoutsSourcesThrough")
+            ("Sources", "Workouts", "WorkoutsSourcesThrough"),
         ]
         for m in mappings:
             a = m[0]
@@ -35,22 +35,26 @@ def everything_http(request, is_dev=False):
         prefetch(db_objects["Samples"], db_objects["Workouts"])
 
         logger.info(f"Total number of tags: {len(db_objects['Tags'])}")
-        logger.info(f"Total number of equipment entries: {len(db_objects['Equipment'])}")
+        logger.info(
+            f"Total number of equipment entries: {len(db_objects['Equipment'])}"
+        )
         data = {
             "tags": {tag.id: tag.json_friendly() for tag in db_objects["Tags"]},
-            "equipment": {equip.id: equip.json_friendly() for equip in db_objects["Equipment"]},
+            "equipment": {
+                equip.id: equip.json_friendly() for equip in db_objects["Equipment"]
+            },
             "sources": {},
             "workouts": {},
         }
         logger.info(f"Total number of sources: {len(db_objects['Sources'])}")
-        for source in db_objects['Sources']:
+        for source in db_objects["Sources"]:
             s = source.json_friendly()
             s["tags"] = [t.id for t in source.tags]
             s["workouts"] = [w.id for w in source.workouts]
             data["sources"][source.id] = s
 
         logger.info(f"Total number of workouts: {len(db_objects['Workouts'])}")
-        for workout in db_objects['Workouts']:
+        for workout in db_objects["Workouts"]:
             w = workout.json_friendly()
             w["sources"] = [s.id for s in workout.sources]
             w["equipment"] = [e.id for e in workout.equipment]
@@ -63,11 +67,12 @@ def everything_http(request, is_dev=False):
             data["workouts"][sample.workout.id]["samples"] = sample.samples
 
         logger.info("Adding hrzone info")
-        for zone in db_objects['HRZones']:
+        for zone in db_objects["HRZones"]:
             z = zone.json_friendly()
             del z["workout"]
             data["workouts"][zone.workout.id]["hrzones"][zone.zonetype] = z
     return json.dumps(data)
+
 
 if __name__ == "__main__":
     print(everything_http(None, True))
