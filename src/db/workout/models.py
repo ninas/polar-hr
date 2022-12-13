@@ -84,7 +84,7 @@ class Workouts(WorkoutBaseModel):
     maxhr = IntegerField(null=True)
     minhr = IntegerField(null=True)
     notes = TextField(null=True)
-    samples = TextField()
+    samples = TextField(null=True)
     sources = ManyToManyField(Sources, backref="workouts")
     sport = CharField(default="Unknown")
     starttime = DateTimeTZField(unique=True)
@@ -100,6 +100,11 @@ class HRZones(WorkoutBaseModel):
     workout = ForeignKeyField(Workouts)
 
 
+class Samples(WorkoutBaseModel):
+    samples = BinaryJSONField()
+    workout = ForeignKeyField(Workouts)
+
+
 def get_all_models():
     return [
         HRZones,
@@ -111,4 +116,5 @@ def get_all_models():
         Workouts.sources.get_through_model(),
         Workouts.equipment.get_through_model(),
         Workouts.tags.get_through_model(),
+        Samples,
     ]
