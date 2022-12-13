@@ -5,7 +5,6 @@ from src.utils import log
 import json
 
 
-
 def everything_http(request, is_dev=False):
     """
     /everything
@@ -33,7 +32,7 @@ def everything_http(request, is_dev=False):
             through = m[2] if len(m) == 3 else f"{a}{b}Through"
             prefetch(db_objects[a], db_objects[through], db_objects[b])
         prefetch(db_objects["HRZones"], db_objects["Workouts"])
-        print(db_objects)
+        prefetch(db_objects["Samples"], db_objects["Workouts"])
 
         logger.info(f"Total number of tags: {len(db_objects['Tags'])}")
         logger.info(f"Total number of equipment entries: {len(db_objects['Equipment'])}")
@@ -58,6 +57,10 @@ def everything_http(request, is_dev=False):
             w["tags"] = [t.id for t in workout.tags]
             w["hrzones"] = {}
             data["workouts"][workout.id] = w
+
+        logger.info("Adding samples in")
+        for sample in db_objects["Samples"]:
+            data["workouts"][sample.workout.id]["samples"] = sample.samples
 
         logger.info("Adding hrzone info")
         for zone in db_objects['HRZones']:
