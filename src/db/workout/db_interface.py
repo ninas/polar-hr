@@ -1,11 +1,11 @@
 import abc
 from functools import cached_property
 
-import structlog
 from overrides import EnforceOverrides
 
 import src.db.workout.models as models
 from src.db.workout.workout_data_store import WorkoutDataStore
+from src.utils import log
 
 
 class DBInterface(EnforceOverrides, abc.ABC):
@@ -14,7 +14,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
         self._data = data
         self.model = None
         if logger is None:
-            logger = structlog.get_logger()
+            logger = log.new_logger()
         if isinstance(self._data, WorkoutDataStore):
             self.logger = logger.bind(workout=self._data.log_abridged())
 
