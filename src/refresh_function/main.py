@@ -1,4 +1,3 @@
-import structlog
 from polar import *
 
 from src.utils import gcp_utils, log

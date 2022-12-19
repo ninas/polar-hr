@@ -1,13 +1,11 @@
-from collections import defaultdict
-from datetime import timedelta
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
 import json
-from datetime import datetime
-
-from src.utils.test_base import TestBase
-from src.db.workout.workout_data_store import WorkoutDataStore
+from collections import defaultdict
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import src.db.workout.models as models
+from src.db.workout.workout_data_store import WorkoutDataStore
+from src.utils.test_base import TestBase
 
 
 class TestWorkoutDataStore(TestBase):

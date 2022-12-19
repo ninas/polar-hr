@@ -2,9 +2,8 @@ import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-from src.db.workout.source import ExistingSource, Source, UnknownSource
-
 import src.db.workout.models as models
+from src.db.workout.source import ExistingSource, Source, UnknownSource
 from src.utils import log
 from src.utils.test_base import TestBase
 

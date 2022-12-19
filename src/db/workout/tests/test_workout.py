@@ -1,15 +1,14 @@
+import json
 import unittest
 from collections import defaultdict
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
-from copy import deepcopy
-import json
-
-from src.utils.test_base import TestBase
-from src.db.workout.workout import Workout
-from src.db.workout.workout_data_store import WorkoutDataStore
 
 import src.db.workout.models as models
+from src.db.workout.workout import Workout
+from src.db.workout.workout_data_store import WorkoutDataStore
+from src.utils.test_base import TestBase
 
 
 class TestWorkout(TestBase):
