@@ -19,11 +19,11 @@ def process_new_workout(db, data):
 
 def read_files():
     all_info = []
-    for f in os.listdir("/home/nina/code/polar/polar-hr/output"):
+    for f in os.listdir("/home/nina/code/polar/polar-hr/data/output"):
         if not f.startswith("training-session"):
             continue
 
-        with open(f"/home/nina/code/polar/polar-hr/output/{f}") as fi:
+        with open(f"/home/nina/code/polar/polar-hr/data/output/{f}") as fi:
             all_info.append(WorkoutDataWithFilenameStore(json.load(fi), f))
 
     srt = lambda x: x.filename

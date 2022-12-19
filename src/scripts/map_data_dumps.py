@@ -31,7 +31,7 @@ def read_polar_dir():
 
     data = defaultdict(dd)
     all_info = {}
-    for f in os.listdir("/home/nina/code/polar/polar"):
+    for f in os.listdir("/home/nina/code/polar-hr/data/polar"):
         if not f.startswith("training"):
             continue
         start, d = read_polar_data(f)
@@ -40,7 +40,7 @@ def read_polar_dir():
 
 
 def read_polar_data(f):
-    with open(f"/home/nina/code/polar/polar/{f}") as fi:
+    with open(f"/home/nina/code/polar-hr/data/polar/{f}") as fi:
         contents = json.load(fi)
         if f in read_mappings():
             print("Applying mapping:")
@@ -53,7 +53,7 @@ def read_polar_data(f):
 
 
 def read_youtube_data():
-    with open("/home/nina/code/polar/history/watch-history.json") as f:
+    with open("/home/nina/code/polar-hr/data/youtube/history/watch-history.json") as f:
         contents = json.load(f)
     return contents
 
@@ -167,14 +167,14 @@ def write_out(polar, location):
 
 
 def append_mapping(filename, note):
-    with open("mapping", "a") as f:
+    with open("data/youtube_mapping", "a") as f:
         f.write(f"{filename} {note}\n")
 
 
 @cache
 def read_mappings():
     mapping = {}
-    with open("mapping") as f:
+    with open("data/youtube_mapping") as f:
         for i in f:
             vals = i.split(" ")
             if len(vals) > 2:
