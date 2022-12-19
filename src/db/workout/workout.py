@@ -65,15 +65,6 @@ class Workout(DBInterface):
 
         self.model = self._populate_model()
 
-        if self._data.samples is not None:
-            # Let's put the sample in a blob store rather than the db
-            # If this fails, we want to fail inserting the record, so let exception propagate
-            samples_name = upload_to_cloud_storage(
-                str(self._data.start_time), self._data.samples
-            )
-            self.model.samples = samples_name
-            self.logger.debug("Uploaded to cloud storage", filename=samples_name)
-
         try:
             equipment = self.equipment
             tag_models = set()
