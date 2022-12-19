@@ -85,7 +85,6 @@ class Workouts(WorkoutBaseModel):
     maxhr = IntegerField(null=True)
     minhr = IntegerField(null=True)
     notes = TextField(null=True)
-    samples = TextField(null=True)
     sources = ManyToManyField(Sources, backref="workouts")
     sport = CharField(default="Unknown")
     starttime = DateTimeTZField(unique=True)
