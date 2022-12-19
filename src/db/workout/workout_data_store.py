@@ -36,9 +36,14 @@ class WorkoutDataStore(EnforceOverrides):
         # For some reason Polar subs these two
         if sport == "CROSS_FIT":
             sport = "HIIT"
-        if sport == "STRENGTH_TRAINING":
-            sport = "STRENGTH"
-        return sport.lower().replace("_", " ")
+
+        sport = sport.lower().replace("_", " ")
+
+        if sport == "high-intensity interval training":
+            sport = "hiit"
+        if sport.endswith(" training"):
+            sport = sport[:-9]
+        return sport
 
     @property
     def calories(self):
