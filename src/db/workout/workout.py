@@ -52,7 +52,11 @@ class Workout(DBInterface):
 
     @override
     def insert_row(self):
-        if self._data.start_time is None or self._data.samples is None:
+        if (
+            self._data.start_time is None
+            or self._data.samples is None
+            or len(self._data.samples) == 0
+        ):
             # Not much we can do with this, skip it
             self.logger.warn("Invalid workout, exiting")
             return None

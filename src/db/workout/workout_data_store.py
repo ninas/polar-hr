@@ -14,6 +14,14 @@ class WorkoutDataStore(EnforceOverrides):
     def start_time(self):
         return self.get_datetime("start_time")
 
+    @property
+    def _str_start_time(self):
+        return self.start_time.isoformat() if self.start_time is not None else None
+
+    @property
+    def _str_end_time(self):
+        return self.end_time.isoformat() if self.end_time is not None else None
+
     @cached_property
     def duration(self):
         return isodate.parse_duration(self._i_data.get("duration", "PT0S"))
@@ -72,9 +80,10 @@ class WorkoutDataStore(EnforceOverrides):
         return self._i_data.get("start_time_utc_offset", -420)
 
     def get_datetime(self, field, tz=None):
-        dt = datetime.min
         if field in self._i_data:
             dt = datetime.fromisoformat(self._i_data[field])
+        else:
+            return None
 
         if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
             # We need to add timezone
@@ -86,9 +95,9 @@ class WorkoutDataStore(EnforceOverrides):
 
     @cache
     def as_dict(self):
-        return {
-            "start_time": self.start_time.isoformat(),
-            "end_time": self.end_time.isoformat(),
+        data = {
+            "start_time": self._str_start_time,
+            "end_time": self._str_end_time,
             "duration": isodate.duration_isoformat(self.duration),
             "sport": self.sport,
             "calories": self.calories,
@@ -109,8 +118,8 @@ class WorkoutDataStore(EnforceOverrides):
     @cache
     def log_abridged(self):
         return {
-            "start": self.start_time.isoformat(),
-            "end": self.end_time.isoformat(),
+            "start": self._str_start_time,
+            "end": self._str_end_time,
             "sport": self.sport,
         }
 
