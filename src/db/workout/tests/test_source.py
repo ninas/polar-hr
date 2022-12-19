@@ -2,19 +2,23 @@ import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-from source import ExistingSource, Source, UnknownSource
+from src.db.workout.source import ExistingSource, Source, UnknownSource
 
-import db.models as models
+import src.db.workout.models as models
+from src.utils import log
+from src.utils.test_base import TestBase
 
 
-class TestSource(unittest.TestCase):
+class TestSource(TestBase):
     YOUTUBE_URL = "https://www.youtube.com/watch?v=something"
 
     def setUp(self):
         self.url = "www.test.com"
         self.data_return = {"snippet": {}}
         self.db = MagicMock()
-        self.source = Source(self.db, self.url, self.data_return)
+        self.source = Source(self.db, self.url, self.data_return, self.logger)
+
+        self.source._insert_tags = MagicMock(side_effect=lambda a,b: a)
 
     def test_normalise(self):
         self.assertEqual(
@@ -25,25 +29,53 @@ class TestSource(unittest.TestCase):
     def test_load_source(self):
         Source._find = MagicMock(return_value="something")
         self.assertTrue(
-            isinstance(Source.load_source(MagicMock(), self.url), ExistingSource)
+            isinstance(
+                Source.load_source(MagicMock(), self.url, self.logger), ExistingSource
+            )
         )
 
         Source._find = MagicMock(return_value=None)
         self.assertTrue(
-            isinstance(Source.load_source(MagicMock(), self.url), UnknownSource)
+            isinstance(
+                Source.load_source(MagicMock(), self.url, self.logger), UnknownSource
+            )
         )
 
-    @patch("source.models.Sources")
-    def test_insert_row(self, mock_src_model):
-        self.source.model = MagicMock(tags=MagicMock())
-        self.source.insert_row()
-        self.source.model.tags.assert_not_called()
+    def test_gen_tag_from_duration(self):
+        with patch(
+            __name__ + ".Source.duration", new_callable=PropertyMock
+        ) as mock_duration:
+            mock_duration.return_value = timedelta(minutes=23)
+            self.assertEqual(self.source._gen_tag_from_duration(), "20-30min")
+            mock_duration.return_value = timedelta(minutes=9)
+            self.assertEqual(self.source._gen_tag_from_duration(), "0-10min")
+            mock_duration.return_value = timedelta(minutes=40)
+            self.assertEqual(self.source._gen_tag_from_duration(), "40-50min")
 
-        with patch(__name__ + ".Source.tags", new_callable=PropertyMock) as tags_mock:
-            tags_mock.return_value = ["one", "two"]
-            self.source._insert_basic_model_data = MagicMock()
+    def test_all_tags_added(self):
 
+        with (patch(
+            __name__ + ".Source.creator",
+            new_callable=PropertyMock,
+            return_value="creator",
+        ) as mock_creator,
+        patch(
+            __name__ + ".Source.exercises",
+            new_callable=PropertyMock,
+            return_value=["ex1", "ex2"],
+        ) as mock_exercises,
+        patch(
+            __name__ + ".Source.duration",
+            new_callable=PropertyMock,
+            return_value=timedelta(minutes=23),
+        ) as mock_duration,
+        patch(__name__ + ".models.Sources.create") as mock_model):
+            mm = MagicMock()
+            mock_model.return_value = MagicMock(tags=MagicMock(add=mm))
             self.source.insert_row()
-            self.source._insert_basic_model_data.assert_called_with(
-                tags_mock.return_value, models.Tags
-            )
+            self.assertEqual(set(*(mm.call_args.args)), {
+                "creator",
+                "ex1",
+                "ex2",
+                "20-30min"
+            })
