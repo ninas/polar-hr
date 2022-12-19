@@ -2,26 +2,41 @@ import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-from youtube import HeatherRobertsonYoutube, Youtube
-from youtube_consts import YTConsts
+from src.utils.test_base import TestBase
+from src.db.workout.youtube import HeatherRobertsonYoutube, Youtube
+from src.db.workout.youtube_consts import YTConsts
 
 
-class TestYoutube(unittest.TestCase):
+class TestYoutube(TestBase):
     def setUp(self):
         self.db = MagicMock()
         self.url = "www.youtu.be/test"
-        self.data_return = {"snippet": {"channelTitle": "Heather Robertson"}}
-
-        self.vid = Youtube(self.db, self.url, self.data_return)
+        self.data_return = {
+            "snippet": {
+                "channelTitle": "Heather Robertson",
+                "title": "My workout title",
+                "description": "My workout description",
+            },
+            "contentDetails": {"duration": "PT21M34S"},
+        }
+        self.vid = self._create_vid()
         Youtube.get_data = MagicMock(return_value=self.data_return)
+
+    def _create_vid(self):
+        return Youtube(self.db, self.url, self.data_return, self.logger)
 
     def test_load_source(self):
         self.assertTrue(
-            isinstance(Youtube.load_source(self.db, self.url), HeatherRobertsonYoutube)
+            isinstance(
+                Youtube.load_source(self.db, self.url, self.logger),
+                HeatherRobertsonYoutube,
+            )
         )
 
         self.data_return["snippet"]["channelTitle"] = "something"
-        self.assertTrue(isinstance(Youtube.load_source(self.db, self.url), Youtube))
+        self.assertTrue(
+            isinstance(Youtube.load_source(self.db, self.url, self.logger), Youtube)
+        )
 
     def test_strip_words(self):
         # only removes if not in the middle of a word
@@ -60,10 +75,12 @@ class TestYoutube(unittest.TestCase):
                 "#stayhome and other things",
                 "no jumping",
                 "apartment friendly qq",
+                # this gets automatically added by Source
+                "20-30min",
             },
         )
 
-        self.vid._tags = None
+        del self.vid.tags
         # progressively strips tags to prevent repeats
         self.data_return["snippet"]["tags"] = [
             "many words",
@@ -71,16 +88,18 @@ class TestYoutube(unittest.TestCase):
             "a whole sentence of words",
             "sentence",
         ]
-        self.assertEqual(self.vid.tags, {"words", "sentence", "many", "a whole of"})
+        self.assertEqual(
+            self.vid.tags, {"words", "sentence", "many", "a whole of", "20-30min"}
+        )
 
-        self.vid._tags = None
+        del self.vid.tags
         # test progressive flow
         self.data_return["snippet"]["tags"] = [
             "apples",
             "apple and bananas",
             "bananas and apples, kiwi",
         ]
-        self.assertEqual(self.vid.tags, {"apples", "kiwi", "bananas"})
+        self.assertEqual(self.vid.tags, {"apples", "kiwi", "bananas", "20-30min"})
 
     def test_add_from_description(self):
         self.data_return["snippet"]["title"] = "workout with hiit and low impact"
@@ -109,28 +128,8 @@ class TestYoutube(unittest.TestCase):
                     "leg",
                 }
             ),
-            {
-                "full body",
-                "hiit",
-                "no equipment",
-                "no jumping",
-                "legs",
-                "lower body",
-            },
+            {"full body", "hiit", "no equipment", "no jumping", "legs", "lower body",},
         )
-
-    def test_gen_from_duration(self):
-        with patch(
-            __name__ + ".Youtube.duration", new_callable=PropertyMock
-        ) as mock_duration:
-            mock_duration.return_value = timedelta(minutes=42)
-            self.assertEqual(self.vid._gen_tag_from_duration(), "40-50min")
-
-            mock_duration.return_value = timedelta(minutes=40)
-            self.assertEqual(self.vid._gen_tag_from_duration(), "40-50min")
-
-            mock_duration.return_value = timedelta(minutes=7)
-            self.assertEqual(self.vid._gen_tag_from_duration(), "0-10min")
 
     def test_enrich_tags(self):
 
@@ -144,25 +143,18 @@ class TestYoutube(unittest.TestCase):
             "jumping",
         }
 
-        with patch(
-            __name__ + ".Youtube.creator", new_callable=PropertyMock
-        ) as mock_channel:
-            mock_channel.return_value = "channel title"
-            self.vid._gen_tag_from_duration = MagicMock(return_value="10-20min")
-            self.assertEqual(
-                self.vid._enrich_tags(tags),
-                {
-                    "hiit",
-                    "upper body",
-                    "supersets",
-                    "no equipment",
-                    "jumping",
-                    "strength",
-                    "low impact",
-                    "channel title",
-                    "10-20min",
-                },
-            )
+        self.assertEqual(
+            self.vid._enrich_tags(tags),
+            {
+                "hiit",
+                "upper body",
+                "supersets",
+                "no equipment",
+                "jumping",
+                "strength",
+                "low impact",
+            },
+        )
 
     def test_exercises(self):
         self.data_return["snippet"]["description"] = (
@@ -192,11 +184,43 @@ class TestYoutube(unittest.TestCase):
 
         self.assertEqual(self.vid._clean_exercise("- my workout"), "my workout")
 
+    def test_vid_id(self):
+        test_vid_id = "dQw4w9WgXcQ"
+        test_urls = [
+            f"https://youtube.com/shorts/{test_vid_id}?feature=share",
+            f"//www.youtube-nocookie.com/embed/{test_vid_id}?rel=0",
+            f"http://www.youtube.com/user/Scobleizer#p/u/1/{test_vid_id}",
+            f"https://www.youtube.com/watch?v={test_vid_id}&feature=channel",
+            f"http://www.youtube.com/watch?v={test_vid_id}&playnext_from=TL&videos=osPknwzXEas&feature=sub",
+            f"http://www.youtube.com/ytscreeningroom?v={test_vid_id}",
+            f"http://www.youtube.com/user/SilkRoadTheatre#p/a/u/2/{test_vid_id}",
+            f"http://youtu.be/{test_vid_id}",
+            f"http://www.youtube.com/watch?v={test_vid_id}&feature=youtu.be",
+            f"http://youtu.be/{test_vid_id}",
+            f"https://www.youtube.com/user/Scobleizer#p/u/1/{test_vid_id}?rel=0",
+            f"http://www.youtube.com/watch?v={test_vid_id}&feature=channel",
+            f"http://www.youtube.com/watch?v={test_vid_id}&playnext_from=TL&videos=osPknwzXEas&feature=sub",
+            f"http://www.youtube.com/ytscreeningroom?v={test_vid_id}",
+            f"http://www.youtube.com/embed/{test_vid_id}?rel=0",
+            f"http://www.youtube.com/watch?v={test_vid_id}",
+            f"http://youtube.com/v/{test_vid_id}?feature=youtube_gdata_player",
+            f"http://youtube.com/vi/{test_vid_id}?feature=youtube_gdata_player",
+            f"http://youtube.com/?v={test_vid_id}&feature=youtube_gdata_player",
+            f"http://www.youtube.com/watch?v={test_vid_id}&feature=youtube_gdata_player",
+            f"http://youtube.com/?vi={test_vid_id}&feature=youtube_gdata_player",
+            f"http://youtube.com/watch?v={test_vid_id}&feature=youtube_gdata_player",
+            f"http://youtube.com/watch?vi={test_vid_id}&feature=youtube_gdata_player",
+            f"http://youtu.be/{test_vid_id}?feature=youtube_gdata_player",
+            f"www.youtu.be/{test_vid_id}",
+        ]
+
+        for u in test_urls:
+            self.assertEqual(Youtube.youtube_vid_id(u), test_vid_id)
+
 
 class TestHeatherRobertsonYoutube(TestYoutube):
-    def setUp(self):
-        super().setUp()
-        self.vid = HeatherRobertsonYoutube(self.db, self.url, self.data_return)
+    def _create_vid(self):
+        return HeatherRobertsonYoutube(self.db, self.url, self.data_return, self.logger)
 
     def test_hiit_intervals(self):
         self.data_return["snippet"]["description"] = (
@@ -244,7 +268,7 @@ class TestHeatherRobertsonYoutube(TestYoutube):
             "10: Testing\n"
             "More random stuff\n"
         )
-        self.vid._exercises = None
+        del self.vid.exercises
 
         self.assertEqual(
             self.vid.exercises, {"exercise 1", "exercise 2", "exercise 3", "exercise 4"}
@@ -263,7 +287,7 @@ class TestHeatherRobertsonYoutube(TestYoutube):
             "10: Testing\n"
             "More random stuff\n"
         )
-        self.vid._exercises = None
+        del self.vid.exercises
 
         self.assertEqual(self.vid.exercises, set())
 
@@ -281,7 +305,7 @@ class TestHeatherRobertsonYoutube(TestYoutube):
             "10: Testing\n"
             "More random stuff\n"
         )
-        self.vid._exercises = None
+        del self.vid.exercises
 
         self.assertEqual(
             self.vid.exercises, {"exercise 1", "exercise 2", "exercise 3", "exercise 4"}
@@ -300,7 +324,7 @@ class TestHeatherRobertsonYoutube(TestYoutube):
             "10: Testing in a really really long string with lots of things in it\n"
             "More random stuff\n"
         )
-        self.vid._exercises = None
+        del self.vid.exercises
 
         self.assertEqual(
             self.vid.exercises, {"exercise 1", "exercise 2", "exercise 3", "exercise 4"}
