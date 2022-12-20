@@ -18,7 +18,7 @@ class Source(DBInterface):
     @staticmethod
     def normalise_url(url):
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            from .youtube import Youtube
+            from src.workout_sources.youtube import Youtube
 
             vid_id = Youtube.youtube_vid_id(url)
             return f"https://www.youtu.be/{vid_id}"
@@ -40,7 +40,7 @@ class Source(DBInterface):
             return ExistingSource(db, url, res, logger)
 
         if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            from .youtube import Youtube
+            from src.workout_sources.youtube import Youtube
 
             return Youtube.load_source(db, url, logger)
         return UnknownSource(db, url, logger)

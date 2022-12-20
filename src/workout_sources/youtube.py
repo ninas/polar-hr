@@ -9,7 +9,7 @@ from overrides import override
 
 import src.db.workout.models as models
 from src.db.workout.source import Source
-from src.db.workout.youtube_consts import YTConsts
+from src.workout_sources.youtube_consts import YTConsts
 from src.utils.gcp_utils import get_secret
 
 

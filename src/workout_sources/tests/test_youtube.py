@@ -2,8 +2,7 @@ import unittest
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
-from src.db.workout.youtube import HeatherRobertsonYoutube, Youtube
-from src.db.workout.youtube_consts import YTConsts
+from src.workout_sources.youtube import HeatherRobertsonYoutube, Youtube
 from src.utils.test_base import TestBase
 
 
