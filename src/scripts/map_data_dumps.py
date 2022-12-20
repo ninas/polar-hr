@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from functools import cache
 
 from src.scripts.dump_workout_data_store import DumpWorkoutDataStore
+from src.scripts.polar_raw_data import *
 
 pp = pprint.PrettyPrinter(indent=4)
 DEBUG = False
@@ -24,32 +25,6 @@ ignore_matches = {
     "training-session-2021-11-11",
     "training-session-2022-07-21",
 }
-
-
-def read_polar_dir():
-    dd = lambda x: defaultdict(list)
-
-    data = defaultdict(dd)
-    all_info = {}
-    for f in os.listdir("/home/nina/code/polar-hr/data/polar"):
-        if not f.startswith("training"):
-            continue
-        start, d = read_polar_data(f)
-        all_info[start] = d
-    return all_info
-
-
-def read_polar_data(f):
-    with open(f"/home/nina/code/polar-hr/data/polar/{f}") as fi:
-        contents = json.load(fi)
-        if f in read_mappings():
-            print("Applying mapping:")
-            print(f"\t{contents['note']}")
-            contents["note"] = read_mappings()[f]
-            print(f" --> {contents['note']}")
-
-        dump_wd = DumpWorkoutDataStore(contents, f)
-    return dump_wd.start_time, dump_wd
 
 
 def read_youtube_data():
@@ -206,9 +181,19 @@ def confirm_notes(data):
                 append_mapping(v["filename"], v["note"])
         """
 
+
+def transform_func(data, filename):
+    if filename in read_mappings():
+        print("Applying mapping:")
+        print(f"\t{data['note']}")
+        data["note"] = read_mappings()[filename]
+        print(f" --> {data['note']}")
+
+
 if __name__ == "__main__":
-    polar = read_polar_dir()
+
+    polar = read_polar_dir(transform_func)
     youtube = preprocess_yt(read_youtube_data())
     merge_data(polar, youtube)
     # confirm_notes(polar)
-    write_out(polar, "output")
+    write_out(polar, "data/output")
