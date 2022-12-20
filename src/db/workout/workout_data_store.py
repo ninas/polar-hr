@@ -100,7 +100,7 @@ class WorkoutDataStore(EnforceOverrides):
 
     @cache
     def as_dict(self):
-        data = {
+        return {
             "start_time": self._str_start_time,
             "end_time": self._str_end_time,
             "duration": isodate.duration_isoformat(self.duration),
