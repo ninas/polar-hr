@@ -10,7 +10,6 @@ from overrides import override
 import src.db.workout.models as models
 from src.db.workout.db_interface import DBInterface
 from src.db.workout.source import Source
-from src.utils.gcp_utils import upload_to_cloud_storage
 
 
 class Workout(DBInterface):
