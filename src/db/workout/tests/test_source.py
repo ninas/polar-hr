@@ -9,8 +9,6 @@ from src.utils.test_base import TestBase, TestConsts
 
 
 class TestSource(TestBase):
-    YOUTUBE_URL = "https://www.youtube.com/watch?v=something"
-
     def setUp(self):
         self.url = "www.test.com"
         self.db = MagicMock()
@@ -20,7 +18,8 @@ class TestSource(TestBase):
 
     def test_normalise(self):
         self.assertEqual(
-            Source.normalise_url(self.YOUTUBE_URL), "https://www.youtu.be/something"
+            Source.normalise_url("https://www.youtube.com/watch?v=something"),
+            "https://www.youtu.be/something",
         )
         self.assertEqual(Source.normalise_url("unknown"), "unknown")
 

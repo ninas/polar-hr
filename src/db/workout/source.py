@@ -42,20 +42,26 @@ class Source(DBInterface):
             return source_obj.load_source(db, url, logger)
         return source_obj(db, url, logger)
 
-            return Youtube.load_source(db, url, logger)
-        return UnknownSource(db, url, logger)
+    def _model_val(self, field, default=None):
+        if self.model is not None:
+            return getattr(self.model, field)
+        return default
+
+    @property
+    def data(self):
+        return None
 
     @property
     def title(self):
-        return None
+        return self._model_val("name")
 
     @property
     def duration(self):
-        return None
+        return self._model_val("length")
 
     @property
     def extra_info(self):
-        return None
+        return self._model_val("extrainfo")
 
     @property
     def tags(self):
@@ -66,15 +72,20 @@ class Source(DBInterface):
 
     @property
     def exercises(self):
-        return []
+        exercises = []
+        for val in self.tags:
+            if val.tagtype == models.TagType.EXERCISE:
+                exercises.append(val.name)
+        return exercises
 
     @property
     def creator(self):
-        return None
+        return self._model_val("creator")
 
+    @classmethod
     @property
-    def source_type(self):
-        return models.SourceType.UNKNOWN
+    def source_type(cls):
+        return None
 
     @override
     def insert_row(self):
@@ -116,8 +127,15 @@ class Source(DBInterface):
 
 
 class UnknownSource(Source):
-    def __init__(self, db, url, logger=None):
-        super().__init__(db, url, {}, logger)
+    @staticmethod
+    @override
+    def normalise_url(url):
+        return url
+
+    @classmethod
+    @property
+    def source_type(cls):
+        return models.SourceType.UNKNOWN
 
 
 class ExistingSource(Source):
@@ -126,6 +144,15 @@ class ExistingSource(Source):
         super().__init__(db, url, logger)
         self.model = model
 
+    @staticmethod
+    @override
+    def normalise_url(url):
+        return url
+
     @override
     def insert_row(self):
         pass
+
+    @property
+    def source_type(cls):
+        return cls.model.sourcetype
