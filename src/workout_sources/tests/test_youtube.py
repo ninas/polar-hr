@@ -37,27 +37,13 @@ class TestYoutube(TestBase):
             isinstance(Youtube.load_source(self.db, self.url, self.logger), Youtube)
         )
 
-    def test_strip_words(self):
-        # only removes if not in the middle of a word
-        words = ["test", "2", "ing"]
-        self.assertEqual(self.vid._strip_words(words, "testing"), "testing")
-        self.assertEqual(self.vid._strip_words(words, "test"), "")
-        self.assertEqual(self.vid._strip_words(words, "live2poop"), "live2poop")
+    def test_normalise(self):
         self.assertEqual(
-            self.vid._strip_words(words, "testing  things"), "testing things"
+            Youtube.normalise_url("https://www.youtube.com/watch?v=something"),
+            "https://www.youtu.be/something",
         )
-
-    def test_remove_helper_words(self):
-        self.assertEqual(self.vid._remove_helper_words("testing s"), "testing")
-        self.assertEqual(
-            self.vid._remove_helper_words("in and middle"), "in and middle"
-        )
-        self.assertEqual(self.vid._remove_helper_words("with friends"), "friends")
 
     def test_tags_basic(self):
-        func1 = lambda x: x
-        mock1 = Mock(side_effect=func1)
-        self.vid._enrich_tags = mock1
 
         # removes/replaces ignored words/dupes only if the whole string matches
         self.data_return["snippet"]["tags"] = [
@@ -74,7 +60,7 @@ class TestYoutube(TestBase):
                 "#stayhome and other things",
                 "no jumping",
                 "apartment friendly qq",
-                # this gets automatically added by Source
+                # this gets automatically added by VideoSource
                 "20-30min",
             },
         )
@@ -99,61 +85,6 @@ class TestYoutube(TestBase):
             "bananas and apples, kiwi",
         ]
         self.assertEqual(self.vid.tags, {"apples", "kiwi", "bananas", "20-30min"})
-
-    def test_add_from_description(self):
-        self.data_return["snippet"]["title"] = "workout with hiit and low impact"
-        self.data_return["snippet"]["description"] = "blah blah strength blah"
-
-        self.assertEqual(
-            self.vid._add_from_description(), {"hiit", "low impact", "strength"}
-        )
-
-    def test_semantically_update(self):
-
-        self.assertEqual(
-            self.vid._semantically_update({"total body hiit"}), {"full body", "hiit"}
-        )
-
-        self.assertEqual(
-            self.vid._semantically_update(
-                {
-                    "total body hiit",
-                    "total body",
-                    "no equipment",
-                    "weights",
-                    "no jumping",
-                    "jumping",
-                    "legs",
-                    "leg",
-                }
-            ),
-            {"full body", "hiit", "no equipment", "no jumping", "legs", "lower body",},
-        )
-
-    def test_enrich_tags(self):
-
-        self.data_return["snippet"]["title"] = "workout with hiit and low impact"
-        self.data_return["snippet"]["description"] = "blah blah strength blah"
-
-        tags = {
-            "upper body superset",
-            "no equipment",
-            "dumbbells",
-            "jumping",
-        }
-
-        self.assertEqual(
-            self.vid._enrich_tags(tags),
-            {
-                "hiit",
-                "upper body",
-                "supersets",
-                "no equipment",
-                "jumping",
-                "strength",
-                "low impact",
-            },
-        )
 
     def test_exercises(self):
         self.data_return["snippet"]["description"] = (

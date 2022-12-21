@@ -8,13 +8,15 @@ from googleapiclient.errors import HttpError
 from overrides import override
 
 import src.db.workout.models as models
-from src.db.workout.source import Source
-from src.workout_sources.youtube_consts import YTConsts
+from src.workout_sources.video_source import VideoSource
+from src.workout_sources.source_consts import SourceConsts
 from src.utils.gcp_utils import get_secret
 
 
-class Youtube(Source):
-    _secret = None
+class Youtube(VideoSource):
+    def __init__(self, db, url, data, logger):
+        super().__init__(db, url, logger)
+        self._data = data
 
     @staticmethod
     @override
@@ -26,19 +28,26 @@ class Youtube(Source):
         return Youtube(db, url, data, logger)
 
     @staticmethod
+    @override
+    def normalise_url(url):
+        vid_id = Youtube.youtube_vid_id(url)
+        return f"https://www.youtu.be/{vid_id}"
+
+    @staticmethod
     @cache
     def youtube_vid_id(url):
-        m = YTConsts.id_regex.match(url)
+        m = SourceConsts.id_regex.match(url)
         if m is None:
             raise Exception(f"Unable to find id in url: {url}")
         return m.group(1).strip()
 
-    @staticmethod
+    @classmethod
     @cache
     def api_key():
         return get_secret("youtube_api_key")
 
     @staticmethod
+    @cache
     def get_data(url):
         # https://www.googleapis.com/youtube/v3/videos?id=Mvo2snJGhtM&key=<key>&part=snippet,contentDetails
         secret = Youtube.api_key()
@@ -58,47 +67,14 @@ class Youtube(Source):
 
         return results["items"][0]
 
+    @classmethod
     @property
-    @override
-    def source_type(self):
+    def source_type(cls):
         return models.SourceType.YOUTUBE
 
     @cached_property
-    @override(check_signature=False)
     def data(self):
-        return Youtube.get_data(self.url)
-
-    @cached_property
-    @override(check_signature=False)
-    def tags(self):
-        tags = super().tags
-        strip_words = sorted(
-            list(copy.deepcopy(YTConsts.strip_words)), key=len, reverse=True
-        )
-
-        for i in sorted(self.data["snippet"].get("tags", []), key=len):
-            i = i.lower()
-
-            if i in YTConsts.ignore_tags:
-                continue
-
-            if i in YTConsts.dedupes:
-                i = YTConsts.dedupes[i]
-            else:
-                i = self._strip_words(strip_words, i)
-                i = Youtube._remove_helper_words(i)
-
-            if i in YTConsts.ignore_tags:
-                continue
-
-            if len(i) >= 3:
-                tags.add(i)
-                strip_words.append(i)
-                if len(i.split(" ")) == 1 and i[-1] == "s":
-                    strip_words.append(i[:-1])
-                strip_words = sorted(strip_words, key=len, reverse=True)
-
-        return self._enrich_tags(tags)
+        return self._data
 
     @property
     @override
@@ -124,7 +100,7 @@ class Youtube(Source):
         exercises = set()
 
         for i in description.split("\n"):
-            m = YTConsts.chapters_regex.match(i)
+            m = SourceConsts.chapters_regex.match(i)
             if m is None:
                 continue
             cleaned = Youtube._clean_exercise(m.group(2)).strip()
@@ -132,93 +108,26 @@ class Youtube(Source):
                 exercises.add(cleaned)
         return exercises
 
-    def _strip_words(self, words, val):
-        for j in words:
-            val = re.sub(r"\b" + j + r"\b", "", val)
-            val = re.sub(r"\s+", " ", val)
-        return val.strip()
-
-    @staticmethod
-    @cache
-    def _remove_helper_words(i):
-        for t in ["s", "and", "with", "for", ","]:
-            if i.startswith(f"{t} "):
-                i = i[len(t) :]
-            if i.endswith(f" {t}"):
-                i = i[: -len(t)]
-            i = i.strip()
-        return i
-
-    def _add_from_description(self):
-        tags = set()
-        for i in YTConsts.possible_tags:
-            if i in tags:
-                continue
-            elif (
-                i in self.data["snippet"]["title"]
-                or i in self.data["snippet"]["description"]
-            ):
-                tags.add(i)
+    @override
+    def _gen_tags(self):
+        tags = super()._gen_tags()
+        tags.update(self.data["snippet"]["tags"])
+        tags.update(self._add_from_text(self.data["snippet"]["description"]))
         return tags
 
-    @staticmethod
+    @classmethod
     @cache
-    def _semantically_update_tag(tag):
-        to_add = set()
-        to_remove = set()
-        if tag in YTConsts.expands:
-            to_add.update(YTConsts.expands[tag])
-            to_remove.add(tag)
-        if tag in YTConsts.dedupes:
-            to_add.add(YTConsts.dedupes[tag])
-            to_remove.add(tag)
-        return to_add, to_remove
-
-    def _semantically_update(self, tags):
-        to_remove = set()
-        to_add = set()
-        for tag in tags:
-            t_a, t_r = Youtube._semantically_update_tag(tag)
-            to_add.update(t_a)
-            to_remove.update(t_r)
-
-            if tag.startswith("no ") and tag[3:] in tags:
-                to_remove.add(tag[3:])
-            if tag.endswith("s") and tag[:-1] in tags:
-                to_remove.add(tag[:-1])
-
-        if "no equipment" in tags:
-            to_remove.add("weights")
-
-        for k, v in YTConsts.mappings.items():
-            if k in tags and v not in tags:
-                to_add.add(v)
-
-        tags.update(to_add)
-        tags = tags - to_remove
-        return tags
-
-    def _enrich_tags(self, tags):
-        tags.update(self._add_from_description())
-
-        for r in range(2):
-            tags = self._semantically_update(tags)
-
-        return tags
-
-    @staticmethod
-    @cache
-    def _clean_exercise(val):
+    def _clean_exercise(cls, val):
         # remove extra words
-        for e in YTConsts.exercises_strip:
+        for e in SourceConsts.exercises_strip:
             val = re.sub(r"(" + e + r")\b", "", val)
 
         # standardise names (but only if they're not in the middle of a word"
-        for k, v in YTConsts.exercise_dupes.items():
+        for k, v in SourceConsts.exercise_dupes.items():
             val = re.sub(r"(" + k + r")\b", v, val)
 
         # standardise on the plural form
-        for e in YTConsts.exercise_plurals:
+        for e in SourceConsts.exercise_plurals:
             val = re.sub(r"(" + e + r")\b", f"{e}s", val)
 
         # remove any bracketed extra info - i.e. (L) or (R)
@@ -269,7 +178,7 @@ class HeatherRobertsonYoutube(Youtube):
             ):
                 break
 
-            res = YTConsts.chapters_regex.match(des[i])
+            res = SourceConsts.chapters_regex.match(des[i])
             val = res.group(2).strip() if res is not None else des[i]
             if val.startswith("circuit") or val.startswith("superset"):
                 i += 1
@@ -284,8 +193,8 @@ class HeatherRobertsonYoutube(Youtube):
         return exercises
 
     @override
-    def _enrich_tags(self, tags):
-        tags = super()._enrich_tags(tags)
+    def _gen_tags(self):
+        tags = super()._gen_tags()
         tags.update(self._hiit_intervals())
         return tags
 
