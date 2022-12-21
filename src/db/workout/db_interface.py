@@ -14,6 +14,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
         self.model = None
         if logger is None:
             logger = log.new_logger()
+        self.logger = logger
 
     @abc.abstractmethod
     def insert_row(self):
