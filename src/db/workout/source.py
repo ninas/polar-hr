@@ -16,18 +16,16 @@ class Source(DBInterface):
 
     @staticmethod
     def normalise_url(url):
-        if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            from src.workout_sources.youtube import Youtube
-
-            vid_id = Youtube.youtube_vid_id(url)
-            return f"https://www.youtu.be/{vid_id}"
-        return url
+        source_obj = Source.get_source_type(url)
+        return source_obj.normalise_url(url)
 
     @staticmethod
     def get_source_type(url):
         if "youtu" in url:
-            return models.SourceType.YOUTUBE
-        return models.SourceType.UNKNOWN
+            from src.workout_sources.youtube import Youtube
+
+            return Youtube
+        return UnknownSource
 
     @staticmethod
     def load_source(db, url, logger=None):
@@ -38,8 +36,11 @@ class Source(DBInterface):
         if res is not None:
             return ExistingSource(db, url, res, logger)
 
-        if Source.get_source_type(url) == models.SourceType.YOUTUBE:
-            from src.workout_sources.youtube import Youtube
+        source_obj = Source.get_source_type(url)
+        # __dict__ doesn't include inherited attrs
+        if "load_source" in source_obj.__dict__:
+            return source_obj.load_source(db, url, logger)
+        return source_obj(db, url, logger)
 
             return Youtube.load_source(db, url, logger)
         return UnknownSource(db, url, logger)

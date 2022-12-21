@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from src.workout_sources.youtube import HeatherRobertsonYoutube, Youtube
-from src.utils.test_base import TestBase
+from src.utils.test_base import TestBase, TestConsts
 
 
 class TestYoutube(TestBase):
@@ -184,37 +184,8 @@ class TestYoutube(TestBase):
         self.assertEqual(self.vid._clean_exercise("- my workout"), "my workout")
 
     def test_vid_id(self):
-        test_vid_id = "dQw4w9WgXcQ"
-        test_urls = [
-            f"https://youtube.com/shorts/{test_vid_id}?feature=share",
-            f"//www.youtube-nocookie.com/embed/{test_vid_id}?rel=0",
-            f"http://www.youtube.com/user/Scobleizer#p/u/1/{test_vid_id}",
-            f"https://www.youtube.com/watch?v={test_vid_id}&feature=channel",
-            f"http://www.youtube.com/watch?v={test_vid_id}&playnext_from=TL&videos=osPknwzXEas&feature=sub",
-            f"http://www.youtube.com/ytscreeningroom?v={test_vid_id}",
-            f"http://www.youtube.com/user/SilkRoadTheatre#p/a/u/2/{test_vid_id}",
-            f"http://youtu.be/{test_vid_id}",
-            f"http://www.youtube.com/watch?v={test_vid_id}&feature=youtu.be",
-            f"http://youtu.be/{test_vid_id}",
-            f"https://www.youtube.com/user/Scobleizer#p/u/1/{test_vid_id}?rel=0",
-            f"http://www.youtube.com/watch?v={test_vid_id}&feature=channel",
-            f"http://www.youtube.com/watch?v={test_vid_id}&playnext_from=TL&videos=osPknwzXEas&feature=sub",
-            f"http://www.youtube.com/ytscreeningroom?v={test_vid_id}",
-            f"http://www.youtube.com/embed/{test_vid_id}?rel=0",
-            f"http://www.youtube.com/watch?v={test_vid_id}",
-            f"http://youtube.com/v/{test_vid_id}?feature=youtube_gdata_player",
-            f"http://youtube.com/vi/{test_vid_id}?feature=youtube_gdata_player",
-            f"http://youtube.com/?v={test_vid_id}&feature=youtube_gdata_player",
-            f"http://www.youtube.com/watch?v={test_vid_id}&feature=youtube_gdata_player",
-            f"http://youtube.com/?vi={test_vid_id}&feature=youtube_gdata_player",
-            f"http://youtube.com/watch?v={test_vid_id}&feature=youtube_gdata_player",
-            f"http://youtube.com/watch?vi={test_vid_id}&feature=youtube_gdata_player",
-            f"http://youtu.be/{test_vid_id}?feature=youtube_gdata_player",
-            f"www.youtu.be/{test_vid_id}",
-        ]
-
-        for u in test_urls:
-            self.assertEqual(Youtube.youtube_vid_id(u), test_vid_id)
+        for u in TestConsts.YOUTUBE_URLS:
+            self.assertEqual(Youtube.youtube_vid_id(u), TestConsts.YOUTUBE_ID)
 
 
 class TestHeatherRobertsonYoutube(TestYoutube):

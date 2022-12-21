@@ -35,3 +35,34 @@ class TestBase(unittest.TestCase):
                 ]
             )
         return structlog.get_logger()
+
+
+class TestConsts:
+    YOUTUBE_ID = "dQw4w9WgXcQ"
+    YOUTUBE_URLS = [
+        f"https://youtube.com/shorts/{YOUTUBE_ID}?feature=share",
+        f"//www.youtube-nocookie.com/embed/{YOUTUBE_ID}?rel=0",
+        f"http://www.youtube.com/user/Scobleizer#p/u/1/{YOUTUBE_ID}",
+        f"https://www.youtube.com/watch?v={YOUTUBE_ID}&feature=channel",
+        f"http://www.youtube.com/watch?v={YOUTUBE_ID}&playnext_from=TL&videos=osPknwzXEas&feature=sub",
+        f"http://www.youtube.com/ytscreeningroom?v={YOUTUBE_ID}",
+        f"http://www.youtube.com/user/SilkRoadTheatre#p/a/u/2/{YOUTUBE_ID}",
+        f"http://youtu.be/{YOUTUBE_ID}",
+        f"http://www.youtube.com/watch?v={YOUTUBE_ID}&feature=youtu.be",
+        f"http://youtu.be/{YOUTUBE_ID}",
+        f"https://www.youtube.com/user/Scobleizer#p/u/1/{YOUTUBE_ID}?rel=0",
+        f"http://www.youtube.com/watch?v={YOUTUBE_ID}&feature=channel",
+        f"http://www.youtube.com/watch?v={YOUTUBE_ID}&playnext_from=TL&videos=osPknwzXEas&feature=sub",
+        f"http://www.youtube.com/ytscreeningroom?v={YOUTUBE_ID}",
+        f"http://www.youtube.com/embed/{YOUTUBE_ID}?rel=0",
+        f"http://www.youtube.com/watch?v={YOUTUBE_ID}",
+        f"http://youtube.com/v/{YOUTUBE_ID}?feature=youtube_gdata_player",
+        f"http://youtube.com/vi/{YOUTUBE_ID}?feature=youtube_gdata_player",
+        f"http://youtube.com/?v={YOUTUBE_ID}&feature=youtube_gdata_player",
+        f"http://www.youtube.com/watch?v={YOUTUBE_ID}&feature=youtube_gdata_player",
+        f"http://youtube.com/?vi={YOUTUBE_ID}&feature=youtube_gdata_player",
+        f"http://youtube.com/watch?v={YOUTUBE_ID}&feature=youtube_gdata_player",
+        f"http://youtube.com/watch?vi={YOUTUBE_ID}&feature=youtube_gdata_player",
+        f"http://youtu.be/{YOUTUBE_ID}?feature=youtube_gdata_player",
+        f"www.youtu.be/{YOUTUBE_ID}",
+    ]

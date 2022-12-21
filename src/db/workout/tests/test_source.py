@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, Mock, PropertyMock, patch
 import src.db.workout.models as models
 from src.db.workout.source import ExistingSource, Source, UnknownSource
 from src.utils import log
-from src.utils.test_base import TestBase
+from src.utils.test_base import TestBase, TestConsts
 
 
 class TestSource(TestBase):
@@ -13,17 +13,22 @@ class TestSource(TestBase):
 
     def setUp(self):
         self.url = "www.test.com"
-        self.data_return = {"snippet": {}}
         self.db = MagicMock()
-        self.source = Source(self.db, self.url, self.data_return, self.logger)
+        self.source = Source(self.db, self.url, self.logger)
 
-        self.source._insert_tags = MagicMock(side_effect=lambda a,b: a)
+        self.source._insert_tags = MagicMock(side_effect=lambda a, b: a)
 
     def test_normalise(self):
         self.assertEqual(
             Source.normalise_url(self.YOUTUBE_URL), "https://www.youtu.be/something"
         )
         self.assertEqual(Source.normalise_url("unknown"), "unknown")
+
+    def test_get_source_type(self):
+        for i in TestConsts.YOUTUBE_URLS:
+            self.assertEqual(Source.get_source_type(i).source_type, models.SourceType.YOUTUBE)
+
+        self.assertEqual(Source.get_source_type("test").source_type, models.SourceType.UNKNOWN)
 
     def test_load_source(self):
         Source._find = MagicMock(return_value="something")

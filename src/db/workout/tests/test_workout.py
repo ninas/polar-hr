@@ -76,18 +76,31 @@ class TestWorkout(TestBase):
         self.workout._insert_hr_zones = MagicMock()
         self.workout.insert_row()
         self.assertEqual(
-            set(*(tgs.call_args.args)), {"hiit", "5lbs", "8lbs", "weights",}
+            set(*(tgs.call_args.args)),
+            {
+                "hiit",
+                "5lbs",
+                "8lbs",
+                "weights",
+            },
         )
 
     def test_equipment_to_tags(self):
         self.assertEqual(
-            self.workout._equipment_to_tags(), {"5lbs", "8lbs", "weights",}
+            self.workout._equipment_to_tags(),
+            {
+                "5lbs",
+                "8lbs",
+                "weights",
+            },
         )
 
         equip = self._mock_equipment()
         equip.append(
             MagicMock(
-                equipmenttype=models.EquipmentType.BANDS, magnitude="heavy", quantity=1,
+                equipmenttype=models.EquipmentType.BANDS,
+                magnitude="heavy",
+                quantity=1,
             )
         )
         self.workout = Workout(self.db, self.data, self.logger)
