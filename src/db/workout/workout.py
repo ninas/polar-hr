@@ -68,7 +68,7 @@ class Workout(DBInterface):
             # Not much we can do with this, skip it
             self.logger.warn("Invalid workout, exiting")
             return None
-        wkout = self._find(
+        wkout = self.find(
             self.db, models.Workouts, models.Workouts.starttime, self._data.start_time
         )
         if wkout is not None:

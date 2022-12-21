@@ -21,7 +21,7 @@ class DBInterface(EnforceOverrides, abc.ABC):
         pass
 
     @staticmethod
-    def _find(db, model, field, val):
+    def find(db, model, field, val):
         try:
             with db.atomic():
                 return model.get(field == val)

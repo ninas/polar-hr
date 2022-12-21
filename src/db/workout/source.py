@@ -36,7 +36,7 @@ class Source(DBInterface):
         url = Source.normalise_url(url)
 
         # Check whether it's already in the db first
-        res = Source._find(db, models.Sources, models.Sources.url, url)
+        res = Source.find(db, models.Sources, models.Sources.url, url)
         if res is not None:
             return ExistingSource(db, url, res, logger)
 
