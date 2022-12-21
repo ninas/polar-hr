@@ -1,6 +1,8 @@
 import copy
+import json
 import re
 from functools import cache, cached_property
+from datetime import timedelta
 
 import isodate
 from googleapiclient.discovery import build
@@ -14,11 +16,11 @@ from src.utils.gcp_utils import get_secret, fetch_from_cloud_storage
 
 
 class Fiton(VideoSource):
-    BUCKET = "fiton_workout_data/fiton_workouts.json"
+    BUCKET = "fiton_workout_info/fiton_workouts.json"
 
     @override
-    def __init__(db, url, logger):
-        super().__init__(db, url, data, logger)
+    def __init__(self, db, url, logger):
+        super().__init__(db, url, logger)
         self.workout_id = url.split("/")[-1]
 
     @staticmethod
@@ -44,9 +46,9 @@ class Fiton(VideoSource):
     @override(check_signature=False)
     def data(self):
         all_data = Fiton.fetch_all_workout_data()
-        if workout_id not in all_data:
+        if self.workout_id not in all_data:
             raise Exception("Unknown Fiton workout")
-        return all_data[workout_id]
+        return all_data[self.workout_id]
 
     @property
     @override
@@ -56,13 +58,14 @@ class Fiton(VideoSource):
     @property
     @override
     def creator(self):
-        return f"Fiton:{self.data['trainerName']}"
+        return f"{self.data['trainerName'].lower()}"
 
     @cached_property
     @override(check_signature=False)
     def duration(self):
         return timedelta(seconds=self.data["workoutData"]["part"]["continueTime"])
 
+    @property
     @override
     def exercises(self):
         return []
@@ -70,7 +73,7 @@ class Fiton(VideoSource):
     @override
     def _gen_tags(self):
         tags = super()._gen_tags()
-        tags.update({"fiton", self.data["trainerName"]})
+        tags.update({"fiton"})
         for cat in self.data["workoutData"]["categoryList"]:
             tags.add(cat["categoryNameEN"])
         for equip in self.data["workoutData"]["equipments"]:
