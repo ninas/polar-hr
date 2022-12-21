@@ -144,7 +144,7 @@ class ExistingSource(Source):
 
     @override
     def insert_row(self):
-        pass
+        return self.model
 
     @property
     def source_type(cls):
