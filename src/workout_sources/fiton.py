@@ -1,8 +1,8 @@
 import copy
 import json
 import re
-from functools import cache, cached_property
 from datetime import timedelta
+from functools import cache, cached_property
 
 import isodate
 from googleapiclient.discovery import build
@@ -10,9 +10,9 @@ from googleapiclient.errors import HttpError
 from overrides import override
 
 import src.db.workout.models as models
-from src.workout_sources.video_source import VideoSource
+from src.utils.gcp_utils import fetch_from_cloud_storage, get_secret
 from src.workout_sources.source_consts import SourceConsts
-from src.utils.gcp_utils import get_secret, fetch_from_cloud_storage
+from src.workout_sources.video_source import VideoSource
 
 
 class Fiton(VideoSource):

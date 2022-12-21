@@ -1,6 +1,6 @@
+import copy
 import math
 import re
-import copy
 from functools import cache, cached_property
 
 from overrides import override

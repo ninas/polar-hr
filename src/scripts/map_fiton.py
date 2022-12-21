@@ -1,5 +1,5 @@
-import json
 import csv
+import json
 import os
 import pprint
 from collections import defaultdict
@@ -9,15 +9,13 @@ from functools import cache
 from peewee import prefetch
 
 from src.db.workout import models
-from src.db.workout.workout import ExistingWorkout
+from src.db.workout.models import SourceType
 from src.db.workout.source import Source
+from src.db.workout.workout import ExistingWorkout
+from src.scripts.dump_workout_data_store import DumpWorkoutDataStore
+from src.scripts.polar_raw_data import *
 from src.utils import log
 from src.utils.db_utils import DBConnection
-
-
-from src.scripts.dump_workout_data_store import DumpWorkoutDataStore
-from src.db.workout.models import SourceType
-from src.scripts.polar_raw_data import *
 from src.workout_sources.fiton import Fiton
 
 pp = pprint.PrettyPrinter(indent=4)

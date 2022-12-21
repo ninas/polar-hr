@@ -3,9 +3,9 @@ from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import src.db.workout.models as models
-from src.workout_sources.video_source import VideoSource
 from src.utils import log
 from src.utils.test_base import TestBase
+from src.workout_sources.video_source import VideoSource
 
 
 class TestVideoSource(TestBase):
