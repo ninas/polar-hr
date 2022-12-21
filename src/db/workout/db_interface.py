@@ -9,18 +9,11 @@ from src.utils import log
 
 
 class DBInterface(EnforceOverrides, abc.ABC):
-    def __init__(self, db, data, logger=None):
+    def __init__(self, db, logger=None):
         self.db = db
-        self._data = data
         self.model = None
         if logger is None:
             logger = log.new_logger()
-        if isinstance(self._data, WorkoutDataStore):
-            self.logger = logger.bind(workout=self._data.log_abridged())
-
-    @cached_property
-    def data(self):
-        return self._data
 
     @abc.abstractmethod
     def insert_row(self):

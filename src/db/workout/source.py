@@ -9,11 +9,10 @@ from src.db.workout.db_interface import DBInterface
 
 class Source(DBInterface):
     @override
-    def __init__(self, db, url, data, logger=None):
-        super().__init__(db, data, logger)
+    def __init__(self, db, url, logger=None):
+        super().__init__(db, logger)
         self.url = Source.normalise_url(url)
         self.logger = logger.bind(url=self.url, source_type=self.__class__.__name__)
-        self.logger.info("Instantiated new source")
 
     @staticmethod
     def normalise_url(url):
@@ -122,8 +121,8 @@ class UnknownSource(Source):
 
 class ExistingSource(Source):
     @override
-    def __init__(self, db, url, model, logger=None):
-        super().__init__(db, url, None, logger)
+    def __init__(self, db, url, model, logger):
+        super().__init__(db, url, logger)
         self.model = model
 
     @override

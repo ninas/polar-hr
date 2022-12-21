@@ -13,6 +13,11 @@ from src.db.workout.source import Source
 
 
 class Workout(DBInterface):
+    def __init__(self, db, data, logger):
+        super().__init__(db, logger)
+        self._data = data
+        self.logger = logger.bind(workout=self._data.log_abridged())
+
     def _populate_model(self):
         workout_model = models.Workouts(
             calories=self._data.calories,
@@ -24,6 +29,10 @@ class Workout(DBInterface):
             setattr(workout_model, f"{k}hr", v)
 
         return workout_model
+
+    @cached_property
+    def data(self):
+        return self._data
 
     @cached_property
     def equipment(self):
