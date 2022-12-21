@@ -1,7 +1,7 @@
 import re
 
 
-class YTConsts:
+class SourceConsts:
     ignore_tags = {
         "#stayhome",
         "#withme",
