@@ -3,7 +3,7 @@ import json
 from functools import cache
 
 # from gcloud.aio.storage import Storage
-from google.cloud import runtimeconfig, secretmanager  # , storage
+from google.cloud import runtimeconfig, secretmanager, storage
 
 SAMPLES_BUCKET = "polar-workout-samples"
 
@@ -16,7 +16,6 @@ def get_secret(name):
     return response.payload.data.decode("UTF-8")
 
 
-"""
 def upload_to_cloud_storage(blob_name, data, bucket_name=SAMPLES_BUCKET):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
@@ -34,6 +33,7 @@ def fetch_from_cloud_storage(blob_path):
     return blob.download_as_text()
 
 
+"""
 async def async_fetch_from_cloud_storage(blob_path):
     bucket_name, blob_name = blob_path.split("/")
 
