@@ -12,7 +12,51 @@ from src.db.workout.db_interface import DBInterface
 from src.db.workout.source import Source
 
 
-class Workout(DBInterface):
+class WorkoutBase(DBInterface):
+    def _create_source(self, url):
+        try:
+            src = Source.load_source(self.db, url, self.logger)
+            return src.insert_row()
+        except Exception as e:
+            self.logger.warn("Failed to insert source", url=Source.normalise_url(url))
+            raise e
+
+    @override
+    def insert_row(self):
+        pass
+
+
+class ExistingWorkout(WorkoutBase):
+    def __init__(self, db, starttime, logger):
+        super().__init__(db, logger)
+        self.model = self._populate_model(starttime)
+
+    def _populate_model(self, starttime):
+        return Workout.find(
+            self.db, models.Workouts, models.Workouts.starttime, starttime
+        )
+
+    def add_sources(self, urls):
+        if self.model is None:
+            raise Exception("Model must be created before adding sources")
+        new_sources = set()
+        for url in urls:
+            new_sources.add(self._create_source(url))
+
+        model_sources = set(self.model.sources)
+        new_sources -= model_sources
+
+        with self.db.atomic():
+            self.model.sources.add(list(new_sources))
+            self.model.save()
+        return new_sources
+
+    @override
+    def insert_row(self):
+        return self.model
+
+
+class Workout(WorkoutBase):
     def __init__(self, db, data, logger):
         super().__init__(db, logger)
         self._data = data
@@ -73,6 +117,7 @@ class Workout(DBInterface):
         )
         if wkout is not None:
             self.logger.debug("Workout already in db; exiting")
+            self.model = wkout
             return wkout
 
         self.model = self._populate_model()
@@ -89,24 +134,16 @@ class Workout(DBInterface):
                     set(self._insert_tags(tags, models.TagType.EQUIPMENT))
                 )
 
-            self.sources = []
+            self.sources = set()
             for url in self._data.sources:
-                try:
-                    src = Source.load_source(self.db, url, self.logger)
-                    src.insert_row()
-                    self.sources.append(src.model)
-                except Exception as e:
-                    self.logger.warn(
-                        "Failed to insert source", url=Source.normalise_url(url)
-                    )
-                    raise e
+                self.sources.add(self._create_source(url))
 
             self.logger.info("Inserted sources")
 
             with self.db.atomic():
                 self.model.save()
 
-                self.model.sources.add(self.sources)
+                self.model.sources.add(list(self.sources))
                 self.model.equipment.add(equipment)
                 self.model.tags.add(list(tag_models))
                 self.model.save()
