@@ -25,6 +25,10 @@ class Source(DBInterface):
             from src.workout_sources.youtube import Youtube
 
             return Youtube
+        if "fiton" in url:
+            from src.workout_sources.fiton import Fiton
+
+            return Fiton
         return UnknownSource
 
     @staticmethod

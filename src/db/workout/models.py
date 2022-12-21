@@ -16,6 +16,7 @@ class EquipmentType(ExtendedEnum):
 
 class SourceType(ExtendedEnum):
     YOUTUBE = "youtube"
+    FITON = "fiton"
     UNKNOWN = "unknown"
 
 
