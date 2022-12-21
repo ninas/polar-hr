@@ -65,10 +65,7 @@ class Source(DBInterface):
 
     @property
     def tags(self):
-        tags = set()
-        if self.duration is not None:
-            tags.add(self._gen_tag_from_duration())
-        return tags
+        return self._model_val("tags", [])
 
     @property
     def exercises(self):
@@ -116,14 +113,6 @@ class Source(DBInterface):
             self.model.save()
 
         return self.model
-
-    def _gen_tag_from_duration(self):
-        in_mins = self.duration.total_seconds() / 60
-        start = int(in_mins / 10) * 10
-        end = math.ceil(in_mins / 10) * 10
-        if start == end:
-            end += 10
-        return f"{start}-{end}min"
 
 
 class UnknownSource(Source):

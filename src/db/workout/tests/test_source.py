@@ -44,41 +44,36 @@ class TestSource(TestBase):
             )
         )
 
-    def test_gen_tag_from_duration(self):
-        with patch(
-            __name__ + ".Source.duration", new_callable=PropertyMock
-        ) as mock_duration:
-            mock_duration.return_value = timedelta(minutes=23)
-            self.assertEqual(self.source._gen_tag_from_duration(), "20-30min")
-            mock_duration.return_value = timedelta(minutes=9)
-            self.assertEqual(self.source._gen_tag_from_duration(), "0-10min")
-            mock_duration.return_value = timedelta(minutes=40)
-            self.assertEqual(self.source._gen_tag_from_duration(), "40-50min")
-
     def test_all_tags_added(self):
 
-        with (patch(
-            __name__ + ".Source.creator",
-            new_callable=PropertyMock,
-            return_value="creator",
-        ) as mock_creator,
-        patch(
-            __name__ + ".Source.exercises",
-            new_callable=PropertyMock,
-            return_value=["ex1", "ex2"],
-        ) as mock_exercises,
-        patch(
-            __name__ + ".Source.duration",
-            new_callable=PropertyMock,
-            return_value=timedelta(minutes=23),
-        ) as mock_duration,
-        patch(__name__ + ".models.Sources.create") as mock_model):
+        with (
+            patch(
+                __name__ + ".Source.creator",
+                new_callable=PropertyMock,
+                return_value="creator",
+            ) as mock_creator,
+            patch(
+                __name__ + ".Source.exercises",
+                new_callable=PropertyMock,
+                return_value=["ex1", "ex2"],
+            ) as mock_exercises,
+            patch(
+                __name__ + ".Source.tags",
+                new_callable=PropertyMock,
+                return_value=["tag1", "tag2"],
+            ) as mock_duration,
+            patch(__name__ + ".models.Sources.create") as mock_model,
+        ):
             mm = MagicMock()
             mock_model.return_value = MagicMock(tags=MagicMock(add=mm))
             self.source.insert_row()
-            self.assertEqual(set(*(mm.call_args.args)), {
-                "creator",
-                "ex1",
-                "ex2",
-                "20-30min"
-            })
+            self.assertEqual(
+                set(*(mm.call_args.args)),
+                {
+                    "creator",
+                    "ex1",
+                    "ex2",
+                    "tag1",
+                    "tag2",
+                },
+            )
