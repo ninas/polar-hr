@@ -1,3 +1,4 @@
+import json
 from polar import *
 
 from src.utils import gcp_utils, log
@@ -28,7 +29,9 @@ def http(request, is_dev=False):
         logger.info("No workouts returned by the API", api_response=api)
 
     logger.info("Completed run")
-    return ""
+
+    response = {"statusCode": 200, "body": ""}
+    return json.dumps(response, indent=4)
 
 
 if __name__ == "__main__":
