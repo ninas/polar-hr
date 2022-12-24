@@ -30,8 +30,14 @@ class APIBase:
         if self.logger == None:
             self.logger = log.new_logger(is_dev=True)
 
-        self.db = DBConnection(logger).workout_db
         self._models = {}
+        self.db = self._get_db()
+
+    @classmethod
+    @cache
+    def _get_db(cls):
+        logger = log.new_logger(is_dev=True)
+        return DBConnection(logger).workout_db
 
     def _lazy_load_model(self, model):
         return self._models.setdefault(model, model.select())
