@@ -10,7 +10,7 @@ def equipment_http(request):
     """
     /equipment
     """
-    func = lambda api: api.fetch_from_model("Equipment")
+    func = lambda api, data: api.fetch_from_model("Equipment")
     return base_function(request, func)
 
 
@@ -20,7 +20,7 @@ def tags_http(request, is_dev=False):
 
     """
 
-    def func(api):
+    def func(api, data):
         return api.by_id(
             models.Tags,
             {
@@ -41,7 +41,7 @@ def exercises_http(request, is_dev=False):
     /exercises
 
     """
-    func = lambda api: api.by_id(
+    func = lambda api, data: api.by_id(
         models.Tags, {models.Tags.tagtype: [models.TagType.EXERCISE]}
     )
     return base_function(request, func)
@@ -52,7 +52,7 @@ def everything_http(request, is_dev=False):
     /everything
 
     """
-    func = lambda api: {
+    func = lambda api, data: {
         "tags": tags_http(request),
         "equipment": equipment_http(request),
         "exercises": exercises_http(request),
