@@ -43,7 +43,7 @@ class Youtube(VideoSource):
 
     @classmethod
     @cache
-    def api_key():
+    def api_key(cls):
         return get_secret("youtube_api_key")
 
     @staticmethod

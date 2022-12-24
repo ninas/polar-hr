@@ -80,5 +80,5 @@ class Process:
 
     def save_to_db(self, workouts):
         for workout in workouts:
-            w = Workout(self.db.workout_db, workout)
+            w = Workout(self.db.workout_db, workout, self.logger)
             w.insert_row()
