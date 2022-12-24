@@ -4,14 +4,16 @@ from playhouse.db_url import connect
 
 from src.db.sources import models as source_models
 from src.db.workout import models as workout_models
-from src.utils import gcp_utils
+from src.utils import gcp_utils, log
 
 
 class DBConnection:
     UNIX_SOCKET_PATH = "/cloudsql/"
 
-    def __init__(self, logger):
+    def __init__(self, logger=None):
         self.logger = logger
+        if self.logger is None:
+            self.logger = log.new_logger(is_dev=True)
 
     @cache
     def _database_connection_data(self, prefix):
