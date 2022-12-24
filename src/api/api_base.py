@@ -182,6 +182,6 @@ class APIBase:
         name = model.__name__
         model_select = self._prefetch(model)
         for field, ids in identifiers.items():
-            model_select.where(field << ids)
+            model_select = model_select.orwhere(field << ids)
 
         return self.fetch_from_model(name, model_select)
