@@ -1,5 +1,5 @@
 import json
-from functools import cache
+from functools import cache, cached_property
 
 from peewee import prefetch, fn
 
@@ -134,6 +134,49 @@ class APIBase:
     def _basic_object(self, model_select):
         with self.db.atomic():
             return [m for m in model_select.dicts()]
+
+    def _gen_sources_query(self, query):
+        srcs = self.prefetch_sources()
+        source_tags_to_filter = set()
+
+        if query.exercises is not None:
+            source_tags_to_filter.update(set(query.exercises))
+        if query.tags is not None:
+            source_tags_to_filter.update(set(query.tags))
+
+        if len(source_tags_to_filter) > 0:
+            sub_query = (
+                models.Sources.select(models.Sources.id)
+                .join(models.Sources.tags.get_through_model())
+                .join(models.Tags)
+                .where(models.Tags.name << source_tags_to_filter)
+                .group_by(models.Sources.id)
+                .having(fn.COUNT(models.Sources.id) == len(source_tags_to_filter))
+            )
+            srcs = srcs.where(models.Sources.id << sub_query)
+
+        if query.creator is not None:
+            srcs = srcs.where(models.Sources.creator == query.creator)
+
+        if query.length_min is not None:
+            srcs = srcs.where(
+                models.Sources.length >= timedelta(seconds=query.length_min)
+            )
+        if query.length_max is not None:
+            srcs = srcs.where(models.Sources.length <= timedelta(query.length_max))
+
+        if query.source_type is not None:
+            srcs = srcs.where(models.Sources.sourcettype == query.source_type)
+
+        return srcs
+
+    def query_sources(self, query):
+        return_data = {}
+        if query.source_attributes is not None:
+            return_data = self.fetch_from_model(
+                "Sources", self._gen_sources_query(query.source_attributes)
+            )
+        return return_data
 
     def by_id(self, model, identifiers):
         name = model.__name__
