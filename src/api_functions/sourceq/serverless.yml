@@ -1,0 +1,27 @@
+service: sourcesq
+
+provider:
+  name: google
+  stage: dev
+  runtime: python39
+  region: us-central1
+  project: ${file(../secrets.yml):default.project}
+  credentials: ${file(../secrets.yml):default.credentials_path}
+
+frameworkVersion: '3'
+plugins:
+  - serverless-google-cloudfunctions
+  - serverless-python-requirements
+
+
+package:
+  exclude:
+    - node_modules/**
+    - .gitignore
+    - .git/**
+
+functions:
+  sourcesq:
+    handler: sources_query_http
+    events:
+      - http: path
