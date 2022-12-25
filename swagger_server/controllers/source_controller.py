@@ -6,37 +6,15 @@ from swagger_server.models.source_query import SourceQuery  # noqa: E501
 from swagger_server import util
 
 
-def all_sources():  # noqa: E501
-    """Return all sources
+def get_sources(id=None, url=None):  # noqa: E501
+    """Retrieve a specific source using its id or all if no ids are specified
 
-    Fetch all sources # noqa: E501
+    Returns sources # noqa: E501
 
-
-    :rtype: List[Source]
-    """
-    return 'do some magic!'
-
-
-def get_source_by_id(sourceId):  # noqa: E501
-    """Retrieve a specific source using its id
-
-    Returns a single source # noqa: E501
-
-    :param sourceId: ID of source to return
-    :type sourceId: int
-
-    :rtype: Source
-    """
-    return 'do some magic!'
-
-
-def get_source_by_url(sourceUrl):  # noqa: E501
-    """Retrieve a specific source using its url
-
-    Returns a single source # noqa: E501
-
-    :param sourceUrl: URL of source to return
-    :type sourceUrl: str
+    :param id: ID of source to return
+    :type id: List[int]
+    :param url: URL of source to return
+    :type url: List[int]
 
     :rtype: Source
     """

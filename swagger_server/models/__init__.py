@@ -9,6 +9,7 @@ from swagger_server.models.equipment_type import EquipmentType
 from swagger_server.models.everything import Everything
 from swagger_server.models.hr_range import HRRange
 from swagger_server.models.hr_zone import HRZone
+from swagger_server.models.hr_zone_above import HRZoneAbove
 from swagger_server.models.hr_zone_range import HRZoneRange
 from swagger_server.models.query import Query
 from swagger_server.models.source import Source

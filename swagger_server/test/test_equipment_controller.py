@@ -8,16 +8,16 @@ from six import BytesIO
 from swagger_server.test import BaseTestCase
 
 
-class TestTagsController(BaseTestCase):
-    """TagsController integration test stubs"""
+class TestEquipmentController(BaseTestCase):
+    """EquipmentController integration test stubs"""
 
-    def test_all_tags(self):
-        """Test case for all_tags
+    def test_all_equipment(self):
+        """Test case for all_equipment
 
-        Return all tags
+        Return all equipment
         """
         response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/tags',
+            '/NINASCHIFF/workout-api/1.0.0/equipment',
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

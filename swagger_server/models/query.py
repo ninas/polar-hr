@@ -7,7 +7,6 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.source_query_params import SourceQueryParams
-from swagger_server.models.tag_type import TagType
 from swagger_server.models.workout_query_params import WorkoutQueryParams
 from swagger_server import util
 
@@ -18,40 +17,30 @@ class Query(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, source_attributes: SourceQueryParams=None, workout_attributes: WorkoutQueryParams=None, tags: List[str]=None, tag_types: List[TagType]=None, paginate: bool=None):  # noqa: E501
+    def __init__(self, source_attributes: SourceQueryParams=None, workout_attributes: WorkoutQueryParams=None, paginate: bool=None):  # noqa: E501
         """Query - a model defined in Swagger
 
         :param source_attributes: The source_attributes of this Query.  # noqa: E501
         :type source_attributes: SourceQueryParams
         :param workout_attributes: The workout_attributes of this Query.  # noqa: E501
         :type workout_attributes: WorkoutQueryParams
-        :param tags: The tags of this Query.  # noqa: E501
-        :type tags: List[str]
-        :param tag_types: The tag_types of this Query.  # noqa: E501
-        :type tag_types: List[TagType]
         :param paginate: The paginate of this Query.  # noqa: E501
         :type paginate: bool
         """
         self.swagger_types = {
             'source_attributes': SourceQueryParams,
             'workout_attributes': WorkoutQueryParams,
-            'tags': List[str],
-            'tag_types': List[TagType],
             'paginate': bool
         }
 
         self.attribute_map = {
             'source_attributes': 'sourceAttributes',
             'workout_attributes': 'workoutAttributes',
-            'tags': 'tags',
-            'tag_types': 'tagTypes',
             'paginate': 'paginate'
         }
 
         self._source_attributes = source_attributes
         self._workout_attributes = workout_attributes
-        self._tags = tags
-        self._tag_types = tag_types
         self._paginate = paginate
 
     @classmethod
@@ -106,48 +95,6 @@ class Query(Model):
         """
 
         self._workout_attributes = workout_attributes
-
-    @property
-    def tags(self) -> List[str]:
-        """Gets the tags of this Query.
-
-
-        :return: The tags of this Query.
-        :rtype: List[str]
-        """
-        return self._tags
-
-    @tags.setter
-    def tags(self, tags: List[str]):
-        """Sets the tags of this Query.
-
-
-        :param tags: The tags of this Query.
-        :type tags: List[str]
-        """
-
-        self._tags = tags
-
-    @property
-    def tag_types(self) -> List[TagType]:
-        """Gets the tag_types of this Query.
-
-
-        :return: The tag_types of this Query.
-        :rtype: List[TagType]
-        """
-        return self._tag_types
-
-    @tag_types.setter
-    def tag_types(self, tag_types: List[TagType]):
-        """Sets the tag_types of this Query.
-
-
-        :param tag_types: The tag_types of this Query.
-        :type tag_types: List[TagType]
-        """
-
-        self._tag_types = tag_types
 
     @property
     def paginate(self) -> bool:

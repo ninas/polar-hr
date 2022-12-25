@@ -15,21 +15,24 @@ schemes:
 - "https"
 - "http"
 paths:
-  /workout/{workoutId}:
+  /workouts:
     get:
       tags:
       - "workout"
-      summary: "Retrieve a specific workout"
-      description: "Returns a single workout"
-      operationId: "get_workout_by_id"
+      summary: "Retrieve a specific workout or all if no ids are specified"
+      description: "Returns workouts"
+      operationId: "get_workouts"
       produces:
       - "application/json"
       parameters:
-      - name: "workoutId"
-        in: "path"
-        description: "ID of workout to return"
-        required: true
-        type: "integer"
+      - name: "id"
+        in: "query"
+        description: "ID of source to return"
+        required: false
+        type: "array"
+        items:
+          type: "integer"
+        collectionFormat: "multi"
         format: "int64"
       - name: "samples"
         in: "query"
@@ -41,28 +44,10 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/Workout"
+        "204":
+          description: "No items found"
         "400":
           description: "Invalid ID supplied"
-        "404":
-          description: "Workout not found"
-      x-swagger-router-controller: "swagger_server.controllers.workout_controller"
-  /workouts:
-    get:
-      tags:
-      - "workout"
-      summary: "Fetch all workouts"
-      description: "Returns all workouts"
-      operationId: "all_workouts"
-      produces:
-      - "application/json"
-      parameters: []
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Workout"
       x-swagger-router-controller: "swagger_server.controllers.workout_controller"
     post:
       tags:
@@ -87,77 +72,48 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Workout"
+        "204":
+          description: "No items found"
         "400":
           description: "Invalid search values"
       x-swagger-router-controller: "swagger_server.controllers.workout_controller"
-  /source/{sourceId}:
-    get:
-      tags:
-      - "source"
-      summary: "Retrieve a specific source using its id"
-      description: "Returns a single source"
-      operationId: "get_source_by_id"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "sourceId"
-        in: "path"
-        description: "ID of source to return"
-        required: true
-        type: "integer"
-        format: "int64"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Source"
-        "400":
-          description: "Invalid ID supplied"
-        "404":
-          description: "Source not found"
-      x-swagger-router-controller: "swagger_server.controllers.source_controller"
-  /source/url/{sourceUrl}:
-    get:
-      tags:
-      - "source"
-      summary: "Retrieve a specific source using its url"
-      description: "Returns a single source"
-      operationId: "get_source_by_url"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "sourceUrl"
-        in: "path"
-        description: "URL of source to return"
-        required: true
-        type: "string"
-      responses:
-        "200":
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Source"
-        "400":
-          description: "Invalid URL supplied"
-        "404":
-          description: "Source not found"
-      x-swagger-router-controller: "swagger_server.controllers.source_controller"
   /sources:
     get:
       tags:
       - "source"
-      summary: "Return all sources"
-      description: "Fetch all sources"
-      operationId: "all_sources"
+      summary: "Retrieve a specific source using its id or all if no ids are specified"
+      description: "Returns sources"
+      operationId: "get_sources"
       produces:
       - "application/json"
-      parameters: []
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "ID of source to return"
+        required: false
+        type: "array"
+        items:
+          type: "integer"
+        collectionFormat: "multi"
+        format: "int64"
+      - name: "url"
+        in: "query"
+        description: "URL of source to return"
+        required: false
+        type: "array"
+        items:
+          type: "integer"
+        collectionFormat: "multi"
+        format: "string"
       responses:
         "200":
           description: "successful operation"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Source"
+            $ref: "#/definitions/Source"
+        "204":
+          description: "No items found"
+        "400":
+          description: "Invalid ID supplied"
       x-swagger-router-controller: "swagger_server.controllers.source_controller"
     post:
       tags:
@@ -182,8 +138,12 @@ paths:
             type: "array"
             items:
               $ref: "#/definitions/Source"
+        "204":
+          description: "No items found"
         "400":
           description: "Invalid search values"
+      x-google-backend:
+        address: "https://us-central1-workout-368502.cloudfunctions.net/sourcesq-dev-sourcesq"
       x-swagger-router-controller: "swagger_server.controllers.source_controller"
   /tags:
     get:
@@ -201,10 +161,56 @@ paths:
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/Tag"
+              type: "string"
+        "204":
+          description: "No items found"
       x-google-backend:
         address: "https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags"
       x-swagger-router-controller: "swagger_server.controllers.tags_controller"
+  /exercises:
+    get:
+      tags:
+      - "exercises"
+      summary: "Return all exercises"
+      description: "Fetch all exercises"
+      operationId: "all_exercises"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+        "204":
+          description: "No items found"
+      x-google-backend:
+        address: "https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags"
+      x-swagger-router-controller: "swagger_server.controllers.exercises_controller"
+  /equipment:
+    get:
+      tags:
+      - "equipment"
+      summary: "Return all equipment"
+      description: "Fetch all equipment"
+      operationId: "all_equipment"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+        "204":
+          description: "No items found"
+      x-google-backend:
+        address: "https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags"
+      x-swagger-router-controller: "swagger_server.controllers.equipment_controller"
   /refresh:
     post:
       tags:
@@ -238,6 +244,8 @@ paths:
           description: "successful operation"
           schema:
             $ref: "#/definitions/Everything"
+        "204":
+          description: "No items found"
       x-google-backend:
         address: "https://us-central1-workout-368502.cloudfunctions.net/everything-dev-everything"
       x-swagger-router-controller: "swagger_server.controllers.utils_controller"
@@ -265,92 +273,73 @@ definitions:
       sources:
       - duration: "P1DT12H"
         creator: "creator"
+        exercises:
+        - "exercises"
+        - "exercises"
         sourceType: {}
-        tagIds:
-        - 7
-        - 7
         name: "name"
-        id: 2
+        id: 3
         url: "url"
         extraInfo: "extraInfo"
         tags:
-        - name: "name"
-          tagType: {}
-          id: 4
-        - name: "name"
-          tagType: {}
-          id: 4
+        - "tags"
+        - "tags"
       - duration: "P1DT12H"
         creator: "creator"
+        exercises:
+        - "exercises"
+        - "exercises"
         sourceType: {}
-        tagIds:
-        - 7
-        - 7
         name: "name"
-        id: 2
+        id: 3
         url: "url"
         extraInfo: "extraInfo"
         tags:
-        - name: "name"
-          tagType: {}
-          id: 4
-        - name: "name"
-          tagType: {}
-          id: 4
+        - "tags"
+        - "tags"
       workouts:
       - maxHR: 2
         notes: "notes"
         sources:
         - duration: "P1DT12H"
           creator: "creator"
+          exercises:
+          - "exercises"
+          - "exercises"
           sourceType: {}
-          tagIds:
-          - 7
-          - 7
           name: "name"
-          id: 2
+          id: 3
           url: "url"
           extraInfo: "extraInfo"
           tags:
-          - name: "name"
-            tagType: {}
-            id: 4
-          - name: "name"
-            tagType: {}
-            id: 4
+          - "tags"
+          - "tags"
         - duration: "P1DT12H"
           creator: "creator"
+          exercises:
+          - "exercises"
+          - "exercises"
           sourceType: {}
-          tagIds:
-          - 7
-          - 7
           name: "name"
-          id: 2
+          id: 3
           url: "url"
           extraInfo: "extraInfo"
           tags:
-          - name: "name"
-            tagType: {}
-            id: 4
-          - name: "name"
-            tagType: {}
-            id: 4
+          - "tags"
+          - "tags"
         hrZones:
         - duration: "P1DT12H"
           zoneType: {}
           upperLimit: 7
-          id: 1
-          lowerLimit: 6
-          percentSpentAbove: 1.1730742
+          id: 2
+          lowerLimit: 4
+          percentSpentAbove: 1.2315135
         - duration: "P1DT12H"
           zoneType: {}
           upperLimit: 7
-          id: 1
-          lowerLimit: 6
-          percentSpentAbove: 1.1730742
-        tagIds:
-        - 1
-        - 1
+          id: 2
+          lowerLimit: 4
+          percentSpentAbove: 1.2315135
         equipment:
         - quantity: 9
           magnitude: "5lbs"
@@ -365,77 +354,53 @@ definitions:
         samples:
         - 6
         - 6
-        tags:
-        - name: "name"
-          tagType: {}
-          id: 4
-        - name: "name"
-          tagType: {}
-          id: 4
         avgHR: 5
-        equipmentIds:
-        - 3
-        - 3
         startTime: "2022-12-10T00:14:25-00:00"
         id: 0
         endTime: "2022-12-10T00:14:25-00:00"
         sport: "sport"
-        sourceIds:
-        - 1
-        - 1
       - maxHR: 2
         notes: "notes"
         sources:
         - duration: "P1DT12H"
           creator: "creator"
+          exercises:
+          - "exercises"
+          - "exercises"
           sourceType: {}
-          tagIds:
-          - 7
-          - 7
           name: "name"
-          id: 2
+          id: 3
           url: "url"
           extraInfo: "extraInfo"
           tags:
-          - name: "name"
-            tagType: {}
-            id: 4
-          - name: "name"
-            tagType: {}
-            id: 4
+          - "tags"
+          - "tags"
         - duration: "P1DT12H"
           creator: "creator"
+          exercises:
+          - "exercises"
+          - "exercises"
           sourceType: {}
-          tagIds:
-          - 7
-          - 7
           name: "name"
-          id: 2
+          id: 3
           url: "url"
           extraInfo: "extraInfo"
           tags:
-          - name: "name"
-            tagType: {}
-            id: 4
-          - name: "name"
-            tagType: {}
-            id: 4
+          - "tags"
+          - "tags"
         hrZones:
         - duration: "P1DT12H"
           zoneType: {}
           upperLimit: 7
-          id: 1
-          lowerLimit: 6
-          percentSpentAbove: 1.1730742
+          id: 2
+          lowerLimit: 4
+          percentSpentAbove: 1.2315135
         - duration: "P1DT12H"
           zoneType: {}
           upperLimit: 7
-          id: 1
-          lowerLimit: 6
-          percentSpentAbove: 1.1730742
-        tagIds:
-        - 1
-        - 1
+          id: 2
+          lowerLimit: 4
+          percentSpentAbove: 1.2315135
         equipment:
         - quantity: 9
           magnitude: "5lbs"
@@ -450,24 +415,11 @@ definitions:
         samples:
         - 6
         - 6
-        tags:
-        - name: "name"
-          tagType: {}
-          id: 4
-        - name: "name"
-          tagType: {}
-          id: 4
         avgHR: 5
-        equipmentIds:
-        - 3
-        - 3
         startTime: "2022-12-10T00:14:25-00:00"
         id: 0
         endTime: "2022-12-10T00:14:25-00:00"
         sport: "sport"
-        sourceIds:
-        - 1
-        - 1
       equipment:
       - quantity: 9
         magnitude: "5lbs"
@@ -479,15 +431,12 @@ definitions:
         equipmentType: {}
       tags:
       - name: "name"
-        tagType: {}
-        id: 4
+        id: 0
       - name: "name"
-        tagType: {}
-        id: 4
+        id: 0
   Tag:
     type: "object"
     required:
-    - "id"
     - "name"
     properties:
       id:
@@ -495,12 +444,9 @@ definitions:
         format: "int64"
       name:
         type: "string"
-      tagType:
-        $ref: "#/definitions/TagType"
     example:
       name: "name"
-      tagType: {}
-      id: 4
+      id: 0
   Equipment:
     type: "object"
     required:
@@ -518,6 +464,7 @@ definitions:
       quantity:
         type: "integer"
         description: "Only relvant for weights, e.g. used 1 or 2 dumbbells"
+    description: "Type must be set otherwise parameters are invalid"
     example:
       quantity: 9
       magnitude: "5lbs"
@@ -526,7 +473,6 @@ definitions:
   Source:
     type: "object"
     required:
-    - "id"
     - "url"
     properties:
       id:
@@ -552,33 +498,28 @@ definitions:
       tags:
         type: "array"
         items:
-          $ref: "#/definitions/Tag"
-      tagIds:
+          type: "string"
+      exercises:
         type: "array"
         items:
-          type: "integer"
+          type: "string"
     example:
       duration: "P1DT12H"
       creator: "creator"
+      exercises:
+      - "exercises"
+      - "exercises"
       sourceType: {}
-      tagIds:
-      - 7
-      - 7
       name: "name"
-      id: 2
+      id: 3
       url: "url"
       extraInfo: "extraInfo"
       tags:
-      - name: "name"
-        tagType: {}
-        id: 4
-      - name: "name"
-        tagType: {}
-        id: 4
+      - "tags"
+      - "tags"
   HRZone:
     type: "object"
     required:
-    - "id"
     - "zoneType"
     properties:
       id:
@@ -603,13 +544,12 @@ definitions:
       duration: "P1DT12H"
       zoneType: {}
       upperLimit: 7
-      id: 1
-      lowerLimit: 6
-      percentSpentAbove: 1.1730742
+      id: 2
+      lowerLimit: 4
+      percentSpentAbove: 1.2315135
   Workout:
     type: "object"
     required:
-    - "id"
     - "startTime"
     properties:
       id:
@@ -643,26 +583,10 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/Equipment"
-      equipmentIds:
-        type: "array"
-        items:
-          type: "integer"
       sources:
         type: "array"
         items:
           $ref: "#/definitions/Source"
-      sourceIds:
-        type: "array"
-        items:
-          type: "integer"
-      tags:
-        type: "array"
-        items:
-          $ref: "#/definitions/Tag"
-      tagIds:
-        type: "array"
-        items:
-          type: "integer"
       hrZones:
         type: "array"
         items:
@@ -673,54 +597,43 @@ definitions:
       sources:
       - duration: "P1DT12H"
         creator: "creator"
+        exercises:
+        - "exercises"
+        - "exercises"
         sourceType: {}
-        tagIds:
-        - 7
-        - 7
         name: "name"
-        id: 2
+        id: 3
         url: "url"
         extraInfo: "extraInfo"
         tags:
-        - name: "name"
-          tagType: {}
-          id: 4
-        - name: "name"
-          tagType: {}
-          id: 4
+        - "tags"
+        - "tags"
       - duration: "P1DT12H"
         creator: "creator"
+        exercises:
+        - "exercises"
+        - "exercises"
         sourceType: {}
-        tagIds:
-        - 7
-        - 7
         name: "name"
-        id: 2
+        id: 3
         url: "url"
         extraInfo: "extraInfo"
         tags:
-        - name: "name"
-          tagType: {}
-          id: 4
-        - name: "name"
-          tagType: {}
-          id: 4
+        - "tags"
+        - "tags"
       hrZones:
       - duration: "P1DT12H"
         zoneType: {}
         upperLimit: 7
-        id: 1
-        lowerLimit: 6
-        percentSpentAbove: 1.1730742
+        id: 2
+        lowerLimit: 4
+        percentSpentAbove: 1.2315135
       - duration: "P1DT12H"
         zoneType: {}
         upperLimit: 7
-        id: 1
-        lowerLimit: 6
-        percentSpentAbove: 1.1730742
-      tagIds:
-      - 1
-      - 1
+        id: 2
+        lowerLimit: 4
+        percentSpentAbove: 1.2315135
       equipment:
       - quantity: 9
         magnitude: "5lbs"
@@ -735,32 +648,23 @@ definitions:
       samples:
       - 6
       - 6
-      tags:
-      - name: "name"
-        tagType: {}
-        id: 4
-      - name: "name"
-        tagType: {}
-        id: 4
       avgHR: 5
-      equipmentIds:
-      - 3
-      - 3
       startTime: "2022-12-10T00:14:25-00:00"
       id: 0
       endTime: "2022-12-10T00:14:25-00:00"
       sport: "sport"
-      sourceIds:
-      - 1
-      - 1
   SourceQuery:
     type: "object"
+    required:
+    - "query"
     properties:
       query:
         $ref: "#/definitions/Query"
     description: "Convenience wrapper around Query to specifically return Source objects"
   WorkoutQuery:
     type: "object"
+    required:
+    - "query"
     properties:
       query:
         $ref: "#/definitions/Query"
@@ -773,14 +677,6 @@ definitions:
         $ref: "#/definitions/SourceQueryParams"
       workoutAttributes:
         $ref: "#/definitions/WorkoutQueryParams"
-      tags:
-        type: "array"
-        items:
-          type: "string"
-      tagTypes:
-        type: "array"
-        items:
-          $ref: "#/definitions/TagType"
       paginate:
         type: "boolean"
     description: "Allow searching for resources using a wide range of parameters"
@@ -794,17 +690,12 @@ definitions:
           type: "string"
       exercises:
         type: "array"
-        description: "Return workouts which used a source containing this exercise"
+        description: "Exercises to filter by. Exercises are ORed"
         items:
           type: "string"
       tags:
         type: "array"
-        description: "Tags to filter by"
-        items:
-          type: "string"
-      tagTypes:
-        type: "array"
-        description: "Filter by specific type of tag"
+        description: "Tags to filter by. Tags are ANDed"
         items:
           type: "string"
       lengthMin:
@@ -820,21 +711,11 @@ definitions:
   WorkoutQueryParams:
     type: "object"
     properties:
-      tags:
-        type: "array"
-        description: "Tags to filter by"
-        items:
-          type: "string"
-      tagTypes:
-        type: "array"
-        description: "Filter by specific type of tag"
-        items:
-          type: "string"
       dateRange:
         $ref: "#/definitions/DateRange"
       sport:
         type: "array"
-        description: "Filter by sport type"
+        description: "Filter by sport type. Sports are ORed"
         items:
           type: "string"
       samples:
@@ -857,11 +738,9 @@ definitions:
           $ref: "#/definitions/HRZoneRange"
       aboveHRZone:
         type: "array"
-        description: "Time spent within and above a specific heart rate zone"
+        description: "Time spent above a specific heart rate zone"
         items:
-          $ref: "#/definitions/HRZoneRange"
-      sourceParams:
-        $ref: "#/definitions/SourceQueryParams"
+          $ref: "#/definitions/HRZoneAbove"
   DateRange:
     type: "object"
     properties:
@@ -882,6 +761,8 @@ definitions:
     description: "Range for heart rate values. Either min or max can be omitted."
   HRZoneRange:
     type: "object"
+    required:
+    - "zoneType"
     properties:
       zoneType:
         $ref: "#/definitions/ZoneType"
@@ -893,7 +774,28 @@ definitions:
         type: "string"
         example: "P1DT12H"
         description: "Duration in ISO 8601 format"
+      percentageOfWorkout:
+        type: "number"
+        format: "float"
+        description: "This supersedes min/maxTime and will be used instead. Percentage\
+          \ from 0-100"
     description: "Time range spent in this HR zone. Either min or max can be omitted."
+  HRZoneAbove:
+    type: "object"
+    properties:
+      zoneType:
+        $ref: "#/definitions/ZoneType"
+      minTime:
+        type: "string"
+        example: "P1DT12H"
+        description: "Duration in ISO 8601 format"
+      percentSpentAbove:
+        type: "number"
+        format: "float"
+        description: "This will supercede any other parameters passed. Percentage\
+          \ of workout spent in this HRZone or higher"
+    description: "Time spent within and above a specific heart rate zone. Specified\
+      \ as absolute duration or a percentage of the workout"
   ZoneType:
     type: "string"
     description: "The range (percentile relative to max HR) this zone covers"

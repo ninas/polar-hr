@@ -16,7 +16,7 @@ class HRZoneRange(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, zone_type: ZoneType=None, min_time: str=None, max_time: str=None):  # noqa: E501
+    def __init__(self, zone_type: ZoneType=None, min_time: str=None, max_time: str=None, percentage_of_workout: float=None):  # noqa: E501
         """HRZoneRange - a model defined in Swagger
 
         :param zone_type: The zone_type of this HRZoneRange.  # noqa: E501
@@ -25,22 +25,27 @@ class HRZoneRange(Model):
         :type min_time: str
         :param max_time: The max_time of this HRZoneRange.  # noqa: E501
         :type max_time: str
+        :param percentage_of_workout: The percentage_of_workout of this HRZoneRange.  # noqa: E501
+        :type percentage_of_workout: float
         """
         self.swagger_types = {
             'zone_type': ZoneType,
             'min_time': str,
-            'max_time': str
+            'max_time': str,
+            'percentage_of_workout': float
         }
 
         self.attribute_map = {
             'zone_type': 'zoneType',
             'min_time': 'minTime',
-            'max_time': 'maxTime'
+            'max_time': 'maxTime',
+            'percentage_of_workout': 'percentageOfWorkout'
         }
 
         self._zone_type = zone_type
         self._min_time = min_time
         self._max_time = max_time
+        self._percentage_of_workout = percentage_of_workout
 
     @classmethod
     def from_dict(cls, dikt) -> 'HRZoneRange':
@@ -71,6 +76,8 @@ class HRZoneRange(Model):
         :param zone_type: The zone_type of this HRZoneRange.
         :type zone_type: ZoneType
         """
+        if zone_type is None:
+            raise ValueError("Invalid value for `zone_type`, must not be `None`")  # noqa: E501
 
         self._zone_type = zone_type
 
@@ -119,3 +126,26 @@ class HRZoneRange(Model):
         """
 
         self._max_time = max_time
+
+    @property
+    def percentage_of_workout(self) -> float:
+        """Gets the percentage_of_workout of this HRZoneRange.
+
+        This supersedes min/maxTime and will be used instead. Percentage from 0-100  # noqa: E501
+
+        :return: The percentage_of_workout of this HRZoneRange.
+        :rtype: float
+        """
+        return self._percentage_of_workout
+
+    @percentage_of_workout.setter
+    def percentage_of_workout(self, percentage_of_workout: float):
+        """Sets the percentage_of_workout of this HRZoneRange.
+
+        This supersedes min/maxTime and will be used instead. Percentage from 0-100  # noqa: E501
+
+        :param percentage_of_workout: The percentage_of_workout of this HRZoneRange.
+        :type percentage_of_workout: float
+        """
+
+        self._percentage_of_workout = percentage_of_workout

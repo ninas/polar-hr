@@ -16,7 +16,7 @@ class SourceQueryParams(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, creator: List[str]=None, exercises: List[str]=None, tags: List[str]=None, tag_types: List[str]=None, length_min: int=None, length_max: int=None, source_type: List[SourceType]=None):  # noqa: E501
+    def __init__(self, creator: List[str]=None, exercises: List[str]=None, tags: List[str]=None, length_min: int=None, length_max: int=None, source_type: List[SourceType]=None):  # noqa: E501
         """SourceQueryParams - a model defined in Swagger
 
         :param creator: The creator of this SourceQueryParams.  # noqa: E501
@@ -25,8 +25,6 @@ class SourceQueryParams(Model):
         :type exercises: List[str]
         :param tags: The tags of this SourceQueryParams.  # noqa: E501
         :type tags: List[str]
-        :param tag_types: The tag_types of this SourceQueryParams.  # noqa: E501
-        :type tag_types: List[str]
         :param length_min: The length_min of this SourceQueryParams.  # noqa: E501
         :type length_min: int
         :param length_max: The length_max of this SourceQueryParams.  # noqa: E501
@@ -38,7 +36,6 @@ class SourceQueryParams(Model):
             'creator': List[str],
             'exercises': List[str],
             'tags': List[str],
-            'tag_types': List[str],
             'length_min': int,
             'length_max': int,
             'source_type': List[SourceType]
@@ -48,7 +45,6 @@ class SourceQueryParams(Model):
             'creator': 'creator',
             'exercises': 'exercises',
             'tags': 'tags',
-            'tag_types': 'tagTypes',
             'length_min': 'lengthMin',
             'length_max': 'lengthMax',
             'source_type': 'sourceType'
@@ -57,7 +53,6 @@ class SourceQueryParams(Model):
         self._creator = creator
         self._exercises = exercises
         self._tags = tags
-        self._tag_types = tag_types
         self._length_min = length_min
         self._length_max = length_max
         self._source_type = source_type
@@ -100,7 +95,7 @@ class SourceQueryParams(Model):
     def exercises(self) -> List[str]:
         """Gets the exercises of this SourceQueryParams.
 
-        Return workouts which used a source containing this exercise  # noqa: E501
+        Exercises to filter by. Exercises are ORed  # noqa: E501
 
         :return: The exercises of this SourceQueryParams.
         :rtype: List[str]
@@ -111,7 +106,7 @@ class SourceQueryParams(Model):
     def exercises(self, exercises: List[str]):
         """Sets the exercises of this SourceQueryParams.
 
-        Return workouts which used a source containing this exercise  # noqa: E501
+        Exercises to filter by. Exercises are ORed  # noqa: E501
 
         :param exercises: The exercises of this SourceQueryParams.
         :type exercises: List[str]
@@ -123,7 +118,7 @@ class SourceQueryParams(Model):
     def tags(self) -> List[str]:
         """Gets the tags of this SourceQueryParams.
 
-        Tags to filter by  # noqa: E501
+        Tags to filter by. Tags are ANDed  # noqa: E501
 
         :return: The tags of this SourceQueryParams.
         :rtype: List[str]
@@ -134,36 +129,13 @@ class SourceQueryParams(Model):
     def tags(self, tags: List[str]):
         """Sets the tags of this SourceQueryParams.
 
-        Tags to filter by  # noqa: E501
+        Tags to filter by. Tags are ANDed  # noqa: E501
 
         :param tags: The tags of this SourceQueryParams.
         :type tags: List[str]
         """
 
         self._tags = tags
-
-    @property
-    def tag_types(self) -> List[str]:
-        """Gets the tag_types of this SourceQueryParams.
-
-        Filter by specific type of tag  # noqa: E501
-
-        :return: The tag_types of this SourceQueryParams.
-        :rtype: List[str]
-        """
-        return self._tag_types
-
-    @tag_types.setter
-    def tag_types(self, tag_types: List[str]):
-        """Sets the tag_types of this SourceQueryParams.
-
-        Filter by specific type of tag  # noqa: E501
-
-        :param tag_types: The tag_types of this SourceQueryParams.
-        :type tag_types: List[str]
-        """
-
-        self._tag_types = tag_types
 
     @property
     def length_min(self) -> int:

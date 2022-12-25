@@ -6,7 +6,6 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
-from swagger_server.models.tag_type import TagType
 from swagger_server import util
 
 
@@ -16,31 +15,26 @@ class Tag(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id: int=None, name: str=None, tag_type: TagType=None):  # noqa: E501
+    def __init__(self, id: int=None, name: str=None):  # noqa: E501
         """Tag - a model defined in Swagger
 
         :param id: The id of this Tag.  # noqa: E501
         :type id: int
         :param name: The name of this Tag.  # noqa: E501
         :type name: str
-        :param tag_type: The tag_type of this Tag.  # noqa: E501
-        :type tag_type: TagType
         """
         self.swagger_types = {
             'id': int,
-            'name': str,
-            'tag_type': TagType
+            'name': str
         }
 
         self.attribute_map = {
             'id': 'id',
-            'name': 'name',
-            'tag_type': 'tagType'
+            'name': 'name'
         }
 
         self._id = id
         self._name = name
-        self._tag_type = tag_type
 
     @classmethod
     def from_dict(cls, dikt) -> 'Tag':
@@ -71,8 +65,6 @@ class Tag(Model):
         :param id: The id of this Tag.
         :type id: int
         """
-        if id is None:
-            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
         self._id = id
 
@@ -98,24 +90,3 @@ class Tag(Model):
             raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
         self._name = name
-
-    @property
-    def tag_type(self) -> TagType:
-        """Gets the tag_type of this Tag.
-
-
-        :return: The tag_type of this Tag.
-        :rtype: TagType
-        """
-        return self._tag_type
-
-    @tag_type.setter
-    def tag_type(self, tag_type: TagType):
-        """Sets the tag_type of this Tag.
-
-
-        :param tag_type: The tag_type of this Tag.
-        :type tag_type: TagType
-        """
-
-        self._tag_type = tag_type

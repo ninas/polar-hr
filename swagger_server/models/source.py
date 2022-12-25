@@ -7,7 +7,6 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.source_type import SourceType
-from swagger_server.models.tag import Tag
 from swagger_server import util
 
 
@@ -17,7 +16,7 @@ class Source(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id: int=None, url: str=None, name: str=None, creator: str=None, duration: str=None, source_type: SourceType=None, extra_info: str=None, tags: List[Tag]=None, tag_ids: List[int]=None):  # noqa: E501
+    def __init__(self, id: int=None, url: str=None, name: str=None, creator: str=None, duration: str=None, source_type: SourceType=None, extra_info: str=None, tags: List[str]=None, exercises: List[str]=None):  # noqa: E501
         """Source - a model defined in Swagger
 
         :param id: The id of this Source.  # noqa: E501
@@ -35,9 +34,9 @@ class Source(Model):
         :param extra_info: The extra_info of this Source.  # noqa: E501
         :type extra_info: str
         :param tags: The tags of this Source.  # noqa: E501
-        :type tags: List[Tag]
-        :param tag_ids: The tag_ids of this Source.  # noqa: E501
-        :type tag_ids: List[int]
+        :type tags: List[str]
+        :param exercises: The exercises of this Source.  # noqa: E501
+        :type exercises: List[str]
         """
         self.swagger_types = {
             'id': int,
@@ -47,8 +46,8 @@ class Source(Model):
             'duration': str,
             'source_type': SourceType,
             'extra_info': str,
-            'tags': List[Tag],
-            'tag_ids': List[int]
+            'tags': List[str],
+            'exercises': List[str]
         }
 
         self.attribute_map = {
@@ -60,7 +59,7 @@ class Source(Model):
             'source_type': 'sourceType',
             'extra_info': 'extraInfo',
             'tags': 'tags',
-            'tag_ids': 'tagIds'
+            'exercises': 'exercises'
         }
 
         self._id = id
@@ -71,7 +70,7 @@ class Source(Model):
         self._source_type = source_type
         self._extra_info = extra_info
         self._tags = tags
-        self._tag_ids = tag_ids
+        self._exercises = exercises
 
     @classmethod
     def from_dict(cls, dikt) -> 'Source':
@@ -102,8 +101,6 @@ class Source(Model):
         :param id: The id of this Source.
         :type id: int
         """
-        if id is None:
-            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
         self._id = id
 
@@ -242,43 +239,43 @@ class Source(Model):
         self._extra_info = extra_info
 
     @property
-    def tags(self) -> List[Tag]:
+    def tags(self) -> List[str]:
         """Gets the tags of this Source.
 
 
         :return: The tags of this Source.
-        :rtype: List[Tag]
+        :rtype: List[str]
         """
         return self._tags
 
     @tags.setter
-    def tags(self, tags: List[Tag]):
+    def tags(self, tags: List[str]):
         """Sets the tags of this Source.
 
 
         :param tags: The tags of this Source.
-        :type tags: List[Tag]
+        :type tags: List[str]
         """
 
         self._tags = tags
 
     @property
-    def tag_ids(self) -> List[int]:
-        """Gets the tag_ids of this Source.
+    def exercises(self) -> List[str]:
+        """Gets the exercises of this Source.
 
 
-        :return: The tag_ids of this Source.
-        :rtype: List[int]
+        :return: The exercises of this Source.
+        :rtype: List[str]
         """
-        return self._tag_ids
+        return self._exercises
 
-    @tag_ids.setter
-    def tag_ids(self, tag_ids: List[int]):
-        """Sets the tag_ids of this Source.
+    @exercises.setter
+    def exercises(self, exercises: List[str]):
+        """Sets the exercises of this Source.
 
 
-        :param tag_ids: The tag_ids of this Source.
-        :type tag_ids: List[int]
+        :param exercises: The exercises of this Source.
+        :type exercises: List[str]
         """
 
-        self._tag_ids = tag_ids
+        self._exercises = exercises

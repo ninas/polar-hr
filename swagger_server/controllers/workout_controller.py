@@ -6,24 +6,13 @@ from swagger_server.models.workout_query import WorkoutQuery  # noqa: E501
 from swagger_server import util
 
 
-def all_workouts():  # noqa: E501
-    """Fetch all workouts
+def get_workouts(id=None, samples=None):  # noqa: E501
+    """Retrieve a specific workout or all if no ids are specified
 
-    Returns all workouts # noqa: E501
+    Returns workouts # noqa: E501
 
-
-    :rtype: List[Workout]
-    """
-    return 'do some magic!'
-
-
-def get_workout_by_id(workoutId, samples=None):  # noqa: E501
-    """Retrieve a specific workout
-
-    Returns a single workout # noqa: E501
-
-    :param workoutId: ID of workout to return
-    :type workoutId: int
+    :param id: ID of source to return
+    :type id: List[int]
     :param samples: Whether to include samples in return
     :type samples: bool
 

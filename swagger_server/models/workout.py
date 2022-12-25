@@ -9,7 +9,6 @@ from swagger_server.models.base_model_ import Model
 from swagger_server.models.equipment import Equipment
 from swagger_server.models.hr_zone import HRZone
 from swagger_server.models.source import Source
-from swagger_server.models.tag import Tag
 from swagger_server import util
 
 
@@ -19,7 +18,7 @@ class Workout(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id: int=None, start_time: datetime=None, end_time: datetime=None, samples: List[int]=None, sport: str=None, calories: int=None, avg_hr: int=None, min_hr: int=None, max_hr: int=None, notes: str=None, equipment: List[Equipment]=None, equipment_ids: List[int]=None, sources: List[Source]=None, source_ids: List[int]=None, tags: List[Tag]=None, tag_ids: List[int]=None, hr_zones: List[HRZone]=None):  # noqa: E501
+    def __init__(self, id: int=None, start_time: datetime=None, end_time: datetime=None, samples: List[int]=None, sport: str=None, calories: int=None, avg_hr: int=None, min_hr: int=None, max_hr: int=None, notes: str=None, equipment: List[Equipment]=None, sources: List[Source]=None, hr_zones: List[HRZone]=None):  # noqa: E501
         """Workout - a model defined in Swagger
 
         :param id: The id of this Workout.  # noqa: E501
@@ -44,16 +43,8 @@ class Workout(Model):
         :type notes: str
         :param equipment: The equipment of this Workout.  # noqa: E501
         :type equipment: List[Equipment]
-        :param equipment_ids: The equipment_ids of this Workout.  # noqa: E501
-        :type equipment_ids: List[int]
         :param sources: The sources of this Workout.  # noqa: E501
         :type sources: List[Source]
-        :param source_ids: The source_ids of this Workout.  # noqa: E501
-        :type source_ids: List[int]
-        :param tags: The tags of this Workout.  # noqa: E501
-        :type tags: List[Tag]
-        :param tag_ids: The tag_ids of this Workout.  # noqa: E501
-        :type tag_ids: List[int]
         :param hr_zones: The hr_zones of this Workout.  # noqa: E501
         :type hr_zones: List[HRZone]
         """
@@ -69,11 +60,7 @@ class Workout(Model):
             'max_hr': int,
             'notes': str,
             'equipment': List[Equipment],
-            'equipment_ids': List[int],
             'sources': List[Source],
-            'source_ids': List[int],
-            'tags': List[Tag],
-            'tag_ids': List[int],
             'hr_zones': List[HRZone]
         }
 
@@ -89,11 +76,7 @@ class Workout(Model):
             'max_hr': 'maxHR',
             'notes': 'notes',
             'equipment': 'equipment',
-            'equipment_ids': 'equipmentIds',
             'sources': 'sources',
-            'source_ids': 'sourceIds',
-            'tags': 'tags',
-            'tag_ids': 'tagIds',
             'hr_zones': 'hrZones'
         }
 
@@ -108,11 +91,7 @@ class Workout(Model):
         self._max_hr = max_hr
         self._notes = notes
         self._equipment = equipment
-        self._equipment_ids = equipment_ids
         self._sources = sources
-        self._source_ids = source_ids
-        self._tags = tags
-        self._tag_ids = tag_ids
         self._hr_zones = hr_zones
 
     @classmethod
@@ -144,8 +123,6 @@ class Workout(Model):
         :param id: The id of this Workout.
         :type id: int
         """
-        if id is None:
-            raise ValueError("Invalid value for `id`, must not be `None`")  # noqa: E501
 
         self._id = id
 
@@ -362,27 +339,6 @@ class Workout(Model):
         self._equipment = equipment
 
     @property
-    def equipment_ids(self) -> List[int]:
-        """Gets the equipment_ids of this Workout.
-
-
-        :return: The equipment_ids of this Workout.
-        :rtype: List[int]
-        """
-        return self._equipment_ids
-
-    @equipment_ids.setter
-    def equipment_ids(self, equipment_ids: List[int]):
-        """Sets the equipment_ids of this Workout.
-
-
-        :param equipment_ids: The equipment_ids of this Workout.
-        :type equipment_ids: List[int]
-        """
-
-        self._equipment_ids = equipment_ids
-
-    @property
     def sources(self) -> List[Source]:
         """Gets the sources of this Workout.
 
@@ -402,69 +358,6 @@ class Workout(Model):
         """
 
         self._sources = sources
-
-    @property
-    def source_ids(self) -> List[int]:
-        """Gets the source_ids of this Workout.
-
-
-        :return: The source_ids of this Workout.
-        :rtype: List[int]
-        """
-        return self._source_ids
-
-    @source_ids.setter
-    def source_ids(self, source_ids: List[int]):
-        """Sets the source_ids of this Workout.
-
-
-        :param source_ids: The source_ids of this Workout.
-        :type source_ids: List[int]
-        """
-
-        self._source_ids = source_ids
-
-    @property
-    def tags(self) -> List[Tag]:
-        """Gets the tags of this Workout.
-
-
-        :return: The tags of this Workout.
-        :rtype: List[Tag]
-        """
-        return self._tags
-
-    @tags.setter
-    def tags(self, tags: List[Tag]):
-        """Sets the tags of this Workout.
-
-
-        :param tags: The tags of this Workout.
-        :type tags: List[Tag]
-        """
-
-        self._tags = tags
-
-    @property
-    def tag_ids(self) -> List[int]:
-        """Gets the tag_ids of this Workout.
-
-
-        :return: The tag_ids of this Workout.
-        :rtype: List[int]
-        """
-        return self._tag_ids
-
-    @tag_ids.setter
-    def tag_ids(self, tag_ids: List[int]):
-        """Sets the tag_ids of this Workout.
-
-
-        :param tag_ids: The tag_ids of this Workout.
-        :type tag_ids: List[int]
-        """
-
-        self._tag_ids = tag_ids
 
     @property
     def hr_zones(self) -> List[HRZone]:

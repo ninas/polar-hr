@@ -61,5 +61,7 @@ class WorkoutQuery(Model):
         :param query: The query of this WorkoutQuery.
         :type query: Query
         """
+        if query is None:
+            raise ValueError("Invalid value for `query`, must not be `None`")  # noqa: E501
 
         self._query = query

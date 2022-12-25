@@ -9,8 +9,8 @@ from swagger_server.models.base_model_ import Model
 from swagger_server.models.date_range import DateRange
 from swagger_server.models.equipment import Equipment
 from swagger_server.models.hr_range import HRRange
+from swagger_server.models.hr_zone_above import HRZoneAbove
 from swagger_server.models.hr_zone_range import HRZoneRange
-from swagger_server.models.source_query_params import SourceQueryParams
 from swagger_server import util
 
 
@@ -20,13 +20,9 @@ class WorkoutQueryParams(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, tags: List[str]=None, tag_types: List[str]=None, date_range: DateRange=None, sport: List[str]=None, samples: bool=None, equipment: List[Equipment]=None, hr_range: HRRange=None, avg_hr_range: HRRange=None, in_hr_zone: List[HRZoneRange]=None, above_hr_zone: List[HRZoneRange]=None, source_params: SourceQueryParams=None):  # noqa: E501
+    def __init__(self, date_range: DateRange=None, sport: List[str]=None, samples: bool=None, equipment: List[Equipment]=None, hr_range: HRRange=None, avg_hr_range: HRRange=None, in_hr_zone: List[HRZoneRange]=None, above_hr_zone: List[HRZoneAbove]=None):  # noqa: E501
         """WorkoutQueryParams - a model defined in Swagger
 
-        :param tags: The tags of this WorkoutQueryParams.  # noqa: E501
-        :type tags: List[str]
-        :param tag_types: The tag_types of this WorkoutQueryParams.  # noqa: E501
-        :type tag_types: List[str]
         :param date_range: The date_range of this WorkoutQueryParams.  # noqa: E501
         :type date_range: DateRange
         :param sport: The sport of this WorkoutQueryParams.  # noqa: E501
@@ -42,13 +38,9 @@ class WorkoutQueryParams(Model):
         :param in_hr_zone: The in_hr_zone of this WorkoutQueryParams.  # noqa: E501
         :type in_hr_zone: List[HRZoneRange]
         :param above_hr_zone: The above_hr_zone of this WorkoutQueryParams.  # noqa: E501
-        :type above_hr_zone: List[HRZoneRange]
-        :param source_params: The source_params of this WorkoutQueryParams.  # noqa: E501
-        :type source_params: SourceQueryParams
+        :type above_hr_zone: List[HRZoneAbove]
         """
         self.swagger_types = {
-            'tags': List[str],
-            'tag_types': List[str],
             'date_range': DateRange,
             'sport': List[str],
             'samples': bool,
@@ -56,13 +48,10 @@ class WorkoutQueryParams(Model):
             'hr_range': HRRange,
             'avg_hr_range': HRRange,
             'in_hr_zone': List[HRZoneRange],
-            'above_hr_zone': List[HRZoneRange],
-            'source_params': SourceQueryParams
+            'above_hr_zone': List[HRZoneAbove]
         }
 
         self.attribute_map = {
-            'tags': 'tags',
-            'tag_types': 'tagTypes',
             'date_range': 'dateRange',
             'sport': 'sport',
             'samples': 'samples',
@@ -70,12 +59,9 @@ class WorkoutQueryParams(Model):
             'hr_range': 'hrRange',
             'avg_hr_range': 'avgHRRange',
             'in_hr_zone': 'inHRZone',
-            'above_hr_zone': 'aboveHRZone',
-            'source_params': 'sourceParams'
+            'above_hr_zone': 'aboveHRZone'
         }
 
-        self._tags = tags
-        self._tag_types = tag_types
         self._date_range = date_range
         self._sport = sport
         self._samples = samples
@@ -84,7 +70,6 @@ class WorkoutQueryParams(Model):
         self._avg_hr_range = avg_hr_range
         self._in_hr_zone = in_hr_zone
         self._above_hr_zone = above_hr_zone
-        self._source_params = source_params
 
     @classmethod
     def from_dict(cls, dikt) -> 'WorkoutQueryParams':
@@ -96,52 +81,6 @@ class WorkoutQueryParams(Model):
         :rtype: WorkoutQueryParams
         """
         return util.deserialize_model(dikt, cls)
-
-    @property
-    def tags(self) -> List[str]:
-        """Gets the tags of this WorkoutQueryParams.
-
-        Tags to filter by  # noqa: E501
-
-        :return: The tags of this WorkoutQueryParams.
-        :rtype: List[str]
-        """
-        return self._tags
-
-    @tags.setter
-    def tags(self, tags: List[str]):
-        """Sets the tags of this WorkoutQueryParams.
-
-        Tags to filter by  # noqa: E501
-
-        :param tags: The tags of this WorkoutQueryParams.
-        :type tags: List[str]
-        """
-
-        self._tags = tags
-
-    @property
-    def tag_types(self) -> List[str]:
-        """Gets the tag_types of this WorkoutQueryParams.
-
-        Filter by specific type of tag  # noqa: E501
-
-        :return: The tag_types of this WorkoutQueryParams.
-        :rtype: List[str]
-        """
-        return self._tag_types
-
-    @tag_types.setter
-    def tag_types(self, tag_types: List[str]):
-        """Sets the tag_types of this WorkoutQueryParams.
-
-        Filter by specific type of tag  # noqa: E501
-
-        :param tag_types: The tag_types of this WorkoutQueryParams.
-        :type tag_types: List[str]
-        """
-
-        self._tag_types = tag_types
 
     @property
     def date_range(self) -> DateRange:
@@ -168,7 +107,7 @@ class WorkoutQueryParams(Model):
     def sport(self) -> List[str]:
         """Gets the sport of this WorkoutQueryParams.
 
-        Filter by sport type  # noqa: E501
+        Filter by sport type. Sports are ORed  # noqa: E501
 
         :return: The sport of this WorkoutQueryParams.
         :rtype: List[str]
@@ -179,7 +118,7 @@ class WorkoutQueryParams(Model):
     def sport(self, sport: List[str]):
         """Sets the sport of this WorkoutQueryParams.
 
-        Filter by sport type  # noqa: E501
+        Filter by sport type. Sports are ORed  # noqa: E501
 
         :param sport: The sport of this WorkoutQueryParams.
         :type sport: List[str]
@@ -299,45 +238,24 @@ class WorkoutQueryParams(Model):
         self._in_hr_zone = in_hr_zone
 
     @property
-    def above_hr_zone(self) -> List[HRZoneRange]:
+    def above_hr_zone(self) -> List[HRZoneAbove]:
         """Gets the above_hr_zone of this WorkoutQueryParams.
 
-        Time spent within and above a specific heart rate zone  # noqa: E501
+        Time spent above a specific heart rate zone  # noqa: E501
 
         :return: The above_hr_zone of this WorkoutQueryParams.
-        :rtype: List[HRZoneRange]
+        :rtype: List[HRZoneAbove]
         """
         return self._above_hr_zone
 
     @above_hr_zone.setter
-    def above_hr_zone(self, above_hr_zone: List[HRZoneRange]):
+    def above_hr_zone(self, above_hr_zone: List[HRZoneAbove]):
         """Sets the above_hr_zone of this WorkoutQueryParams.
 
-        Time spent within and above a specific heart rate zone  # noqa: E501
+        Time spent above a specific heart rate zone  # noqa: E501
 
         :param above_hr_zone: The above_hr_zone of this WorkoutQueryParams.
-        :type above_hr_zone: List[HRZoneRange]
+        :type above_hr_zone: List[HRZoneAbove]
         """
 
         self._above_hr_zone = above_hr_zone
-
-    @property
-    def source_params(self) -> SourceQueryParams:
-        """Gets the source_params of this WorkoutQueryParams.
-
-
-        :return: The source_params of this WorkoutQueryParams.
-        :rtype: SourceQueryParams
-        """
-        return self._source_params
-
-    @source_params.setter
-    def source_params(self, source_params: SourceQueryParams):
-        """Sets the source_params of this WorkoutQueryParams.
-
-
-        :param source_params: The source_params of this WorkoutQueryParams.
-        :type source_params: SourceQueryParams
-        """
-
-        self._source_params = source_params

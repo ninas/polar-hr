@@ -13,36 +13,17 @@ from swagger_server.test import BaseTestCase
 class TestSourceController(BaseTestCase):
     """SourceController integration test stubs"""
 
-    def test_all_sources(self):
-        """Test case for all_sources
+    def test_get_sources(self):
+        """Test case for get_sources
 
-        Return all sources
+        Retrieve a specific source using its id or all if no ids are specified
         """
+        query_string = [('id', 56),
+                        ('url', 56)]
         response = self.client.open(
             '/NINASCHIFF/workout-api/1.0.0/sources',
-            method='GET')
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_get_source_by_id(self):
-        """Test case for get_source_by_id
-
-        Retrieve a specific source using its id
-        """
-        response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/source/{sourceId}'.format(sourceId=789),
-            method='GET')
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_get_source_by_url(self):
-        """Test case for get_source_by_url
-
-        Retrieve a specific source using its url
-        """
-        response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/source/url/{sourceUrl}'.format(sourceUrl='sourceUrl_example'),
-            method='GET')
+            method='GET',
+            query_string=query_string)
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 

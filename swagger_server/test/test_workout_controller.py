@@ -13,25 +13,15 @@ from swagger_server.test import BaseTestCase
 class TestWorkoutController(BaseTestCase):
     """WorkoutController integration test stubs"""
 
-    def test_all_workouts(self):
-        """Test case for all_workouts
+    def test_get_workouts(self):
+        """Test case for get_workouts
 
-        Fetch all workouts
+        Retrieve a specific workout or all if no ids are specified
         """
+        query_string = [('id', 56),
+                        ('samples', true)]
         response = self.client.open(
             '/NINASCHIFF/workout-api/1.0.0/workouts',
-            method='GET')
-        self.assert200(response,
-                       'Response body is : ' + response.data.decode('utf-8'))
-
-    def test_get_workout_by_id(self):
-        """Test case for get_workout_by_id
-
-        Retrieve a specific workout
-        """
-        query_string = [('samples', true)]
-        response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/workout/{workoutId}'.format(workoutId=789),
             method='GET',
             query_string=query_string)
         self.assert200(response,
