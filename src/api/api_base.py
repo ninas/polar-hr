@@ -1,5 +1,6 @@
 import json
 from functools import cache, cached_property
+import isodate
 
 from peewee import prefetch, fn
 
@@ -27,11 +28,17 @@ class APIBase:
         models.Equipment: {},
     }
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, id_dev=True):
         self.logger = logger
         if self.logger == None:
-            self.logger = log.new_logger(is_dev=True)
+            self.logger = log.new_logger(is_dev)
 
+        if is_dev:
+            import logging
+
+            logger = logging.getLogger("peewee")
+            logger.addHandler(logging.StreamHandler())
+            logger.setLevel(logging.DEBUG)
         self._models = {}
         self.db = self._get_db()
 
