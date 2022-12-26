@@ -1,8 +1,8 @@
 import connexion
 import six
 
+from swagger_server.models.query import Query  # noqa: E501
 from swagger_server.models.workout import Workout  # noqa: E501
-from swagger_server.models.workout_query import WorkoutQuery  # noqa: E501
 from swagger_server import util
 
 
@@ -11,7 +11,7 @@ def get_workouts(id=None, samples=None):  # noqa: E501
 
     Returns workouts # noqa: E501
 
-    :param id: ID of source to return
+    :param id: ID of workout to return
     :type id: List[int]
     :param samples: Whether to include samples in return
     :type samples: bool
@@ -32,5 +32,5 @@ def search_for_workouts(body):  # noqa: E501
     :rtype: List[Workout]
     """
     if connexion.request.is_json:
-        body = WorkoutQuery.from_dict(connexion.request.get_json())  # noqa: E501
+        body = Query.from_dict(connexion.request.get_json())  # noqa: E501
     return 'do some magic!'

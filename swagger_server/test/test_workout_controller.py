@@ -5,8 +5,8 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from swagger_server.models.query import Query  # noqa: E501
 from swagger_server.models.workout import Workout  # noqa: E501
-from swagger_server.models.workout_query import WorkoutQuery  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
@@ -32,7 +32,7 @@ class TestWorkoutController(BaseTestCase):
 
         Search for workouts
         """
-        body = WorkoutQuery()
+        body = Query()
         response = self.client.open(
             '/NINASCHIFF/workout-api/1.0.0/workouts',
             method='POST',

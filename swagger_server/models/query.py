@@ -17,30 +17,30 @@ class Query(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, source_attributes: SourceQueryParams=None, workout_attributes: WorkoutQueryParams=None, paginate: bool=None):  # noqa: E501
+    def __init__(self, sources_attributes: SourceQueryParams=None, workouts_attributes: WorkoutQueryParams=None, paginate: bool=None):  # noqa: E501
         """Query - a model defined in Swagger
 
-        :param source_attributes: The source_attributes of this Query.  # noqa: E501
-        :type source_attributes: SourceQueryParams
-        :param workout_attributes: The workout_attributes of this Query.  # noqa: E501
-        :type workout_attributes: WorkoutQueryParams
+        :param sources_attributes: The sources_attributes of this Query.  # noqa: E501
+        :type sources_attributes: SourceQueryParams
+        :param workouts_attributes: The workouts_attributes of this Query.  # noqa: E501
+        :type workouts_attributes: WorkoutQueryParams
         :param paginate: The paginate of this Query.  # noqa: E501
         :type paginate: bool
         """
         self.swagger_types = {
-            'source_attributes': SourceQueryParams,
-            'workout_attributes': WorkoutQueryParams,
+            'sources_attributes': SourceQueryParams,
+            'workouts_attributes': WorkoutQueryParams,
             'paginate': bool
         }
 
         self.attribute_map = {
-            'source_attributes': 'sourceAttributes',
-            'workout_attributes': 'workoutAttributes',
+            'sources_attributes': 'sourcesAttributes',
+            'workouts_attributes': 'workoutsAttributes',
             'paginate': 'paginate'
         }
 
-        self._source_attributes = source_attributes
-        self._workout_attributes = workout_attributes
+        self._sources_attributes = sources_attributes
+        self._workouts_attributes = workouts_attributes
         self._paginate = paginate
 
     @classmethod
@@ -55,46 +55,46 @@ class Query(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def source_attributes(self) -> SourceQueryParams:
-        """Gets the source_attributes of this Query.
+    def sources_attributes(self) -> SourceQueryParams:
+        """Gets the sources_attributes of this Query.
 
 
-        :return: The source_attributes of this Query.
+        :return: The sources_attributes of this Query.
         :rtype: SourceQueryParams
         """
-        return self._source_attributes
+        return self._sources_attributes
 
-    @source_attributes.setter
-    def source_attributes(self, source_attributes: SourceQueryParams):
-        """Sets the source_attributes of this Query.
+    @sources_attributes.setter
+    def sources_attributes(self, sources_attributes: SourceQueryParams):
+        """Sets the sources_attributes of this Query.
 
 
-        :param source_attributes: The source_attributes of this Query.
-        :type source_attributes: SourceQueryParams
+        :param sources_attributes: The sources_attributes of this Query.
+        :type sources_attributes: SourceQueryParams
         """
 
-        self._source_attributes = source_attributes
+        self._sources_attributes = sources_attributes
 
     @property
-    def workout_attributes(self) -> WorkoutQueryParams:
-        """Gets the workout_attributes of this Query.
+    def workouts_attributes(self) -> WorkoutQueryParams:
+        """Gets the workouts_attributes of this Query.
 
 
-        :return: The workout_attributes of this Query.
+        :return: The workouts_attributes of this Query.
         :rtype: WorkoutQueryParams
         """
-        return self._workout_attributes
+        return self._workouts_attributes
 
-    @workout_attributes.setter
-    def workout_attributes(self, workout_attributes: WorkoutQueryParams):
-        """Sets the workout_attributes of this Query.
+    @workouts_attributes.setter
+    def workouts_attributes(self, workouts_attributes: WorkoutQueryParams):
+        """Sets the workouts_attributes of this Query.
 
 
-        :param workout_attributes: The workout_attributes of this Query.
-        :type workout_attributes: WorkoutQueryParams
+        :param workouts_attributes: The workouts_attributes of this Query.
+        :type workouts_attributes: WorkoutQueryParams
         """
 
-        self._workout_attributes = workout_attributes
+        self._workouts_attributes = workouts_attributes
 
     @property
     def paginate(self) -> bool:

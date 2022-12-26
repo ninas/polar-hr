@@ -27,7 +27,7 @@ paths:
       parameters:
       - name: "id"
         in: "query"
-        description: "ID of source to return"
+        description: "ID of workout to return"
         required: false
         type: "array"
         items:
@@ -64,7 +64,7 @@ paths:
         description: "Search for workouts"
         required: true
         schema:
-          $ref: "#/definitions/WorkoutQuery"
+          $ref: "#/definitions/Query"
       responses:
         "200":
           description: "successful operation"
@@ -130,7 +130,7 @@ paths:
         description: "Search for sources"
         required: true
         schema:
-          $ref: "#/definitions/SourceQuery"
+          $ref: "#/definitions/Query"
       responses:
         "200":
           description: "successful operation"
@@ -653,29 +653,12 @@ definitions:
       id: 0
       endTime: "2022-12-10T00:14:25-00:00"
       sport: "sport"
-  SourceQuery:
-    type: "object"
-    required:
-    - "query"
-    properties:
-      query:
-        $ref: "#/definitions/Query"
-    description: "Convenience wrapper around Query to specifically return Source objects"
-  WorkoutQuery:
-    type: "object"
-    required:
-    - "query"
-    properties:
-      query:
-        $ref: "#/definitions/Query"
-    description: "Convenience wrapper around Query to specifically return Workout\
-      \ objects"
   Query:
     type: "object"
     properties:
-      sourceAttributes:
+      sourcesAttributes:
         $ref: "#/definitions/SourceQueryParams"
-      workoutAttributes:
+      workoutsAttributes:
         $ref: "#/definitions/WorkoutQueryParams"
       paginate:
         type: "boolean"
@@ -774,7 +757,7 @@ definitions:
         type: "string"
         example: "P1DT12H"
         description: "Duration in ISO 8601 format"
-      percentageOfWorkout:
+      percentSpentIn:
         type: "number"
         format: "float"
         description: "This supersedes min/maxTime and will be used instead. Percentage\
@@ -806,15 +789,6 @@ definitions:
     - "seventy_to_80"
     - "eighty_to_90"
     - "ninety_to_100"
-  TagType:
-    type: "string"
-    description: "Additional metadata on the source of the tag"
-    enum:
-    - "creator"
-    - "tag"
-    - "exercise"
-    - "equipment"
-    - "sport"
   EquipmentType:
     type: "string"
     enum:

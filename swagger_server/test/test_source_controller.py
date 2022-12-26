@@ -5,8 +5,8 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from swagger_server.models.query import Query  # noqa: E501
 from swagger_server.models.source import Source  # noqa: E501
-from swagger_server.models.source_query import SourceQuery  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
@@ -32,7 +32,7 @@ class TestSourceController(BaseTestCase):
 
         Search for sources
         """
-        body = SourceQuery()
+        body = Query()
         response = self.client.open(
             '/NINASCHIFF/workout-api/1.0.0/sources',
             method='POST',
