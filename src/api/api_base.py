@@ -28,10 +28,10 @@ class APIBase:
         models.Equipment: {},
     }
 
-    def __init__(self, logger=None, id_dev=True):
+    def __init__(self, logger=None, is_dev=True):
         self.logger = logger
         if self.logger == None:
-            self.logger = log.new_logger(is_dev)
+            self.logger = log.new_logger(is_dev=is_dev)
 
         if is_dev:
             import logging
