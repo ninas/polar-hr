@@ -1,16 +1,16 @@
 import json
-from datetime import datetime, timedelta
 from functools import cache, cached_property
-
+from datetime import datetime, timedelta
 import isodate
-from peewee import fn, prefetch
+
+from peewee import prefetch, fn
 
 from src.db.workout import models
 from src.utils import log
 from src.utils.db_utils import DBConnection
 
 
-class APIBase:
+class DBBase:
     PREFETCH_MAPPINGS = {
         models.Workouts: {
             models.Tags: models.Workouts.tags.get_through_model(),
@@ -75,7 +75,7 @@ class APIBase:
             "Sources": self._sources,
             "Workouts": self._workouts,
             "Equipment": self._basic_object,
-            "Tags": self._basic_object,
+            "Tags": self._tags,
         }
         if model_select.model.__name__ not in model_to_func:
             return []
@@ -103,7 +103,7 @@ class APIBase:
         return data
 
     @cache
-    def _workouts(self, workouts_model_select, include_samples=True):
+    def _workouts(self, workouts_model_select, include_samples=False):
         data = {}
         with self.db.atomic():
             workouts_model_select = self._prefetch(workouts_model_select)
@@ -119,27 +119,34 @@ class APIBase:
                 sample_model = models.Samples.select()
                 self._prefetch_models(sample_model, workouts_model_select)
                 for sample in sample_model:
-                    data[sample.workout_id]["samples"] = sample.samples
+                    if sample.workout_id in data:
+                        data[sample.workout_id]["samples"] = sample.samples
 
             hr_model = models.HRZones.select()
             self._prefetch_models(hr_model, workouts_model_select)
             for zone in hr_model:
-                z = zone.json_friendly()
-                del z["workout"]
-                data[zone.workout_id]["hrzones"][zone.zonetype] = z
+                if zone.workout_id in data:
+                    z = zone.json_friendly()
+                    del z["workout"]
+                    data[zone.workout_id]["hrzones"][zone.zonetype] = z
 
         return data
+
+    @cache
+    def _tags(self, model_select):
+        with self.db.atomic():
+            return [t.name for t in model_select]
 
     @cache
     def _basic_object(self, model_select):
         with self.db.atomic():
             return [m for m in model_select.dicts()]
 
-    def _gen_workouts_query(self, query, return_vals):
-        wrkouts = models.Workouts.select(*return_vals)
+    def _gen_workouts_query(self, query):
+        wrkouts = models.Workouts.select(models.Workouts.id)
 
-        include_samples = query.samples is None or query.samples
-
+        if query.samples is not None and query.samples:
+            wrkouts = wrkouts.join(models.Samples)
         if query.sport is not None and len(query.sport) > 0:
             wrkouts = wrkouts.where(models.Workouts.sport << set(query.sport))
 
@@ -291,35 +298,74 @@ class APIBase:
 
         return srcs
 
-    def query_sources(self, query):
+    def query_workouts(self, query):
+        return_data = {}
+        wrks = None
+
+        if query.workout_attributes is not None:
+            wrks = self._gen_workouts_query(query.workout_attributes)
+
+        if query.source_attributes is not None:
+
+            through = models.Workouts.sources.get_through_model()
+            wrk_through = (
+                through.select(models.Workouts.id)
+                .join(models.Workouts)
+                .where(
+                    through.sources_id
+                    << self._gen_sources_query(query.source_attributes)
+                )
+            )
+            if wrks is None:
+                wrks = wrk_through
+            else:
+                wrks = wrks.intersect(wrk_through)
+
+        if wrks is not None:
+            workout_model = models.Workouts.select().where(models.Workouts.id << wrks)
+            return_data = self._fetch_from_model(workouts_model)
+
+        return return_data
+
+    @cache
+    def _query_ordering(self, model_name):
+        return {
+            "Sources": ["sources", "workouts"],
+            "Workouts": ["workouts", "sources"],
+        }[model_name]
+
+    def query(self, model, query):
         return_data = {}
         srcs = None
 
-        if query.source_attributes is not None:
-            srcs = self._gen_sources_query(query.source_attributes)
+        name1, name2 = self._query_ordering(model.__name__)
+        q1, q2 = [
+            getattr(query, f"{i}_attributes")
+            for i in self._query_ordering(model.__name__)
+        ]
 
-        if query.workout_attributes is not None:
-            through = models.Workouts.sources.get_through_model()
-            wrk = (
-                through.select(models.Sources.id)
-                .join(models.Sources)
+        one = None
+        if q1 is not None:
+            one = getattr(self, f"_gen_{name1}_query")(q1)
+
+        if q2 is not None:
+            through = getattr(model, f"{name2}").get_through_model()
+            two = (
+                through.select(model.id)
+                .join(model)
                 .where(
-                    through.workouts_id
-                    << self._gen_workouts_query(
-                        query.workout_attributes, [models.Workouts.id]
-                    )
+                    getattr(through, f"{name2}_id")
+                    << getattr(self, f"_gen_{name2}_query")(q2)
                 )
             )
-            if srcs is None:
-                srcs = wrk
+            if one is None:
+                one = two
             else:
-                srcs = srcs.intersect(wrk)
+                one = one.intersect(two)
 
-        if srcs is not None:
-            src_model = models.Sources.select().where(models.Sources.id << srcs)
-
-        if src_model is not None:
-            return_data = self._fetch_from_model(src_model)
+        if one is not None:
+            one_select = model.select().where(model.id << one)
+            return_data = self._fetch_from_model(one_select)
 
         return return_data
 
