@@ -12,20 +12,18 @@ from src.utils.db_utils import DBConnection
 class APIBase:
     PREFETCH_MAPPINGS = {
         models.Workouts: {
-            models.Tags: {"through": models.Workouts.tags.get_through_model(),},
-            models.Sources: {"through": models.Workouts.sources.get_through_model(),},
-            models.Equipment: {
-                "through": models.Workouts.equipment.get_through_model(),
-            },
-            models.HRZones: {"flip": True},
-            models.Samples: {"flip": True},
+            models.Tags: models.Workouts.tags.get_through_model(),
+            models.Sources: models.Workouts.sources.get_through_model(),
+            models.Equipment: models.Workouts.equipment.get_through_model(),
         },
         models.Sources: {
-            models.Workouts: {"through": models.Workouts.sources.get_through_model()},
-            models.Tags: {"through": models.Sources.tags.get_through_model()},
+            models.Workouts: models.Workouts.sources.get_through_model(),
+            models.Tags: models.Sources.tags.get_through_model(),
         },
         models.Tags: {},
         models.Equipment: {},
+        models.HRZones: {models.Workouts: None},
+        models.Samples: {models.Workouts: None},
     }
 
     def __init__(self, logger=None, is_dev=True):
@@ -48,27 +46,28 @@ class APIBase:
         logger = log.new_logger(is_dev=True)
         return DBConnection(logger).workout_db
 
-    def _lazy_load_model(self, model):
-        return self._models.setdefault(model, model.select())
-
     @cache
-    def _prefetch(self, main_model):
+    def _prefetch(self, main_model_select):
         with self.db.atomic():
-            mm = self._lazy_load_model(main_model)
-            for second_model, options in self.PREFETCH_MAPPINGS[main_model].items():
+            if main_model_select is None:
+                main_model_select = main_model.select()
+            mm = main_model_select
+            for second_model, through in self.PREFETCH_MAPPINGS[
+                main_model_select.model
+            ].items():
 
-                sm = self._lazy_load_model(second_model)
+                sm = second_model.select()
+                self._prefetch_models(main_model_select, sm, through)
 
-                modelselects = [mm, sm] if "flip" not in options else [sm, mm]
-
-                if "through" in options:
-                    tm = self._lazy_load_model(options["through"])
-                    modelselects.insert(1, tm)
-                prefetch(*modelselects)
-            return mm
+            return main_model_select
 
     @cache
+    def _prefetch_models(self, mod1, mod2, through=None):
+        modelselects = [mod1, mod2]
 
+        if through is not None:
+            modelselects.insert(1, through.select())
+        prefetch(*modelselects)
 
     def _fetch_from_model(self, model_select):
         model_to_func = {
@@ -85,6 +84,7 @@ class APIBase:
     def _sources(self, sources_model_select):
         data = {}
         with self.db.atomic():
+            sources_model_select = self._prefetch(sources_model_select)
             for source in sources_model_select:
                 s = source.json_friendly()
                 s["tags"] = []
@@ -105,6 +105,7 @@ class APIBase:
     def _workouts(self, workouts_model_select):
         data = {}
         with self.db.atomic():
+            workouts_model_select = self._prefetch(workouts_model_select)
             for workout in workouts_model_select:
                 w = workout.json_friendly()
                 w["sources"] = [s.url for s in workout.sources]
@@ -113,13 +114,17 @@ class APIBase:
                 w["hrzones"] = {}
                 data[workout.id] = w
 
-            for sample in self._lazy_load_model(models.Samples):
-                data[sample.workout.id]["samples"] = sample.samples
+                sample_model = models.Samples.select()
+                self._prefetch_models(sample_model, workouts_model_select)
+                for sample in sample_model:
+                    data[sample.workout_id]["samples"] = sample.samples
 
-            for zone in self._lazy_load_model(models.HRZones):
+            hr_model = models.HRZones.select()
+            self._prefetch_models(hr_model, workouts_model_select)
+            for zone in hr_model:
                 z = zone.json_friendly()
                 del z["workout"]
-                data[zone.workout.id]["hrzones"][zone.zonetype] = z
+                data[zone.workout_id]["hrzones"][zone.zonetype] = z
 
         return data
 
@@ -129,7 +134,7 @@ class APIBase:
             return [m for m in model_select.dicts()]
 
     def _gen_sources_query(self, query):
-        srcs = self.prefetch_sources()
+        srcs = models.Sources.select(models.Sources.id)
         source_tags_to_filter = set()
 
         if query.exercises is not None:
@@ -171,8 +176,7 @@ class APIBase:
         return return_data
 
     def by_id(self, model, identifiers):
-        name = model.__name__
-        model_select = self._prefetch(model)
+        model_select = model.select()
         for field, ids in identifiers.items():
             model_select = model_select.orwhere(field << ids)
 
