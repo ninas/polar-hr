@@ -10,7 +10,7 @@ def equipment_http(request):
     """
     /equipment
     """
-    func = lambda api, data: api.fetch_from_model("Equipment")
+    func = lambda api, data: api.get_all(models.Equipment)
     return base_function(request, func)
 
 
@@ -56,8 +56,8 @@ def everything_http(request, is_dev=False):
         "tags": tags_http(request),
         "equipment": equipment_http(request),
         "exercises": exercises_http(request),
-        "workouts": api.fetch_from_model("Workouts"),
-        "sources": api.fetch_from_model("Sources"),
+        "workouts": api.get_all(models.Workouts),
+        "sources": api.get_all(models.Sources),
     }
 
     return base_function(request, func)

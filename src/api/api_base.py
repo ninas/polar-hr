@@ -68,32 +68,18 @@ class APIBase:
             return mm
 
     @cache
-    def prefetch_workouts(self):
-        return self._prefetch(models.Workouts)
 
-    @cache
-    def prefetch_sources(self):
-        return self._prefetch(models.Sources)
 
-    @cache
-    def prefetch_all(self):
-        return {
-            "workouts": self.prefetch_workouts(),
-            "sources": self.prefetch_sources(),
-        }
-
-    def fetch_from_model(self, model_type, model=None):
+    def _fetch_from_model(self, model_select):
         model_to_func = {
             "Sources": self._sources,
             "Workouts": self._workouts,
             "Equipment": self._basic_object,
             "Tags": self._basic_object,
         }
-        if model_type not in model_to_func:
+        if model_select.model.__name__ not in model_to_func:
             return []
-        if model is None:
-            model = self._prefetch(getattr(models, model_type))
-        return model_to_func[model_type](model)
+        return model_to_func[model_select.model.__name__](model_select)
 
     @cache
     def _sources(self, sources_model_select):
@@ -180,8 +166,7 @@ class APIBase:
     def query_sources(self, query):
         return_data = {}
         if query.source_attributes is not None:
-            return_data = self.fetch_from_model(
-                "Sources", self._gen_sources_query(query.source_attributes)
+            srcs = self._gen_sources_query(query.source_attributes)
             )
         return return_data
 
@@ -191,4 +176,7 @@ class APIBase:
         for field, ids in identifiers.items():
             model_select = model_select.orwhere(field << ids)
 
-        return self.fetch_from_model(name, model_select)
+        return self._fetch_from_model(model_select)
+
+    def get_all(self, model):
+        return self._fetch_from_model(model.select())
