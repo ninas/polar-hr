@@ -1,5 +1,6 @@
 import json
 from functools import cache, cached_property
+from datetime import datetime, timedelta
 import isodate
 
 from peewee import prefetch, fn
@@ -137,6 +138,19 @@ class APIBase:
         srcs = models.Sources.select(models.Sources.id)
         source_tags_to_filter = set()
 
+        if query.creator is not None:
+            srcs = srcs.where(models.Sources.creator == query.creator)
+
+        if query.length_min is not None:
+            srcs = srcs.where(
+                models.Sources.length >= timedelta(seconds=query.length_min)
+            )
+        if query.length_max is not None:
+            srcs = srcs.where(models.Sources.length <= timedelta(query.length_max))
+
+        if query.source_type is not None:
+            srcs = srcs.where(models.Sources.sourcettype == query.source_type)
+
         if query.exercises is not None:
             source_tags_to_filter.update(set(query.exercises))
         if query.tags is not None:
@@ -153,26 +167,38 @@ class APIBase:
             )
             srcs = srcs.where(models.Sources.id << sub_query)
 
-        if query.creator is not None:
-            srcs = srcs.where(models.Sources.creator == query.creator)
-
-        if query.length_min is not None:
-            srcs = srcs.where(
-                models.Sources.length >= timedelta(seconds=query.length_min)
-            )
-        if query.length_max is not None:
-            srcs = srcs.where(models.Sources.length <= timedelta(query.length_max))
-
-        if query.source_type is not None:
-            srcs = srcs.where(models.Sources.sourcettype == query.source_type)
-
         return srcs
 
     def query_sources(self, query):
         return_data = {}
+        srcs = None
+
         if query.source_attributes is not None:
             srcs = self._gen_sources_query(query.source_attributes)
+
+        if query.workout_attributes is not None:
+            through = models.Workouts.sources.get_through_model()
+            wrk = (
+                through.select(models.Sources.id)
+                .join(models.Sources)
+                .where(
+                    through.workouts_id
+                    << self._gen_workouts_query(
+                        query.workout_attributes, [models.Workouts.id]
+                    )
+                )
             )
+            if srcs is None:
+                srcs = wrk
+            else:
+                srcs = srcs.intersect(wrk)
+
+        if srcs is not None:
+            src_model = models.Sources.select().where(models.Sources.id << srcs)
+
+        if src_model is not None:
+            return_data = self._fetch_from_model(src_model)
+
         return return_data
 
     def by_id(self, model, identifiers):
