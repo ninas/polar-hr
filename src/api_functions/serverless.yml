@@ -1,12 +1,12 @@
-service: fetchall
+service: api
 
 provider:
   name: google
   stage: dev
   runtime: python39
   region: us-central1
-  project: ${file(../secrets.yml):default.project}
-  credentials: ${file(../secrets.yml):default.credentials_path}
+  project: ${file(secrets.yml):default.project}
+  credentials: ${file(secrets.yml):default.credentials_path}
 
 frameworkVersion: '3'
 plugins:
@@ -35,5 +35,9 @@ functions:
       - http: path
   equipment:
     handler: equipment_http
+    events:
+      - http: path
+  sourcesq:
+    handler: sources_query_http
     events:
       - http: path

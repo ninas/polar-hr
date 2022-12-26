@@ -6,7 +6,6 @@ from peewee import *
 
 import swagger_server.models as api_models
 from src.api.api_base import APIBase
-from src.api.api_utils import *
 from src.db.workout import models
 from src.utils import log
 from src.utils.db_utils import DBConnection

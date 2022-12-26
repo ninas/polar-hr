@@ -8,7 +8,7 @@ As with everything this needs to have GCP's sql auth proxy running.
 cloud_sql_proxy --credential_file=creds.json --dir=/cloudsql/
 ```
 
-Basic testing can be done using GCP's functions-framework and curl.
+Basic testing can be done using GCP's functions-framework and curl because serverless' GCP support is trash.
 Run:
 ```
 functions-framework --target sources_query_http
@@ -17,6 +17,8 @@ functions-framework --target sources_query_http
 and query like:
 ```
 curl --request GET http://localhost:8080
+curl --request POST  -H "Content-Type: application/json" -d '{"query": {"sourceAttributes": {"tags": ["hiit", "low impact"]}}}' http://localhost:8080
+
 ```
 etc.
 
