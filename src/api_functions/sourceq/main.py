@@ -1,10 +1,11 @@
 import json
-from flask import make_response
 from datetime import timedelta
-from src.api.api_base import APIBase
-import swagger_server.models as api_models
+
+from flask import make_response
 from peewee import *
 
+import swagger_server.models as api_models
+from src.api.api_base import APIBase
 from src.api.api_utils import *
 from src.db.workout import models
 from src.utils import log

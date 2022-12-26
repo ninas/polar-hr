@@ -1,7 +1,8 @@
-import unittest
-import structlog
 import logging
+import unittest
 from functools import cache
+
+import structlog
 
 
 class TestBase(unittest.TestCase):

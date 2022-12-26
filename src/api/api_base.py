@@ -1,9 +1,9 @@
 import json
-from functools import cache, cached_property
 from datetime import datetime, timedelta
-import isodate
+from functools import cache, cached_property
 
-from peewee import prefetch, fn
+import isodate
+from peewee import fn, prefetch
 
 from src.db.workout import models
 from src.utils import log
