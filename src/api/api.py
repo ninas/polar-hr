@@ -104,6 +104,54 @@ class QueryAPI(API):
     def methods(self):
         return {"GET": self._get, "POST": self._post}
 
+    def _validate_api_enum_fields(self, query):
+        return [
+            self._validate_enum_field(
+                query, ("sources_attributes", "source_type"), api_models.SourceType
+            ),
+            self._validate_enum_field(
+                query,
+                ("workouts_attributes", "equipment"),
+                api_models.EquipmentType,
+                "equipment_type",
+            ),
+            self._validate_enum_field(
+                query,
+                ("workouts_attributes", "in_hr_zone"),
+                api_models.ZoneType,
+                "zone_type",
+            ),
+            self._validate_enum_field(
+                query,
+                ("workouts_attributes", "above_hr_zone"),
+                api_models.ZoneType,
+                "zone_type",
+            ),
+        ]
+
+    def _validate_enum_field(self, query, field_path, model, in_obj=None):
+        obj = query
+        for i in field_path:
+            if getattr(obj, i) is None:
+                return None
+            obj = getattr(obj, i)
+        if len(obj) > 0:
+            valid = [
+                v
+                for k, v in model.__dict__.items()
+                if k[0:2] != "__"
+                and not callable(v)
+                and not isinstance(v, property)
+                and not isinstance(v, classmethod)
+            ]
+
+            for i in obj:
+                if in_obj is not None:
+                    i = getattr(i, in_obj)
+                if i not in valid:
+                    return f"{model.__name__}: Invalid parameter {i}. Valid options are: {valid}"
+        return None
+
     def _post(self):
         if (
             self.request.mimetype != "application/json"
@@ -125,5 +173,10 @@ class QueryAPI(API):
 
     def _parse_post(self, data):
         query = api_models.Query.from_dict(data)
+        # Should prob enable typing to validate all API types
+        errs = self._validate_api_enum_fields(query)
+        for i in errs:
+            if i is not None:
+                return self._result(i, self.error)
 
         return self._result(DBApi(self.logger).query(self.model, query))

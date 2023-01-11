@@ -110,3 +110,17 @@ class TestQueryAPI(TestBase):
 
         # This will raise a json.decoder.JSONDecodeError
         self._run(400, "")
+
+    def test_enum_typing(self):
+        query = {"workoutsAttributes": {"equipment": [{"equipmentType": "weights"}]}}
+        self.mock_db_return.query.return_value = {"something": "yup"}
+        self._run(200, query=query)
+
+        query = {"workoutsAttributes": {"equipment": [{"equipmentType": "invalid"}]}}
+        self.mock_db_return.query.return_value = {"something": "yup"}
+        self._run(400, query=query)
+
+        # Test when not nested in outer obj
+        query = {"sourcesAttributes": {"sourceType": ["youtube", "invalid"]}}
+        self.mock_db_return.query.return_value = {"something": "yup"}
+        self._run(400, query=query)
