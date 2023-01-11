@@ -1,4 +1,12 @@
 [[package]]
+name = "asn1crypto"
+version = "1.5.1"
+description = "Fast ASN.1 parser and serializer with definitions for private keys, public keys, certificates, CRL, OCSP, CMS, PKCS#3, PKCS#7, PKCS#8, PKCS#12, PKCS#5, X.509 and TSP"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "black"
 version = "22.10.0"
 description = "The uncompromising code formatter."
@@ -555,6 +563,18 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "pg8000"
+version = "1.29.4"
+description = "PostgreSQL interface library"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+python-dateutil = ">=2.8.2"
+scramp = ">=1.4.3"
+
+[[package]]
 name = "platformdirs"
 version = "2.6.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
@@ -638,6 +658,17 @@ python-versions = ">=3.6.8"
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
+name = "python-dateutil"
+version = "2.8.2"
+description = "Extensions to the standard Python datetime module"
+category = "dev"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
 name = "requests"
 version = "2.28.1"
 description = "Python HTTP for Humans."
@@ -697,6 +728,17 @@ python-versions = ">=3.6,<4"
 pyasn1 = ">=0.1.3"
 
 [[package]]
+name = "scramp"
+version = "1.4.4"
+description = "An implementation of the SCRAM protocol."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+asn1crypto = ">=1.5.1"
+
+[[package]]
 name = "setuptools"
 version = "65.6.3"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -730,6 +772,32 @@ dev = ["structlog[docs,tests,typing]"]
 docs = ["furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-mermaid", "twisted"]
 tests = ["coverage[toml]", "freezegun (>=0.2.8)", "pretend", "pytest (>=6.0)", "pytest-asyncio (>=0.17)", "simplejson"]
 typing = ["mypy", "rich", "twisted"]
+
+[[package]]
+name = "testing-common-database"
+version = "2.0.3"
+description = "utilities for testing.* packages"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.extras]
+testing = ["nose"]
+
+[[package]]
+name = "testing-postgresql"
+version = "1.3.0"
+description = "automatically setups a postgresql instance in a temporary directory, and destroys it after testing"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pg8000 = ">=1.10"
+"testing.common.database" = "*"
+
+[package.extras]
+testing = ["SQLAlchemy", "nose", "psycopg2"]
 
 [[package]]
 name = "tomli"
@@ -808,9 +876,13 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "0aa95b8c4f05783c3cc4c63905d72cf7b495ccec2829ddbba38aa1ec6b738b78"
+content-hash = "4072702da925cc91a42450f28c81870a9f3217210184c3bc1de68dbe8a096984"
 
 [metadata.files]
+asn1crypto = [
+    {file = "asn1crypto-1.5.1-py2.py3-none-any.whl", hash = "sha256:db4e40728b728508912cbb3d44f19ce188f218e9eba635821bb4b68564f8fd67"},
+    {file = "asn1crypto-1.5.1.tar.gz", hash = "sha256:13ae38502be632115abf8a24cbe5f4da52e3b5231990aff31123c805306ccb9c"},
+]
 black = [
     {file = "black-22.10.0-1fixedarch-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:5cc42ca67989e9c3cf859e84c2bf014f6633db63d1cbdf8fdb666dcd9e77e3fa"},
     {file = "black-22.10.0-1fixedarch-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:5d8f74030e67087b219b032aa33a919fae8806d49c867846bfacde57f43972ef"},
@@ -1148,6 +1220,10 @@ pathspec = [
 peewee = [
     {file = "peewee-3.15.4.tar.gz", hash = "sha256:2581520c8dfbacd9d580c2719ae259f0637a9e46eda47dfc0ce01864c6366205"},
 ]
+pg8000 = [
+    {file = "pg8000-1.29.4-py3-none-any.whl", hash = "sha256:3264e481857752023eb968016d1b55cceedc0261133cf7a37c87623e465b0146"},
+    {file = "pg8000-1.29.4.tar.gz", hash = "sha256:76d2aa1757a30bc71e0307dae18c374e336a69123e6b046e206a96611fa2a330"},
+]
 platformdirs = [
     {file = "platformdirs-2.6.0-py3-none-any.whl", hash = "sha256:1a89a12377800c81983db6be069ec068eee989748799b946cce2a6e80dcc54ca"},
     {file = "platformdirs-2.6.0.tar.gz", hash = "sha256:b46ffafa316e6b83b47489d240ce17173f123a9b9c83282141c3daf26ad9ac2e"},
@@ -1261,6 +1337,10 @@ pyparsing = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
+python-dateutil = [
+    {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
+    {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
 requests = [
     {file = "requests-2.28.1-py3-none-any.whl", hash = "sha256:8fefa2a1a1365bf5520aac41836fbee479da67864514bdb821f31ce07ce65349"},
     {file = "requests-2.28.1.tar.gz", hash = "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983"},
@@ -1277,6 +1357,10 @@ rsa = [
     {file = "rsa-4.9-py3-none-any.whl", hash = "sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7"},
     {file = "rsa-4.9.tar.gz", hash = "sha256:e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21"},
 ]
+scramp = [
+    {file = "scramp-1.4.4-py3-none-any.whl", hash = "sha256:b142312df7c2977241d951318b7ee923d6b7a4f75ba0f05b621ece1ed616faa3"},
+    {file = "scramp-1.4.4.tar.gz", hash = "sha256:b7022a140040f33cf863ab2657917ed05287a807b917950489b89b9f685d59bc"},
+]
 setuptools = [
     {file = "setuptools-65.6.3-py3-none-any.whl", hash = "sha256:57f6f22bde4e042978bcd50176fdb381d7c21a9efa4041202288d3737a0c6a54"},
     {file = "setuptools-65.6.3.tar.gz", hash = "sha256:a7620757bf984b58deaf32fc8a4577a9bbc0850cf92c20e1ce41c38c19e5fb75"},
@@ -1288,6 +1372,14 @@ six = [
 structlog = [
     {file = "structlog-22.3.0-py3-none-any.whl", hash = "sha256:b403f344f902b220648fa9f286a23c0cc5439a5844d271fec40562dbadbc70ad"},
     {file = "structlog-22.3.0.tar.gz", hash = "sha256:e7509391f215e4afb88b1b80fa3ea074be57a5a17d794bd436a5c949da023333"},
+]
+testing-common-database = [
+    {file = "testing.common.database-2.0.3-py2.py3-none-any.whl", hash = "sha256:e3ed492bf480a87f271f74c53b262caf5d85c8bc09989a8f534fa2283ec52492"},
+    {file = "testing.common.database-2.0.3.tar.gz", hash = "sha256:965d80b2985315325dc358c3061b174a712f4d4d5bf6a80b58b11f9a1dd86d73"},
+]
+testing-postgresql = [
+    {file = "testing.postgresql-1.3.0-py2.py3-none-any.whl", hash = "sha256:1b41daeb98dfc8cd4a584bb91e8f5f4ab182993870f95257afe5f1ba6151a598"},
+    {file = "testing.postgresql-1.3.0.tar.gz", hash = "sha256:8e1a69760369a7a8ffe63a66b6d95a5cd82db2fb976e4a8f85ffd24fbfc447d8"},
 ]
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
