@@ -1,4 +1,6 @@
 import json
+import operator
+from collections import defaultdict
 from functools import cache, cached_property
 from datetime import datetime, timedelta
 import isodate
@@ -6,6 +8,7 @@ import isodate
 from peewee import prefetch, fn
 
 from src.db.workout import models
+from swagger_server.models.equipment_type import EquipmentType as APIEquipmentType
 
 
 class ComplexQuery:
@@ -21,9 +24,10 @@ class ComplexQuery:
             wrkouts = wrkouts.where(models.Workouts.sport << set(query.sport))
 
         if query.equipment is not None and len(query.equipment) > 0:
-            wrkouts = wrkouts.where(
-                models.Workouts.id << self._build_equipment_query(query.equipment)
-            )
+            equip_query = self._build_equipment_query(query.equipment)
+            if equip_query is not None:
+                wrkouts = wrkouts.where(models.Workouts.id << equip_query)
+
         if query.hr_range is not None:
             if query.hr_range.min is not None:
                 wrkouts = wrkouts.where(models.Workouts.minhr >= query.hr_range.min)
@@ -38,11 +42,25 @@ class ComplexQuery:
         hr_zones_query = None
         if query.in_hr_zone is not None and len(query.in_hr_zone) > 0:
             hr_zones_query = self._build_hr_zones_query(
-                query.in_hr_zones, "percent_spent_in"
+                query.in_hr_zone,
+                "max_time",
+                timedelta(seconds=0),
+                isodate.parse_duration,
+                operator.le,
+                models.HRZones.duration,
+                False,
             )
 
         if query.above_hr_zone is not None and len(query.above_hr_zone) > 0:
-            quer = self._build_hr_zones_query(query.in_hr_zones, "percent_spent_above")
+            quer = self._build_hr_zones_query(
+                query.above_hr_zone,
+                "percent_spent_above",
+                -1,
+                float,
+                operator.ge,
+                models.HRZones.percentspentabove,
+                True,
+            )
             if hr_zones_query is not None:
                 hr_zones_query.union(quer)
             else:
@@ -53,67 +71,98 @@ class ComplexQuery:
 
         return wrkouts
 
-    def _build_hr_zones_query(self, query, percent_field):
+    def _build_hr_zones_query(
+        self,
+        query,
+        second_name,
+        second_default,
+        second_type,
+        second_comparison,
+        second_model_field,
+        second_exclusive,
+    ):
         zones = defaultdict(dict)
 
         defaults = {
-            "min": timedelta(days=1),
-            "max": timedelta(seconds=0),
-            "percent": -1,
+            "min_time": timedelta(days=1),
+            second_name: second_default,
         }
-        lt = lambda a, b: a < b
-        gt = lambda a, b: a > b
 
-        def check_replace(instance, new_field, saved_field, cast_func, comparison_func):
-            if getattr(instance, new_field) is None:
+        def check_replace(instance, field, cast_func, comparison_func):
+            val = getattr(instance, field)
+            if val is None:
                 return
-            new_val = cast_func(getattr(instance, new_field))
+            new_val = cast_func(val)
 
             if comparison_func(
-                new_val,
-                zones[instance.zone_type].get(saved_field, defaults[saved_field]),
+                new_val, zones[instance.zone_type].get(field, defaults[field]),
             ):
-                zones[instance.zone_type][saved_field] = new_val
+                zones[instance.zone_type][field] = new_val
 
         # combine any duplicates using lowest/highest values for each zone type
         for r in query:
-            if getattr(r, percent_field) is not None:
-                check_replace(r, percent_field, "percent", float, gt)
-            if "percent" in zones:
-                continue
-            check_replace(r, "min_time", "min", isodate.parse_duration, lt)
-            check_replace(r, "max_time", "max", isodate.parse_duration, gt)
+            check_replace(r, second_name, second_type, operator.ge)
+            check_replace(r, "min_time", isodate.parse_duration, operator.le)
 
         if len(zones) == 0:
             return None
 
-        hr = models.HRZones.select(models.HRZones.workout)
+        hr = models.HRZones.select(models.HRZones.workout_id)
+        count = 0
         for k, v in zones.items():
             exp = models.HRZones.zonetype == k
-            if "percent" in v:
-                exp &= models.HRZones.percentspentabove >= v["percent"]
-            else:
-                if "min" in v:
-                    exp &= models.HRZones.duration >= v["min"]
-                if "max" in v:
-                    exp &= models.HRZones.duration <= v["max"]
+            skip = False
+            if second_name in v:
+                exp &= second_comparison(second_model_field, v[second_name])
+                if second_exclusive:
+                    skip = True
+            if not skip and "min_time" in v:
+                exp &= models.HRZones.duration >= v["min_time"]
+            count += 1
             hr = hr.orwhere(exp)
+        hr = hr.group_by(models.HRZones.workout_id).having(
+            fn.COUNT(models.HRZones.workout_id) == count
+        )
+
+        if hr._where is None:
+            # If we have no valid search params, don't bother adding the clause
+            return None
+
         return hr
 
-    def _build_equipment_query(self, query):
-        equipment = (
-            models.Workouts.select(models.Workouts.id)
-            .join(models.Workouts.equipment.get_through_model())
-            .join(models.Equipment)
+    def _no_equipment_query(self):
+        through = models.Workouts.equipment.get_through_model()
+        return models.Workouts.select(models.Workouts.id).where(
+            ~fn.EXISTS(through.select().where(through.workouts == models.Workouts.id))
         )
+
+    def _api_enum_vals(self, api_enum):
+        return set(
+            v
+            for k, v in api_enum.__dict__.items()
+            if k[0:2] != "__" and not callable(v)
+        )
+
+    def _build_equipment_query(self, query):
+        through = models.Workouts.equipment.get_through_model()
+        equipment = (
+            through.select(through.workouts)
+            .join(models.Equipment)
+            .group_by(through.workouts)
+        )
+        base = equipment
 
         equipment_types = set()
         ids = set()
+        has_no_equip = False
         for e in query:
             if e.id is not None:
                 ids.add(e.id)
                 continue
             if e.equipment_type is None:
+                continue
+            if e.equipment_type == APIEquipmentType.NONE:
+                has_no_equip = True
                 continue
             if e.magnitude is None and e.quantity is None:
                 equipment_types.add(e.equipment_type)
@@ -125,13 +174,28 @@ class ComplexQuery:
             if e.quantity is not None:
                 exp &= models.Equipment.quantity == e.quantity
 
-            equipment.orwhere(exp)
+            equipment = equipment.orwhere(exp)
 
         if len(ids) > 0:
-            equipment.orwhere(models.Equipment.id << ids)
+            equipment = equipment.orwhere(models.Equipment.id << ids)
         if len(equipment_types) > 0:
-            equipment.orwhere(models.Equipment.equipmenttype << equipment_types)
-        return equipment.group_by(models.Workouts.id)
+            equipment = equipment.orwhere(
+                models.Equipment.equipmenttype << equipment_types
+            )
+        if has_no_equip:
+            if equipment._where is None:
+                equipment = self._no_equipment_query()
+            else:
+                equipment = equipment.union(self._no_equipment_query())
+
+        if equipment._where is None and (
+            not hasattr(equipment, "op") or equipment.op != "UNION"
+        ):
+            # no valid search params added, don't bother adding a search clause
+            # we need to check whether there's a union happening because this masks the where clauses
+            return None
+
+        return equipment
 
     def _gen_sources_query(self, query):
         srcs = models.Sources.select(models.Sources.id)
@@ -145,7 +209,9 @@ class ComplexQuery:
                 models.Sources.length >= timedelta(seconds=query.length_min)
             )
         if query.length_max is not None:
-            srcs = srcs.where(models.Sources.length <= timedelta(query.length_max))
+            srcs = srcs.where(
+                models.Sources.length <= timedelta(seconds=query.length_max)
+            )
 
         if query.source_type is not None:
             srcs = srcs.where(models.Sources.sourcettype == query.source_type)
@@ -178,9 +244,10 @@ class ComplexQuery:
     def execute(self):
         name1, name2 = self._query_ordering(self.model.__name__)
         q1, q2 = [
-            getattr(self.query, f"{i}_attributes")
-            for i in self._query_ordering(model.__name__)
+            getattr(self.full_query, f"{i}_attributes")
+            for i in self._query_ordering(self.model.__name__)
         ]
+        self.logger.info("Starting query", model=name1, query=str(self.full_query))
 
         one = None
         if q1 is not None:
@@ -189,7 +256,7 @@ class ComplexQuery:
         if q2 is not None:
             through = getattr(self.model, f"{name2}").get_through_model()
             two = (
-                through.select(self.model.id)
+                through.select(getattr(through, f"{name1}_id"))
                 .join(self.model)
                 .where(
                     getattr(through, f"{name2}_id")
@@ -212,6 +279,8 @@ class ComplexQuery:
                     attr="samples",
                 )
             quer = select.where(self.model.id << one)
+            self.logger.info("Generated DB query", db_query=str(quer))
             return quer
 
+        self.logger.info("No valid DB query")
         return None
