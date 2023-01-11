@@ -18,6 +18,7 @@ class SourceType(Model):
     """
     allowed enum values
     """
+    FITON = "fiton"
     YOUTUBE = "youtube"
     UNKNOWN = "unknown"
 
