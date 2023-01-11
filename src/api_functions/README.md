@@ -11,7 +11,7 @@ cloud_sql_proxy --credential_file=creds.json --dir=/cloudsql/
 Basic testing can be done using GCP's functions-framework and curl because serverless' GCP support is trash.
 Run:
 ```
-functions-framework --target sources_query_http
+functions-framework --target sources_http
 ```
 
 and query like:
@@ -27,6 +27,6 @@ Serverless doesn't provide a way to invoke the remote function with a GET reques
 
 ```
 ACCOUNT=<account with permission to invoke>
-FUNC=fetchall-dev-everything
+FUNC=api-dev-sources
 curl --request GET -H "Authorization: bearer $(gcloud --account $ACCOUNT auth print-identity-token)"  $(gcloud --account $ACCOUNT functions describe $FUNC | grep "url:" | awk '{ print $2 }')
 ```

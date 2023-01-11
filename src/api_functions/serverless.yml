@@ -37,7 +37,11 @@ functions:
     handler: equipment_http
     events:
       - http: path
-  sourcesq:
-    handler: sources_query_http
+  sources:
+    handler: sources_http
+    events:
+      - http: path
+  workouts:
+    handler: workouts_http
     events:
       - http: path

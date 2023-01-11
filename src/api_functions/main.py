@@ -2,7 +2,6 @@ import json
 
 from src.api.api import API, TagAPI, QueryAPI
 from src.db.workout import models
-from src.utils import log
 
 
 def equipment_http(request):
