@@ -7,7 +7,7 @@ import src.db.workout.models as models
 from src.utils import log
 from src.utils.test_base import TestBase
 from src.workout_sources.video_source import VideoSource
-from src.api.api import API, DBApi, QueryAPI
+from src.api.api import API, QueryAPI
 import swagger_server.models as api_models
 
 
@@ -54,7 +54,7 @@ class TestAPI(TestBase):
         self.api._get.assert_called()
 
     @patch(
-        "src.api.api.DBApi",
+        "src.api.api.DBBase",
         return_value=MagicMock(get_all=MagicMock(), by_id=MagicMock()),
     )
     def test_parse_get(self, db_api_mock):
@@ -87,7 +87,7 @@ class TestQueryAPI(TestBase):
         if has_request_data:
             request.data = request_data
 
-        with patch("src.api.api.DBApi", return_value=self.mock_db_return) as db:
+        with patch("src.api.api.DBBase", return_value=self.mock_db_return) as db:
             api = QueryAPI(request, self.model, logger=self.logger)
             vals = api.parse()
 

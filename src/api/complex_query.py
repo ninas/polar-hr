@@ -12,7 +12,7 @@ from swagger_server.models.equipment_type import EquipmentType as APIEquipmentTy
 
 
 class ComplexQuery:
-    def __init__(self, query, model, logger=None, is_dev=True):
+    def __init__(self, query, model, logger=None, is_dev=False):
         self.logger = logger
         self.full_query = query
         self.model = model

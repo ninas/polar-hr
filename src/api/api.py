@@ -8,11 +8,6 @@ import swagger_server.models as api_models
 from src.utils import log
 
 
-@cache
-def DBApi(logger=None):
-    return DBBase(logger)
-
-
 class API:
     def __init__(self, request, model, get_query_params={}, logger=None):
         if logger is None:
@@ -23,6 +18,10 @@ class API:
         self.request = request
         self.model = model
         self.get_query_params = get_query_params
+
+    @cached_property
+    def db_api(self):
+        return DBBase(self.logger, False)
 
     def error(self, msg=None):
         if msg is None:
@@ -48,7 +47,7 @@ class API:
     def parse(self):
         if self.request.method not in self.methods:
             return self.error(
-                f"Endpoint does not support {self.request.method} requests. Try: {self.methods}"
+                f"Endpoint does not support {self.request.method} requests. Try: {self.methods.keys()}"
             )
 
         results, res_func = self.methods[self.request.method]()
@@ -74,7 +73,7 @@ class API:
         if len(data) == 0 or all(
             is_invalid_arg(i) for i in self.get_query_params.keys()
         ):
-            return self._result(DBApi(self.logger).get_all(self.model))
+            return self._result(self.db_api.get_all(self.model))
 
         return self._parse_get(data)
 
@@ -83,7 +82,7 @@ class API:
         for name, typ in self.get_query_params.items():
             if name in data:
                 params[getattr(self.model, name)] = [typ(i) for i in data[name]]
-        return self._result(DBApi(self.logger).by_id(self.model, params))
+        return self._result(self.db_api.by_id(self.model, params))
 
 
 class TagAPI(API):
@@ -93,9 +92,7 @@ class TagAPI(API):
 
     def _get(self):
         return self._result(
-            DBApi(self.logger).by_id(
-                models.Tags, {models.Tags.tagtype: self.tag_types},
-            )
+            self.db_api.by_id(models.Tags, {models.Tags.tagtype: self.tag_types},)
         )
 
 
@@ -179,4 +176,4 @@ class QueryAPI(API):
             if i is not None:
                 return self._result(i, self.error)
 
-        return self._result(DBApi(self.logger).query(self.model, query))
+        return self._result(self.db_api.query(self.model, query))
