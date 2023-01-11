@@ -32,6 +32,7 @@ class DBBase:
         self.logger = logger
         if self.logger == None:
             self.logger = log.new_logger(is_dev=is_dev)
+        self._is_dev = is_dev
 
         if is_dev:
             import logging
@@ -39,13 +40,12 @@ class DBBase:
             logger = logging.getLogger("peewee")
             logger.addHandler(logging.StreamHandler())
             logger.setLevel(logging.DEBUG)
-        self._models = {}
         self.db = self._get_db()
 
     @classmethod
     @cache
     def _get_db(cls):
-        logger = log.new_logger(is_dev=True)
+        logger = log.new_logger()
         return DBConnection(logger).workout_db
 
     @cache
@@ -139,6 +139,10 @@ class DBBase:
     def query(self, model, query):
         cq = ComplexQuery(query, model, self.logger, self._is_dev)
         model_select = cq.execute()
+        self.logger.debug(
+            "SQL Query", method="query", model=model.__name__, query=model_select
+        )
+
         if model_select is None:
             return {}
         return self._fetch_from_model(model_select)
@@ -148,7 +152,15 @@ class DBBase:
         for field, ids in identifiers.items():
             model_select = model_select.orwhere(field << ids)
 
+        self.logger.debug(
+            "SQL Query", method="by_id", model=model.__name__, query=model_select
+        )
+
         return self._fetch_from_model(model_select)
 
     def get_all(self, model):
-        return self._fetch_from_model(model.select())
+        model_select = model.select()
+        self.logger.debug(
+            "SQL Query", method="get_all", model=model.__name__, query=model_select
+        )
+        return self._fetch_from_model(model_select)
