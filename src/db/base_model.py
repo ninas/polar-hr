@@ -14,9 +14,9 @@ class BaseModel(Model):
         return fields
 
     def __str__(self):
-        fields = [f"\t{name}: {details}" for name, details in self.as_dict().items()]
+        fields = [f"  {name}: {details}" for name, details in self.as_dict().items()]
 
-        fields_str = "\n".join(fields)
+        fields_str = ";".join(fields)
 
         return f"{self.__class__.__name__}\n({fields_str})"
 
