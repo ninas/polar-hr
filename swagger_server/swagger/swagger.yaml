@@ -757,11 +757,6 @@ definitions:
         type: "string"
         example: "P1DT12H"
         description: "Duration in ISO 8601 format"
-      percentSpentIn:
-        type: "number"
-        format: "float"
-        description: "This supersedes min/maxTime and will be used instead. Percentage\
-          \ from 0-100"
     description: "Time range spent in this HR zone. Either min or max can be omitted."
   HRZoneAbove:
     type: "object"
@@ -792,8 +787,9 @@ definitions:
   EquipmentType:
     type: "string"
     enum:
-    - "weight"
-    - "band"
+    - "weights"
+    - "bands"
+    - "none"
   SourceType:
     type: "string"
     enum:

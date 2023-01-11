@@ -18,8 +18,9 @@ class EquipmentType(Model):
     """
     allowed enum values
     """
-    WEIGHT = "weight"
-    BAND = "band"
+    WEIGHTS = "weights"
+    BANDS = "bands"
+    NONE = "none"
 
     def __init__(self):  # noqa: E501
         """EquipmentType - a model defined in Swagger
