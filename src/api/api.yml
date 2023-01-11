@@ -1,0 +1,529 @@
+---
+swagger: "2.0"
+info:
+  description: API to access workout data
+  version: 1.0.0
+  title: Workout API
+basePath: /
+tags:
+- name: workout
+  description: Info around a specific workout
+- name: source
+  description: What workout is done
+schemes:
+- https
+- http
+paths:
+  /workouts:
+    get:
+      tags:
+      - workout
+      summary: Retrieve a specific workout or all if no ids are specified
+      description: Returns workouts
+      operationId: getWorkouts
+      produces:
+      - application/json
+      parameters:
+      - name: id
+        in: query
+        description: ID of workout to return
+        required: false
+        type: array
+        items:
+          type: integer
+        collectionFormat: multi
+        format: int64
+      - name: samples
+        in: query
+        description: Whether to include samples in return
+        required: false
+        type: boolean
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Workout'
+        "204":
+          description: No items found
+        "400":
+          description: Invalid ID supplied
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-workouts
+    post:
+      tags:
+      - workout
+      summary: Search for workouts
+      description: Search for workouts matching a variety of parameters. Using post due to length limitations on GET
+      operationId: searchForWorkouts
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        description: Search for workouts
+        required: true
+        schema:
+          $ref: '#/definitions/Query'
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Workout'
+        "204":
+          description: No items found
+        "400":
+          description: Invalid search values
+  /sources:
+    get:
+      tags:
+      - source
+      summary: Retrieve a specific source using its id or all if no ids are specified
+      description: Returns sources
+      operationId: getSources
+      produces:
+      - application/json
+      parameters:
+      - name: id
+        in: query
+        description: ID of source to return
+        required: false
+        type: array
+        items:
+          type: integer
+        collectionFormat: multi
+        format: int64
+      - name: url
+        in: query
+        description: URL of source to return
+        required: false
+        type: array
+        items:
+          type: integer
+        collectionFormat: multi
+        format: string
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Source'
+        "204":
+          description: No items found
+        "400":
+          description: Invalid ID supplied
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-sources
+    post:
+      tags:
+      - source
+      summary: Search for sources
+      description: Search for sources matching a variety of parameters. Using post due to length limitations on GET
+      operationId: searchForSources
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        description: Search for sources
+        required: true
+        schema:
+          $ref: '#/definitions/Query'
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Source'
+        "204":
+          description: No items found
+        "400":
+          description: Invalid search values
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-sources
+  /tags:
+    get:
+      tags:
+      - tags
+      summary: Return all tags
+      description: Fetch all tags
+      operationId: allTags
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            type: array
+            items:
+              type: string
+        "204":
+          description: No items found
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags
+  /exercises:
+    get:
+      tags:
+      - exercises
+      summary: Return all exercises
+      description: Fetch all exercises
+      operationId: allExercises
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            type: array
+            items:
+              type: string
+        "204":
+          description: No items found
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/tags-dev-exercises
+  /equipment:
+    get:
+      tags:
+      - equipment
+      summary: Return all equipment
+      description: Fetch all equipment
+      operationId: allEquipment
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            type: array
+            items:
+              type: string
+        "204":
+          description: No items found
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-equipment
+  /refresh:
+    post:
+      tags:
+      - utils
+      summary: Refresh workout data
+      description: Manually refresh workout data
+      operationId: refresh
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        "200":
+          description: successful operation
+        "500":
+          description: Error refreshing
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/refresh-function-dev-first
+  /everything:
+    get:
+      tags:
+      - utils
+      summary: Return all data
+      description: Fetch everything
+      operationId: everything
+      produces:
+      - application/json
+      parameters: []
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Everything'
+        "204":
+          description: No items found
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-everything
+definitions:
+  Everything:
+    type: object
+    properties:
+      sources:
+        type: array
+        items:
+          $ref: '#/definitions/Source'
+      workouts:
+        type: array
+        items:
+          $ref: '#/definitions/Workout'
+      tags:
+        type: array
+        items:
+          $ref: '#/definitions/Tag'
+      equipment:
+        type: array
+        items:
+          $ref: '#/definitions/Equipment'
+  Tag:
+    type: object
+    required:
+    - name
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+  Equipment:
+    type: object
+    required:
+    - equipmentType
+    properties:
+      id:
+        type: integer
+        format: int64
+      equipmentType:
+        $ref: '#/definitions/EquipmentType'
+      magnitude:
+        type: string
+        example: 5lbs
+        description: The weight or strength of the equipment
+      quantity:
+        type: integer
+        description: Only relvant for weights, e.g. used 1 or 2 dumbbells
+    description: Type must be set otherwise parameters are invalid
+  Source:
+    type: object
+    required:
+    - url
+    properties:
+      id:
+        type: integer
+        format: int64
+      url:
+        type: string
+        description: The descriptive and unique identifier for the source - may not actually be a web address
+      name:
+        type: string
+      creator:
+        type: string
+      duration:
+        type: string
+        example: P1DT12H
+        description: Duration in ISO 8601 format
+      sourceType:
+        $ref: '#/definitions/SourceType'
+      extraInfo:
+        type: string
+        description: Field that could be used to add sourceType specific info
+      tags:
+        type: array
+        items:
+          type: string
+      exercises:
+        type: array
+        items:
+          type: string
+  HRZone:
+    type: object
+    required:
+    - zoneType
+    properties:
+      id:
+        type: integer
+        format: int64
+      zoneType:
+        $ref: '#/definitions/ZoneType'
+      lowerLimit:
+        type: integer
+      upperLimit:
+        type: integer
+      duration:
+        type: string
+        example: P1DT12H
+        description: Duration in ISO 8601 format
+      percentSpentAbove:
+        type: number
+        format: float
+        description: Convenience value to describe the total percentage of the workout spent in this zone or higher
+  Workout:
+    type: object
+    required:
+    - startTime
+    properties:
+      id:
+        type: integer
+        format: int64
+      startTime:
+        type: string
+        format: date-time
+        example: 2022-12-10T00:14:25-00:00
+      endTime:
+        type: string
+        format: date-time
+        example: 2022-12-10T00:14:25-00:00
+      samples:
+        type: array
+        items:
+          type: integer
+      sport:
+        type: string
+      calories:
+        type: integer
+      avgHR:
+        type: integer
+      minHR:
+        type: integer
+      maxHR:
+        type: integer
+      notes:
+        type: string
+      equipment:
+        type: array
+        items:
+          $ref: '#/definitions/Equipment'
+      sources:
+        type: array
+        items:
+          $ref: '#/definitions/Source'
+      hrZones:
+        type: array
+        items:
+          $ref: '#/definitions/HRZone'
+  Query:
+    type: object
+    properties:
+      sourcesAttributes:
+        $ref: '#/definitions/SourceQueryParams'
+      workoutsAttributes:
+        $ref: '#/definitions/WorkoutQueryParams'
+      paginate:
+        type: boolean
+    description: Allow searching for resources using a wide range of parameters
+  SourceQueryParams:
+    type: object
+    properties:
+      creator:
+        type: array
+        description: Filter by source creator
+        items:
+          type: string
+      exercises:
+        type: array
+        description: Exercises to filter by. Exercises are ORed
+        items:
+          type: string
+      tags:
+        type: array
+        description: Tags to filter by. Tags are ANDed
+        items:
+          type: string
+      lengthMin:
+        type: integer
+        description: Minimum length of a source
+      lengthMax:
+        type: integer
+        description: Maximum length of a source
+      sourceType:
+        type: array
+        items:
+          $ref: '#/definitions/SourceType'
+  WorkoutQueryParams:
+    type: object
+    properties:
+      dateRange:
+        $ref: '#/definitions/DateRange'
+      sport:
+        type: array
+        description: Filter by sport type. Sports are ORed
+        items:
+          type: string
+      samples:
+        type: boolean
+        description: Whether to include samples in return
+      equipment:
+        type: array
+        description: "Filter by equipment used in the workout. \nIt is possible to leave off magnitude or quantity, but equipmentType must always be specified\n"
+        items:
+          $ref: '#/definitions/Equipment'
+      hrRange:
+        $ref: '#/definitions/HRRange'
+      avgHRRange:
+        $ref: '#/definitions/HRRange'
+      inHRZone:
+        type: array
+        description: Time spent within a specific heart rate zone
+        items:
+          $ref: '#/definitions/HRZoneRange'
+      aboveHRZone:
+        type: array
+        description: Time spent above a specific heart rate zone
+        items:
+          $ref: '#/definitions/HRZoneAbove'
+  DateRange:
+    type: object
+    properties:
+      start:
+        type: string
+        format: date-time
+      end:
+        type: string
+        format: date-time
+    description: Get workouts within a range. Either start or end can be omitted.
+  HRRange:
+    type: object
+    properties:
+      min:
+        type: integer
+      max:
+        type: integer
+    description: Range for heart rate values. Either min or max can be omitted.
+  HRZoneRange:
+    type: object
+    required:
+    - zoneType
+    properties:
+      zoneType:
+        $ref: '#/definitions/ZoneType'
+      minTime:
+        type: string
+        example: P1DT12H
+        description: Duration in ISO 8601 format
+      maxTime:
+        type: string
+        example: P1DT12H
+        description: Duration in ISO 8601 format
+    description: Time range spent in this HR zone. Either min or max can be omitted.
+  HRZoneAbove:
+    type: object
+    properties:
+      zoneType:
+        $ref: '#/definitions/ZoneType'
+      minTime:
+        type: string
+        example: P1DT12H
+        description: Duration in ISO 8601 format
+      percentSpentAbove:
+        type: number
+        format: float
+        description: This will supercede any other parameters passed. Percentage of workout spent in this HRZone or higher
+    description: Time spent within and above a specific heart rate zone. Specified as absolute duration or a percentage of the workout
+  ZoneType:
+    type: string
+    description: The range (percentile relative to max HR) this zone covers
+    enum:
+    - below_50
+    - fifty_to_60
+    - sixty_to_70
+    - seventy_to_80
+    - eighty_to_90
+    - ninety_to_100
+  EquipmentType:
+    type: string
+    enum:
+    - weights
+    - bands
+    - none
+  SourceType:
+    type: string
+    enum:
+    - youtube
+    - fiton
+    - unknown
