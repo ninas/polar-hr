@@ -115,6 +115,8 @@ class DBBase:
                 w["tags"] = [t.name for t in workout.tags]
                 w["hrzones"] = {}
                 data[workout.id] = w
+                if hasattr(workout, "samples"):
+                    w["samples"] = workout.samples.samples
 
             hr_model = models.HRZones.select()
             self._prefetch_models(hr_model, workouts_model_select)

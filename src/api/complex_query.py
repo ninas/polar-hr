@@ -202,6 +202,16 @@ class ComplexQuery:
                 one = one.intersect(two)
 
         if one is not None:
-            return self.model.select().where(self.model.id << one)
+            select = self.model.select()
+            if self.model.__name__ == "Workouts" and q1.samples:
+                select = models.Workouts.select(
+                    models.Workouts, models.Samples.samples
+                ).join(
+                    models.Samples,
+                    on=(models.Samples.workout_id == models.Workouts.id),
+                    attr="samples",
+                )
+            quer = select.where(self.model.id << one)
+            return quer
 
         return None
