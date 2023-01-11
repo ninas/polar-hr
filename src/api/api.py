@@ -5,31 +5,37 @@ from functools import cache, cached_property
 from src.api.db_base import DBBase
 from src.db.workout import models
 import swagger_server.models as api_models
+from src.utils import log
 
 
 @cache
-def DBApi():
-    return DBBase()
+def DBApi(logger=None):
+    return DBBase(logger)
 
 
 class API:
-    def __init__(self, request, model, get_query_params={}):
+    def __init__(self, request, model, get_query_params={}, logger=None):
+        if logger is None:
+            logger = log.new_logger()
+        self.logger = logger.bind(
+            url=request.base_url, method=request.method, model=model.__class__
+        )
         self.request = request
         self.model = model
         self.get_query_params = get_query_params
 
-    @staticmethod
-    def error(msg=None):
+    def error(self, msg=None):
         if msg is None:
             msg = "Invalid request parameters"
+        self.logger.info("User error", msg=msg, status_code=400)
         return json.dumps({"statusCode": 400, "message": msg})
 
-    @staticmethod
-    def empty_result():
+    def empty_result(self):
+        self.logger.info("Empty results", status_code=204)
         return json.dumps({"statusCode": 204})
 
-    @staticmethod
-    def success(data):
+    def success(self, data):
+        self.logger.info("Success", status_code=200)
         return json.dumps({"statusCode": 200, "body": data}, indent=4)
 
     @property
@@ -37,17 +43,18 @@ class API:
         return {"GET": self._get}
 
     def _result(self, vals, func=None):
-        return vals, func if func is not None else API.success
+        return vals, func if func is not None else self.success
 
     def parse(self):
         if self.request.method not in self.methods:
-            return API.error(
+            return self.error(
                 f"Endpoint does not support {self.request.method} requests. Try: {self.methods}"
             )
 
         results, res_func = self.methods[self.request.method]()
+
         if results is None or len(results) == 0:
-            return API.empty_result()
+            return self.empty_result()
         return res_func(results)
 
     def _flatten_args(self, args):
@@ -67,7 +74,7 @@ class API:
         if len(data) == 0 or all(
             is_invalid_arg(i) for i in self.get_query_params.keys()
         ):
-            return self._result(API.api().get_all(self.model))
+            return self._result(DBApi(self.logger).get_all(self.model))
 
         return self._parse_get(data)
 
@@ -76,8 +83,7 @@ class API:
         for name, typ in self.get_query_params.items():
             if name in data:
                 params[getattr(self.model, name)] = [typ(i) for i in data[name]]
-
-        return self._result(DBApi().by_id(self.model, params))
+        return self._result(DBApi(self.logger).by_id(self.model, params))
 
 
 class TagAPI(API):
@@ -87,7 +93,9 @@ class TagAPI(API):
 
     def _get(self):
         return self._result(
-            DBApi().by_id(models.Tags, {models.Tags.tagtype: self.tag_types},)
+            DBApi(self.logger).by_id(
+                models.Tags, {models.Tags.tagtype: self.tag_types},
+            )
         )
 
 
@@ -103,23 +111,19 @@ class QueryAPI(API):
             or len(self.request.data) == 0
         ):
             return self._result(
-                "Invalid post request: make sure you're sending json", API.error
+                "Invalid post request: make sure you're sending json", self.error
             )
         try:
-            q = json.loads(self.request.data)
-            if len(q) == 0:
+            data = json.loads(self.request.data)
+            if len(data) == 0:
                 raise json.decoder.JSONDecodeError()
-            data = q
+            self.logger.info("API query", query=data)
         except json.decoder.JSONDecodeError as e:
-            return self._result("Invalid or empty json object passed", API.error)
+            return self._result("Invalid or empty json object passed", self.error)
 
         return self._parse_post(data)
 
     def _parse_post(self, data):
-        try:
-            query = api_models.Query.from_dict(data)
-        except Exception as e:
-            raise e
-            return self._result(None, API.error)
+        query = api_models.Query.from_dict(data)
 
-        return self._result(DBApi().query(self.model, query))
+        return self._result(DBApi(self.logger).query(self.model, query))
