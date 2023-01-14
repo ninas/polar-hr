@@ -1,9 +1,7 @@
 import logging
 from functools import cache
 
-import google.cloud.logging
 import structlog
-from google.cloud.logging_v2.handlers import StructuredLogHandler, setup_logging
 
 from src.utils import gcp_utils
 
@@ -31,6 +29,10 @@ def set_default_log_level():
 # Cheating and using this to ensure it is only run once
 @cache
 def init_cloud_logging():
+
+    import google.cloud.logging
+    from google.cloud.logging_v2.handlers import StructuredLogHandler, setup_logging
+
     client = google.cloud.logging.Client()
     handler = StructuredLogHandler()
     setup_logging(handler)

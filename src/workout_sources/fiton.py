@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 from overrides import override
 
 import src.db.workout.models as models
-from src.utils.gcp_utils import fetch_from_cloud_storage, get_secret
+from src.utils.gcp_utils import get_secret
 from src.workout_sources.source_consts import SourceConsts
 from src.workout_sources.video_source import VideoSource
 
