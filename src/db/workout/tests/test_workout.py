@@ -23,7 +23,6 @@ class TestWorkout(TestBase):
         self.workout = Workout(self.db, self.data, self.logger)
         self.workout.equipment = self._mock_equipment()
         self.workout._insert_tags = MagicMock(side_effect=lambda a, b: a)
-        self.workout.find = MagicMock(return_value=None)
 
     def data(self):
         with open("src/db/workout/tests/sample_data.json") as f:

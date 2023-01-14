@@ -1,9 +1,6 @@
 from functools import cache
 
 
-SAMPLES_BUCKET = "polar-workout-samples"
-
-
 @cache
 def get_secret(name):
 

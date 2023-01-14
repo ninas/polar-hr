@@ -80,11 +80,9 @@ def sources_http(request, is_dev=False):
 
 
 def workouts_http(request, is_dev=False):
-    a = QueryAPI(
+    return QueryAPI(
         request, get_db(), models.Workouts, {"id": int, "url": str,}, LOGGER
     ).parse()
-
-    return a
 
 
 if __name__ == "__main__":
