@@ -132,3 +132,4 @@ dmypy.json
 output/
 secrets.yml
 data/
+app_config.json

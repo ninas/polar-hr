@@ -3,16 +3,21 @@ from functools import cache
 
 import structlog
 
-from src.utils import gcp_utils
+from src.utils import gcp_utils, config
 
 
 @cache
-def enable_debug_logging():
-    # For the moment, since this is used in a cloud function, don't allow changing this during runtime
-    debug = gcp_utils.fetch_config("refresh_func/debug_logging") == "1"
+def enable_debug_logging(use_cloud_config=False):
+    cfg = config.read_config()
+    if "use_cloud_config" in cfg:
+        debug = gcp_utils.fetch_config("refresh_func/debug_logging") == "1"
+    elif "debug_logging" in cfg:
+        debug = cfg["debug_logging"]
+    else:
+        debug_logging = False
+
     if debug:
         print("debug logging enabled")
-
     return debug
 
 
@@ -30,10 +35,10 @@ def set_default_log_level():
 @cache
 def init_cloud_logging():
 
-    import google.cloud.logging
+    from google.cloud.logging import Client
     from google.cloud.logging_v2.handlers import StructuredLogHandler, setup_logging
 
-    client = google.cloud.logging.Client()
+    client = Client()
     handler = StructuredLogHandler()
     setup_logging(handler)
     set_default_log_level()
@@ -90,7 +95,7 @@ def config_structlog(is_dev=False):
 
 
 @cache
-def new_logger(name=None, is_dev=False):
+def new_logger(name=None, is_dev=True):
     if name is not None:
         structlog.contextvars.bind_contextvars(run_reason=name)
     config_structlog(is_dev)
