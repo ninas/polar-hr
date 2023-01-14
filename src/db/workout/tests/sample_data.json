@@ -11,11 +11,11 @@
     "filename": "training-session-2022-11-23-7531213237-609a1e87-9fe1-4e1d-a8ef-f54fa5bc8925.json",
     "heart_rate": {"avg": 130, "max": 171, "min": 66},
     "heart_rate_zones": [
-        {"lower_limit": 103, "upper_limit": 124, "in_zone": "PT10S", "index": 1},
-        {"lower_limit": 124, "upper_limit": 144, "in_zone": "PT20S", "index": 2},
-        {"lower_limit": 144, "upper_limit": 165, "in_zone": "PT30S", "index": 3},
-        {"lower_limit": 165, "upper_limit": 185, "in_zone": "PT20S", "index": 4},
-        {"lower_limit": 185, "upper_limit": 206, "in_zone": "PT10S", "index": 5}
+        {"lower_limit": 103, "upper_limit": 124, "in_zone": "PT10M", "index": 1},
+        {"lower_limit": 124, "upper_limit": 144, "in_zone": "PT5M", "index": 2},
+        {"lower_limit": 144, "upper_limit": 165, "in_zone": "PT5M", "index": 3},
+        {"lower_limit": 165, "upper_limit": 185, "in_zone": "PT2M", "index": 4},
+        {"lower_limit": 185, "upper_limit": 206, "in_zone": "PT3M", "index": 5}
     ],
     "note": null,
     "samples": [

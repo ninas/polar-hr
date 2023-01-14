@@ -25,33 +25,40 @@ class TestSource(TestBase):
 
     def test_get_source_type(self):
         for i in TestConsts.YOUTUBE_URLS:
-            self.assertEqual(Source.get_source_type(i).source_type, models.SourceType.YOUTUBE)
+            self.assertEqual(
+                Source.get_source_type(i).source_type, models.SourceType.YOUTUBE
+            )
 
         for i in [
             "fiton:5567",
             "https://app.fitonapp.com/browse/workout/5567",
             "https://share.fitonapp.com/html/invite-message/5600d08ac57544ab829c680df6a87f04",
         ]:
-            self.assertEqual(Source.get_source_type(i).source_type, models.SourceType.FITON)
+            self.assertEqual(
+                Source.get_source_type(i).source_type, models.SourceType.FITON
+            )
 
         self.assertEqual(
-                Source.get_source_type("www,youtube.com/fiton/something").source_type, models.SourceType.YOUTUBE
-            )
-
-        self.assertEqual(Source.get_source_type("test").source_type, models.SourceType.UNKNOWN)
-
-    def test_load_source(self):
-        Source._find = MagicMock(return_value="something")
-        self.assertTrue(
-            isinstance(
-                Source.load_source(MagicMock(), self.url, self.logger), ExistingSource
-            )
+            Source.get_source_type("www,youtube.com/fiton/something").source_type,
+            models.SourceType.YOUTUBE,
         )
 
-        Source._find = MagicMock(return_value=None)
+        self.assertEqual(
+            Source.get_source_type("test").source_type, models.SourceType.UNKNOWN
+        )
+
+    @patch("src.db.workout.source.DBInterface.find", return_value=None)
+    def test_load_source(self, find):
         self.assertTrue(
             isinstance(
                 Source.load_source(MagicMock(), self.url, self.logger), UnknownSource
+            )
+        )
+
+        find.return_value = "something"
+        self.assertTrue(
+            isinstance(
+                Source.load_source(MagicMock(), self.url, self.logger), ExistingSource
             )
         )
 

@@ -1,9 +1,11 @@
 import json
+import isodate
 import unittest
 from collections import defaultdict
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from peewee import fn
 
 import src.db.workout.models as models
 from src.db.workout.workout import Workout
@@ -13,19 +15,58 @@ from src.utils.test_base import TestBase
 
 class TestWorkout(TestBase):
     def setUp(self):
-        self.db = MagicMock()
         self.raw_data = self.data()
         self.data = WorkoutDataStore(self.raw_data)
+
+    def mock_through_workout(self):
+        self.db = MagicMock()
         self.workout = Workout(self.db, self.data, self.logger)
         self.workout.equipment = self._mock_equipment()
         self.workout._insert_tags = MagicMock(side_effect=lambda a, b: a)
-        Workout._find = MagicMock(return_value=None)
+        self.workout.find = MagicMock(return_value=None)
 
     def data(self):
         with open("src/db/workout/tests/sample_data.json") as f:
             return json.loads(f.read())
 
-    def test_exit_early(self):
+    def test_insert_row(self):
+        self.db = self.create_test_db()
+        self.data._i_data["sources"] = ["www.test.com"]
+        self.workout = Workout(self.db, self.data, self.logger)
+        self.workout.insert_row()
+
+        workouts = models.Workouts.select()
+        self.assertEqual(len(workouts), 1)
+        wrk = workouts[0]
+        self.assertEqual(wrk.samples, self.data.samples)
+        self.assertEqual(wrk.zone_below_50_upper, 103)
+        self.assertEqual(wrk.zone_below_50_percentspentabove, 100)
+        self.assertEqual(wrk.zone_60_70_duration, isodate.parse_duration("PT5M"))
+        self.assertEqual(wrk.zone_90_100_percentspentabove, 11.493916)
+        self.assertEqual(wrk.sport, "hiit")
+        workout_tags = (
+            models.Tags.select(models.Tags.name)
+            .join(models.Workouts.tags.get_through_model())
+            .where(fn.EXISTS(workouts))
+        )
+        self.assertEqual(len(workout_tags), 4)
+        self.assertEqual(
+            {"hiit", "5lbs", "8lbs", "weights"}, {i.name for i in workout_tags}
+        )
+
+        self.assertEqual(len(models.Sources.select()), 1)
+
+        # Add duplicate
+        self.workout = Workout(self.db, self.data, self.logger)
+        self.workout.insert_row()
+        self.assertEqual(len(workouts), 1)
+        self.assertEqual(len(models.Sources.select()), 1)
+
+        self.teardown_test_db()
+
+    @patch("src.db.workout.workout.DBInterface.find", return_value=None)
+    def test_exit_early(self, find):
+        self.mock_through_workout()
         pop = MagicMock()
 
         def _create(dd):
@@ -49,7 +90,7 @@ class TestWorkout(TestBase):
 
         d = deepcopy(self.raw_data)
         w = _create(d)
-        Workout._find = MagicMock(return_value="something")
+        find.return_value = "something"
 
         self.assertEqual(w.insert_row(), "something")
         pop.assert_not_called()
@@ -66,41 +107,16 @@ class TestWorkout(TestBase):
             )
         return equipment_mocks
 
-    def test_tags_created(self):
-        tgs = MagicMock()
-        self.workout._populate_model = MagicMock(
-            return_value=MagicMock(tags=MagicMock(add=tgs))
-        )
-        self.data._i_data["sources"] = []
-        self.workout._insert_samples = MagicMock()
-        self.workout._insert_hr_zones = MagicMock()
-        self.workout.insert_row()
-        self.assertEqual(
-            set(*(tgs.call_args.args)),
-            {
-                "hiit",
-                "5lbs",
-                "8lbs",
-                "weights",
-            },
-        )
-
     def test_equipment_to_tags(self):
+        self.mock_through_workout()
         self.assertEqual(
-            self.workout._equipment_to_tags(),
-            {
-                "5lbs",
-                "8lbs",
-                "weights",
-            },
+            self.workout._equipment_to_tags(), {"5lbs", "8lbs", "weights",},
         )
 
         equip = self._mock_equipment()
         equip.append(
             MagicMock(
-                equipmenttype=models.EquipmentType.BANDS,
-                magnitude="heavy",
-                quantity=1,
+                equipmenttype=models.EquipmentType.BANDS, magnitude="heavy", quantity=1,
             )
         )
         self.workout = Workout(self.db, self.data, self.logger)
@@ -113,32 +129,3 @@ class TestWorkout(TestBase):
         self.workout = Workout(self.db, self.data, self.logger)
         self.workout.equipment = []
         self.assertEqual(self.workout._equipment_to_tags(), set())
-
-    def test_create_hr_zones(self):
-        self.workout.model = MagicMock()
-        self.data._i_data["duration"] = "PT100S"
-        with patch("src.db.workout.workout.models.HRZones") as hrzones:
-            zones = self.workout._insert_hr_zones()
-
-        self.assertEqual(
-            zones[0],
-            {
-                "zonetype": models.ZoneType.NINETY_100,
-                "lowerlimit": 185,
-                "higherlimit": 206,
-                "duration": timedelta(seconds=10),
-                "percentspentabove": 10,
-                "workout": self.workout.model,
-            },
-        )
-        self.assertEqual(
-            zones[-1],
-            {
-                "zonetype": models.ZoneType.BELOW_50,
-                "lowerlimit": 0,
-                "higherlimit": 103,
-                "duration": timedelta(seconds=10),
-                "percentspentabove": 100,
-                "workout": self.workout.model,
-            },
-        )

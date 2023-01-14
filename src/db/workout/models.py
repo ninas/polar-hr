@@ -1,5 +1,20 @@
-from peewee import *
-from playhouse.postgres_ext import *
+from peewee import (
+    TextField,
+    IntegerField,
+    ForeignKeyField,
+    FloatField,
+    TextField,
+    ManyToManyField,
+    CharField,
+    SQL,
+)
+from playhouse.postgres_ext import (
+    PostgresqlExtDatabase,
+    JSONField,
+    IntervalField,
+    DateTimeTZField,
+    BinaryJSONField,
+)
 
 from src.db.base_model import BaseModel
 from src.db.enum_field import EnumField, ExtendedEnum
@@ -90,6 +105,31 @@ class Workouts(WorkoutBaseModel):
     sport = CharField(default="Unknown")
     starttime = DateTimeTZField(unique=True)
     tags = ManyToManyField(Tags, backref="workouts")
+    samples = BinaryJSONField(null=True)
+    zone_below_50_lower = IntegerField(null=True)
+    zone_below_50_upper = IntegerField(null=True)
+    zone_below_50_duration = IntervalField(null=True)
+    zone_below_50_percentspentabove = FloatField(null=True)
+    zone_50_60_lower = IntegerField(null=True)
+    zone_50_60_upper = IntegerField(null=True)
+    zone_50_60_duration = IntervalField(null=True)
+    zone_50_60_percentspentabove = FloatField(null=True)
+    zone_60_70_lower = IntegerField(null=True)
+    zone_60_70_upper = IntegerField(null=True)
+    zone_60_70_duration = IntervalField(null=True)
+    zone_60_70_percentspentabove = FloatField(null=True)
+    zone_70_80_lower = IntegerField(null=True)
+    zone_70_80_upper = IntegerField(null=True)
+    zone_70_80_duration = IntervalField(null=True)
+    zone_70_80_percentspentabove = FloatField(null=True)
+    zone_80_90_lower = IntegerField(null=True)
+    zone_80_90_upper = IntegerField(null=True)
+    zone_80_90_duration = IntervalField(null=True)
+    zone_80_90_percentspentabove = FloatField(null=True)
+    zone_90_100_lower = IntegerField(null=True)
+    zone_90_100_upper = IntegerField(null=True)
+    zone_90_100_duration = IntervalField(null=True)
+    zone_90_100_percentspentabove = FloatField(null=True)
 
 
 class HRZones(WorkoutBaseModel):

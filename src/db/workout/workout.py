@@ -68,9 +68,12 @@ class Workout(WorkoutBase):
             endtime=self._data.end_time,
             starttime=self._data.start_time,
             sport=self._data.sport,
+            samples=self._data.samples,
         )
         for k, v in self._data.heart_rate_range.items():
             setattr(workout_model, f"{k}hr", v)
+
+        self._add_hr_zones(workout_model)
 
         return workout_model
 
@@ -148,12 +151,6 @@ class Workout(WorkoutBase):
                 self.model.tags.add(list(tag_models))
                 self.model.save()
 
-            self.logger.info("Saved workout")
-            self._insert_samples()
-            self.logger.info("Inserted samples")
-            self._insert_hr_zones()
-            self.logger.info("Inserted hr zones")
-
         except Exception as e:
             self.logger.exception(
                 "Failed to insert workout", start_time=self._data.start_time,
@@ -180,32 +177,13 @@ class Workout(WorkoutBase):
 
         return tags
 
-    def _insert_samples(self):
-        if self.model is None:
-            raise Exception("Unable to insert samples until workout model created")
-        with self.db.atomic():
-            s = models.Samples.create(samples=self._data.samples, workout=self.model)
-            s.save()
-
-    @cache
-    def _insert_hr_zones(self):
-        if self.model is None:
-            raise Exception(
-                "Unable to insert heart rate zones until workout mdoel created"
-            )
-
+    def _add_hr_zones(self, model):
         zone_data = self._data.hr_zones
         if len(zone_data) != 5:
             self.logger.warn("Invalid zone data found", zones=zone_data)
-            return []
+            return
 
-        zone_names = [
-            models.ZoneType.NINETY_100,
-            models.ZoneType.EIGHTY_90,
-            models.ZoneType.SEVENTY_80,
-            models.ZoneType.SIXTY_70,
-            models.ZoneType.FIFTY_60,
-        ]
+        zone_names = ["below_50", "50_60", "60_70", "70_80", "80_90", "90_100"]
 
         full_duration = self._data.duration
 
@@ -218,34 +196,16 @@ class Workout(WorkoutBase):
             dur = isodate.parse_duration(val["in_zone"])
             summed_duration += dur
             spent_above = summed_duration / full_duration * 100
-
-            zones.append(
-                {
-                    "zonetype": zone_names[index],
-                    "lowerlimit": val["lower_limit"],
-                    "higherlimit": val["upper_limit"],
-                    "duration": dur,
-                    "percentspentabove": spent_above,
-                    "workout": self.model,
-                }
-            )
-
-            index += 1
+            prefix = f"zone_{zone_names[val['index']]}_"
+            setattr(model, prefix + "lower", val["lower_limit"])
+            setattr(model, prefix + "upper", val["upper_limit"])
+            setattr(model, prefix + "duration", dur)
+            setattr(model, prefix + "percentspentabove", spent_above)
 
         dur = full_duration - summed_duration
 
-        zones.append(
-            {
-                "zonetype": models.ZoneType.BELOW_50,
-                "lowerlimit": 0,
-                "higherlimit": zones[-1]["lowerlimit"],
-                "duration": dur,
-                "percentspentabove": 100,
-                "workout": self.model,
-            }
-        )
-
-        with self.db.atomic():
-            models.HRZones.insert_many(zones).on_conflict_ignore().execute()
-
-        return zones
+        prefix = f"zone_below_50_"
+        setattr(model, prefix + "lower", 0)
+        setattr(model, prefix + "upper", model.zone_50_60_lower)
+        setattr(model, prefix + "duration", dur)
+        setattr(model, prefix + "percentspentabove", 100)
