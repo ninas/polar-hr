@@ -19,7 +19,8 @@ class TestAPI(TestBase):
             getlist=MagicMock(return_value=["aa", "bb"]),
         )
         self.model = MagicMock(a=MagicMock())
-        self.api = API(self.request, self.model, {"a": str}, self.logger)
+        self.db = MagicMock()
+        self.api = API(self.request, self.db, self.model, {"a": str}, self.logger)
 
     def test_flatten_args(self):
         args = self.request.args
@@ -53,21 +54,21 @@ class TestAPI(TestBase):
         vals = self.api.parse()
         self.api._get.assert_called()
 
-    @patch(
-        "src.api.api.DBBase",
-        return_value=MagicMock(get_all=MagicMock(), by_id=MagicMock()),
-    )
-    def test_parse_get(self, db_api_mock):
+    def test_parse_get(self):
+        self.api.db_api = MagicMock(get_all=MagicMock(), by_id=MagicMock())
         self.api.parse()
-        db_api_mock().by_id.assert_called_with(self.model, {self.model.a: ["aa", "bb"]})
+        self.api.db_api.by_id.assert_called_with(
+            self.model, {self.model.a: ["aa", "bb"]}
+        )
 
         self.api.get_query_params = {"c": str}
         self.api.parse()
-        db_api_mock().get_all.assert_called()
+        self.api.db_api.get_all.assert_called()
 
 
 class TestQueryAPI(TestBase):
     def setUp(self):
+        self.db = MagicMock()
         self.model = MagicMock()
         self.mock_db_return = MagicMock(
             get_all=MagicMock(), by_id=MagicMock(), query=MagicMock()
@@ -87,17 +88,17 @@ class TestQueryAPI(TestBase):
         if has_request_data:
             request.data = request_data
 
-        with patch("src.api.api.DBBase", return_value=self.mock_db_return) as db:
-            api = QueryAPI(request, self.model, logger=self.logger)
-            vals = api.parse()
+        api = QueryAPI(request, self.db, self.model, logger=self.logger)
+        api.db_api = self.mock_db_return
+        vals = api.parse()
 
-            loaded = json.loads(vals)
+        loaded = json.loads(vals)
 
-            self.assertEqual(loaded["statusCode"], status_code)
-            if status_code != 400:
-                db().query.assert_called_with(
-                    self.model, api_models.Query.from_dict(query)
-                )
+        self.assertEqual(loaded["statusCode"], status_code)
+        if status_code != 400:
+            api.db_api.query.assert_called_with(
+                self.model, api_models.Query.from_dict(query)
+            )
 
     def test_parse_post(self):
         # didn't define a return so this should give us a 204

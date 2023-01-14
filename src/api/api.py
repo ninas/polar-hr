@@ -9,9 +9,10 @@ from src.utils import log
 
 
 class API:
-    def __init__(self, request, model, get_query_params={}, logger=None):
+    def __init__(self, request, db, model, get_query_params={}, logger=None):
         if logger is None:
-            logger = log.new_logger()
+            logger = log.new_logger(is_dev=False)
+        self.db = db
         self.logger = logger.bind(
             url=request.base_url, method=request.method, model=model.__class__
         )
@@ -21,7 +22,7 @@ class API:
 
     @cached_property
     def db_api(self):
-        return DBBase(self.logger, False)
+        return DBBase(self.db, self.logger, False)
 
     def error(self, msg=None):
         if msg is None:
@@ -86,8 +87,8 @@ class API:
 
 
 class TagAPI(API):
-    def __init__(self, request, tag_types):
-        super().__init__(request, models.Tags)
+    def __init__(self, request, db, tag_types, logger):
+        super().__init__(request, db, models.Tags, logger=logger)
         self.tag_types = tag_types
 
     def _get(self):

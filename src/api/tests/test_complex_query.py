@@ -27,8 +27,7 @@ class TestComplexQuery(TestBase):
         stop_db()
 
     def setUp(self):
-        DBBase._get_db = MagicMock(return_value=self.db)
-        self.base = DBBase(self.logger, False)
+        self.base = DBBase(self.db, self.logger, False)
 
     def _gen_query(self, source_params={}, workout_params={}):
         source = SourceQueryParams(**source_params)

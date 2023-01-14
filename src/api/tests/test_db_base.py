@@ -13,10 +13,9 @@ import swagger_server.models as api_models
 class TestDBBase(TestBase):
     def setUp(self):
         self.db = MagicMock()
-        DBBase._get_db = MagicMock(return_value=self.db)
         DBBase._fetch_from_model = MagicMock(side_effect=lambda x: x)
 
-        self.base = DBBase(self.logger, True)
+        self.base = DBBase(self.db, self.logger, True)
 
     def test_by_id(self):
         vals = {models.Sources.id: [1, 2], models.Sources.url: ["something"]}

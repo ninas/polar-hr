@@ -2,13 +2,30 @@ import json
 
 from src.api.api import API, TagAPI, QueryAPI
 from src.db.workout import models
+from src.utils.db_utils import DBConnection
+from src.utils import log
+
+WORKOUT_DB = None
+
+LOGGER = log.new_logger()
+
+
+def get_db():
+    global WORKOUT_DB, LOGGER
+    if not WORKOUT_DB:
+        LOGGER.info("Instantiating new db connection", db_connection="new")
+        WORKOUT_DB = DBConnection().workout_db
+    else:
+        LOGGER.info("Reusing DB connection", db_connection="reuse")
+    LOGGER.info("Connection established")
+    return WORKOUT_DB
 
 
 def equipment_http(request):
     """
     /equipment
     """
-    return API(request, models.Equipment).parse()
+    return API(request, get_db(), models.Equipment, LOGGER).parse()
 
 
 def tags_http(request, is_dev=False):
@@ -18,12 +35,14 @@ def tags_http(request, is_dev=False):
     """
     return TagAPI(
         request,
+        get_db(),
         [
             models.TagType.TAG,
             models.TagType.SPORT,
             models.TagType.CREATOR,
             models.TagType.EQUIPMENT,
         ],
+        LOGGER,
     ).parse()
 
 
@@ -32,7 +51,7 @@ def exercises_http(request, is_dev=False):
     /exercises
 
     """
-    return TagAPI(request, [models.TagType.EXERCISE]).parse()
+    return TagAPI(request, get_db(), [models.TagType.EXERCISE], LOGGER).parse()
 
 
 def everything_http(request, is_dev=False):
@@ -55,11 +74,17 @@ def everything_http(request, is_dev=False):
 
 
 def sources_http(request, is_dev=False):
-    return QueryAPI(request, models.Sources, {"id": int, "url": str,}).parse()
+    return QueryAPI(
+        request, get_db(), models.Sources, {"id": int, "url": str,}, LOGGER
+    ).parse()
 
 
 def workouts_http(request, is_dev=False):
-    return QueryAPI(request, models.Workouts, {"id": int, "url": str,}).parse()
+    a = QueryAPI(
+        request, get_db(), models.Workouts, {"id": int, "url": str,}, LOGGER
+    ).parse()
+
+    return a
 
 
 if __name__ == "__main__":

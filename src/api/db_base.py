@@ -28,7 +28,8 @@ class DBBase:
         models.Samples: {models.Workouts: None},
     }
 
-    def __init__(self, logger=None, is_dev=True):
+    def __init__(self, db, logger=None, is_dev=False):
+        self.db = db
         self.logger = logger
         if self.logger == None:
             self.logger = log.new_logger(is_dev=is_dev)
@@ -40,13 +41,6 @@ class DBBase:
             logger = logging.getLogger("peewee")
             logger.addHandler(logging.StreamHandler())
             logger.setLevel(logging.DEBUG)
-        self.db = self._get_db()
-
-    @classmethod
-    @cache
-    def _get_db(cls):
-        logger = log.new_logger()
-        return DBConnection(logger).workout_db
 
     @cache
     def _prefetch(self, main_model_select):
