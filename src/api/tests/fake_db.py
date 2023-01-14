@@ -1,30 +1,18 @@
 import unittest
 import json
 from datetime import timedelta, datetime
-import testing.postgresql
 from functools import cache
 
-import src.db.workout.models as models
 from src.utils import log
 from src.utils.test_base import TestBase
 from src.api.complex_query import ComplexQuery
 from src.db.workout import models
 
 
-PG_DB = testing.postgresql.Postgresql()
-
-
-@cache
-def get_db():
-    # Let's create our test DB
-    db = models.database
-    db.init(**PG_DB.dsn())
-    db.connect()
-    db.create_tables(models.get_all_models())
+def insert_data(db):
     sources = _gen_sources(db)
     equipment = _gen_equipment(db)
     workouts = _gen_workouts(db, sources, equipment)
-    return db
 
 
 def _flatten_tags(tags):
@@ -272,7 +260,3 @@ def _insert_tags(db, tags):
             models.Tags.insert_many(
                 [{"name": i, "tagtype": k} for i in v]
             ).on_conflict_ignore().execute()
-
-
-def stop_db():
-    PG_DB.stop()

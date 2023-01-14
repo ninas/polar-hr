@@ -3,13 +3,34 @@ import unittest
 from functools import cache
 
 import structlog
+import testing.postgresql
+from src.db.workout import models
 
 
 class TestBase(unittest.TestCase):
+    PG_DB = None
+
     @classmethod
     def setUpClass(cls):
         # Set to_null to False to get logging in all test cases
         cls.logger = TestBase.gen_logger()
+
+    @classmethod
+    def create_test_db(cls):
+        if cls.PG_DB is not None:
+            cls.teardown_test_db()
+        cls.PG_DB = testing.postgresql.Postgresql()
+        db = models.database
+        db.init(**cls.PG_DB.dsn())
+        db.connect()
+        db.create_tables(models.get_all_models())
+        return db
+
+    @classmethod
+    def teardown_test_db(cls):
+        if cls.PG_DB is not None:
+            cls.PG_DB.stop()
+            cls.PG_DB = None
 
     @staticmethod
     @cache

@@ -10,7 +10,7 @@ from src.utils.test_base import TestBase
 from src.api.complex_query import ComplexQuery
 from swagger_server.models import *
 from src.db.workout import models
-from src.api.tests.fake_db import get_db, stop_db
+from src.api.tests.fake_db import insert_data
 from src.api.db_base import DBBase
 
 
@@ -19,12 +19,13 @@ class TestComplexQuery(TestBase):
     def setUpClass(cls):
         super().setUpClass()
         # Let's create our test DB
-        cls.db = get_db()
+        cls.db = cls.create_test_db()
+        insert_data(cls.db)
 
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        stop_db()
+        cls.teardown_test_db()
 
     def setUp(self):
         self.base = DBBase(self.db, self.logger, False)
