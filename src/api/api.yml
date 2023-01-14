@@ -75,6 +75,8 @@ paths:
           description: No items found
         "400":
           description: Invalid search values
+      x-google-backend:
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-workouts
   /sources:
     get:
       tags:
@@ -162,7 +164,7 @@ paths:
         "204":
           description: No items found
       x-google-backend:
-        address: https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-tags
   /exercises:
     get:
       tags:
@@ -183,7 +185,7 @@ paths:
         "204":
           description: No items found
       x-google-backend:
-        address: https://us-central1-workout-368502.cloudfunctions.net/tags-dev-exercises
+        address: https://us-central1-workout-368502.cloudfunctions.net/api-dev-exercises
   /equipment:
     get:
       tags:
