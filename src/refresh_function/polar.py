@@ -82,3 +82,13 @@ class ProcessData:
         for workout in workouts:
             w = Workout(self.db.workout_db, workout, self.logger)
             w.insert_row()
+            self.update_materialized_views()
+
+    def update_materialized_views(self):
+        with self.db.workout_db.atomic():
+            self.db.workout_db.execute_sql(
+                "REFRESH MATERIALIZED VIEW workouts_materialized"
+            )
+            self.db.workout_db.execute_sql(
+                "REFRESH MATERIALIZED VIEW sources_materialized"
+            )

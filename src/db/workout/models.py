@@ -14,6 +14,7 @@ from playhouse.postgres_ext import (
     IntervalField,
     DateTimeTZField,
     BinaryJSONField,
+    ArrayField,
 )
 from collections import defaultdict
 from functools import cache
@@ -148,10 +149,22 @@ class Workouts(WorkoutBaseModel):
         return j
 
 
+class WorkoutsMaterialized(Workouts):
+    class Meta:
+        db_table = "workouts_materialized"
 
-class Samples(WorkoutBaseModel):
-    samples = BinaryJSONField()
-    workout = ForeignKeyField(Workouts)
+    sources = BinaryJSONField(null=True)
+    tags = ArrayField(TextField)
+    equipment = BinaryJSONField(null=True)
+
+
+class SourcesMaterialized(Sources):
+    class Meta:
+        db_table = "sources_materialized"
+
+    workouts = BinaryJSONField(null=True)
+    tags = ArrayField(TextField)
+    exercises = ArrayField(TextField)
 
 
 def get_all_models():
