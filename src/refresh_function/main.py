@@ -16,7 +16,7 @@ def http(request, is_dev=False):
             workouts=[workout.as_dict_for_logging() for workout in data],
         )
 
-        p = Process(logger)
+        p = ProcessData(logger)
         workouts = p.map_data(data)
 
         logger.debug(

@@ -12,7 +12,7 @@ from src.utils import gcp_utils, log
 from src.utils.db_utils import DBConnection
 
 
-class Process:
+class ProcessData:
     UNIX_SOCKET_PATH = "/cloudsql/"
 
     def __init__(self, logger):
