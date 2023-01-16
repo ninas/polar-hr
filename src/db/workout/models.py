@@ -15,6 +15,8 @@ from playhouse.postgres_ext import (
     DateTimeTZField,
     BinaryJSONField,
 )
+from collections import defaultdict
+from functools import cache
 
 from src.db.base_model import BaseModel
 from src.db.enum_field import EnumField, ExtendedEnum
@@ -131,14 +133,20 @@ class Workouts(WorkoutBaseModel):
     zone_90_100_duration = IntervalField(null=True)
     zone_90_100_percentspentabove = FloatField(null=True)
 
+    @cache
+    def json_friendly(self):
+        j = super().json_friendly()
+        j["hrzones"] = defaultdict(dict)
+        to_delete = []
+        for k, v in j.items():
+            if k.startswith("zone_"):
+                parts = k.split("_")
+                j["hrzones"][f"{parts[1]}_{parts[2]}"][parts[3]] = v
+                to_delete.append(k)
+        for i in to_delete:
+            del j[i]
+        return j
 
-class HRZones(WorkoutBaseModel):
-    zonetype = EnumField(ZoneType)
-    lowerlimit = IntegerField()
-    higherlimit = IntegerField()
-    duration = IntervalField()
-    percentspentabove = FloatField()
-    workout = ForeignKeyField(Workouts)
 
 
 class Samples(WorkoutBaseModel):

@@ -100,18 +100,7 @@ class DBBase:
                 w["sources"] = [s.url for s in workout.sources]
                 w["equipment"] = [e.json_friendly() for e in workout.equipment]
                 w["tags"] = [t.name for t in workout.tags]
-                w["hrzones"] = {}
                 data[workout.id] = w
-                if hasattr(workout, "samples"):
-                    w["samples"] = workout.samples.samples
-
-            hr_model = models.HRZones.select()
-            self._prefetch_models(hr_model, workouts_model_select)
-            for zone in hr_model:
-                if zone.workout_id in data:
-                    z = zone.json_friendly()
-                    del z["workout"]
-                    data[zone.workout_id]["hrzones"][zone.zonetype] = z
 
         return data
 
