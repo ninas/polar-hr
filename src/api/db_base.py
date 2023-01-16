@@ -35,13 +35,6 @@ class DBBase:
             self.logger = log.new_logger(is_dev=is_dev)
         self._is_dev = is_dev
 
-        if is_dev:
-            import logging
-
-            logger = logging.getLogger("peewee")
-            logger.addHandler(logging.StreamHandler())
-            logger.setLevel(logging.DEBUG)
-
     @cache
     def _prefetch(self, main_model_select):
         with self.db.atomic():
