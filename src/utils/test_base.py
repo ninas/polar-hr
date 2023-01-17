@@ -4,33 +4,37 @@ from functools import cache
 
 import structlog
 import testing.postgresql
+from src.utils.test_db import PG_DB
 from src.db.workout import models
 
 
-class TestBase(unittest.TestCase):
-    PG_DB = None
+def tearDownModule():
+    PG_DB.clear_cache()
 
+
+class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Set to_null to False to get logging in all test cases
         cls.logger = TestBase.gen_logger()
 
     @classmethod
-    def create_test_db(cls):
-        if cls.PG_DB is not None:
-            cls.teardown_test_db()
-        cls.PG_DB = testing.postgresql.Postgresql()
+    def create_test_db(cls, insert_data=True):
+        if insert_data:
+            cls.pg_db = PG_DB()
+        else:
+            cls.pg_db = testing.postgresql.Postgresql()
         db = models.database
-        db.init(**cls.PG_DB.dsn())
+        db.init(**cls.pg_db.dsn())
         db.connect()
-        db.create_tables(models.get_all_models())
+        if not insert_data:
+            db.create_tables(models.get_all_models())
         return db
 
     @classmethod
     def teardown_test_db(cls):
-        if cls.PG_DB is not None:
-            cls.PG_DB.stop()
-            cls.PG_DB = None
+        if cls.pg_db is not None:
+            cls.pg_db.stop()
 
     @staticmethod
     @cache
@@ -40,6 +44,10 @@ class TestBase(unittest.TestCase):
                 wrapper_class=structlog.make_filtering_bound_logger(logging.CRITICAL)
             )
         else:
+            logger = logging.getLogger("peewee")
+            logger.addHandler(logging.StreamHandler())
+            logger.setLevel(logging.DEBUG)
+
             structlog.configure_once(
                 processors=[
                     structlog.processors.CallsiteParameterAdder(

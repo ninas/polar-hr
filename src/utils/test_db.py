@@ -1,18 +1,9 @@
-import unittest
 import json
 from datetime import timedelta, datetime
 from functools import cache
 
-from src.utils import log
-from src.utils.test_base import TestBase
-from src.api.complex_query import ComplexQuery
 from src.db.workout import models
-
-
-def insert_data(db):
-    sources = _gen_sources(db)
-    equipment = _gen_equipment(db)
-    workouts = _gen_workouts(db, sources, equipment)
+import testing.postgresql
 
 
 def _flatten_tags(tags):
@@ -111,6 +102,9 @@ def _gen_workouts(db, sources, equipment):
                 notes="some note",
                 sport="sport1",
                 starttime=datetime(2022, 10, 10, 10, 0),
+                samples=json.dumps({"somedata": "something"}),
+                # percent above: [100, 100, 96, 76, 36, 4]
+                **_gen_hr_zones(db, [0, 1, 5, 10, 8, 1], 200),
             )
         )
         workouts[-1].equipment.add(
@@ -118,11 +112,6 @@ def _gen_workouts(db, sources, equipment):
         )
         workouts[-1].sources.add([sources[0]])
         workouts[-1].tags.add(tags)
-        models.Samples.create(
-            samples=json.dumps({"somedata": "something"}), workout=workouts[-1]
-        )
-        # percent above: [100, 100, 96, 76, 36, 4]
-        _insert_hr_zones(db, [0, 1, 5, 10, 8, 1], workouts[-1], 200)
 
         # workout 2, same source
         tags = models.Tags.select().where(
@@ -137,7 +126,10 @@ def _gen_workouts(db, sources, equipment):
                 minhr=100,
                 notes="some note",
                 sport="sport1",
+                samples=json.dumps({"somedata": "something"}),
                 starttime=datetime(2022, 10, 11, 10, 0),
+                # percent above: [100, 100, 92, 72, 60, 20]
+                **_gen_hr_zones(db, [0, 2, 5, 3, 10, 5], 200),
             )
         )
         workouts[-1].equipment.add(
@@ -149,12 +141,6 @@ def _gen_workouts(db, sources, equipment):
         )
         workouts[-1].sources.add([sources[0]])
         workouts[-1].tags.add(tags)
-
-        models.Samples.create(
-            samples=json.dumps({"somedata": "something"}), workout=workouts[-1]
-        )
-        # percent above: [100, 100, 92, 72, 60, 20]
-        _insert_hr_zones(db, [0, 2, 5, 3, 10, 5], workouts[-1], 200)
 
         # workout 3
         _insert_tags(db, {models.TagType.SPORT: ["sport2"]})
@@ -170,15 +156,13 @@ def _gen_workouts(db, sources, equipment):
                 notes="some note",
                 sport="sport2",
                 starttime=datetime(2022, 10, 12, 10, 0),
+                samples=json.dumps({"somedata": "something"}),
+                # percent above: [100, 100, 100, 60, 0, 0]
+                **_gen_hr_zones(db, [0, 0, 20, 15, 0, 0], 200),
             )
         )
         workouts[-1].sources.add([sources[1]])
         workouts[-1].tags.add(tags)
-        models.Samples.create(
-            samples=json.dumps({"somedata": "something"}), workout=workouts[-1]
-        )
-        # percent above: [100, 100, 100, 60, 0, 0]
-        _insert_hr_zones(db, [0, 0, 20, 15, 0, 0], workouts[-1], 200)
 
         # workout 4
         tags = models.Tags.select().where(
@@ -194,7 +178,10 @@ def _gen_workouts(db, sources, equipment):
                 minhr=80,
                 notes="some note",
                 sport="sport1",
+                samples=json.dumps({"somedata": "something"}),
                 starttime=datetime(2022, 10, 13, 10, 0),
+                # percent above: [100, 86, 71, 43, 29, 14]
+                **_gen_hr_zones(db, [5, 5, 5, 10, 5, 5], 200),
             )
         )
         workouts[-1].equipment.add(
@@ -202,38 +189,31 @@ def _gen_workouts(db, sources, equipment):
         )
         workouts[-1].sources.add([sources[2]])
         workouts[-1].tags.add(tags)
-        models.Samples.create(
-            samples=json.dumps({"somedata": "something"}), workout=workouts[-1]
-        )
-        # percent above: [100, 86, 71, 43, 29, 14]
-        _insert_hr_zones(db, [5, 5, 5, 10, 5, 5], workouts[-1], 200)
 
 
-def _insert_hr_zones(db, durations, workout, max_hr):
+def _gen_hr_zones(db, durations, max_hr):
     total = sum(durations)
     interval = int(max_hr / 10)
     half = int(max_hr / 2)
     vals = [
-        [models.ZoneType.BELOW_50, 0],
-        [models.ZoneType.FIFTY_60, half],
-        [models.ZoneType.SIXTY_70, half + interval],
-        [models.ZoneType.SEVENTY_80, half + interval * 2],
-        [models.ZoneType.EIGHTY_90, half + interval * 3],
-        [models.ZoneType.NINETY_100, half + interval * 4],
+        ["below_50", 0],
+        ["50_60", half],
+        ["60_70", half + interval],
+        ["70_80", half + interval * 2],
+        ["80_90", half + interval * 3],
+        ["90_100", half + interval * 4],
     ]
 
-    with db.atomic():
-        for i, v in enumerate(vals):
-            name, start = v
-            end = vals[i + 1][1] - 1 if i + 1 < len(vals) else max_hr
-            models.HRZones.create(
-                zonetype=name,
-                lowerlimit=start,
-                higherlimit=end,
-                duration=timedelta(minutes=durations[i]),
-                percentspentabove=durations[i] / total * 100,
-                workout=workout,
-            )
+    data = {}
+    for i, v in enumerate(vals):
+        name, start = v
+        prefix = f"zone_{name}_"
+        end = vals[i + 1][1] - 1 if i + 1 < len(vals) else max_hr
+        data[prefix + "lower"] = start
+        data[prefix + "upper"] = end
+        data[prefix + "duration"] = timedelta(minutes=durations[i])
+        data[prefix + "percentspentabove"] = durations[i] / total * 100
+    return data
 
 
 def _gen_equipment(db):
@@ -260,3 +240,19 @@ def _insert_tags(db, tags):
             models.Tags.insert_many(
                 [{"name": i, "tagtype": k} for i in v]
             ).on_conflict_ignore().execute()
+
+
+def insert_data(postgres):
+    db = models.database
+    db.init(**postgres.dsn())
+    db.connect()
+    db.create_tables(models.get_all_models())
+    sources = _gen_sources(db)
+    equipment = _gen_equipment(db)
+    workouts = _gen_workouts(db, sources, equipment)
+    models.create_materialized_views()
+
+
+PG_DB = testing.postgresql.PostgresqlFactory(
+    cache_initialized_db=True, on_initialized=insert_data
+)
