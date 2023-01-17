@@ -11,10 +11,18 @@ import swagger_server.models as api_models
 
 
 class TestDBBase(TestBase):
-    def setUp(self):
-        self.db = MagicMock()
-        DBBase._fetch_from_model = MagicMock(side_effect=lambda x: x)
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Let's create our test DB
+        cls.db = cls.create_test_db()
 
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls.teardown_test_db()
+
+    def setUp(self):
         self.base = DBBase(self.db, self.logger, True)
 
     def test_by_id(self):

@@ -17,7 +17,7 @@ functions-framework --target sources_http
 and query like:
 ```
 curl --request GET http://localhost:8080
-curl --request POST  -H "Content-Type: application/json" -d '{"query": {"sourceAttributes": {"tags": ["hiit", "low impact"]}}}' http://localhost:8080
+curl --request POST  -H "Content-Type: application/json" -d '{"sourceAttributes": {"tags": ["hiit", "low impact"]}}' http://localhost:8080
 
 ```
 etc.

@@ -29,7 +29,7 @@ class TestWorkout(TestBase):
             return json.loads(f.read())
 
     def test_insert_row(self):
-        self.db = self.create_test_db()
+        self.db = self.create_test_db(insert_data=False)
         self.data._i_data["sources"] = ["www.test.com"]
         self.workout = Workout(self.db, self.data, self.logger)
         self.workout.insert_row()
