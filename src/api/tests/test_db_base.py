@@ -26,30 +26,30 @@ class TestDBBase(TestBase):
         self.base = DBBase(self.db, self.logger, True)
 
     def test_by_id(self):
-        vals = {models.Sources.id: [1, 2], models.Sources.url: ["something"]}
+        vals = {
+            models.SourcesMaterialized.id: [2, 5],
+            models.SourcesMaterialized.url: ["https://youtube.com/source1"],
+        }
+        mod = self.base.by_id(models.SourcesMaterialized, vals)
+        self.assertEqual(len(mod), 2)
 
-        mod = self.base.by_id(models.Sources, vals)
-        comp_mod = models.Sources().select()
-        for k, v in vals.items():
-            comp_mod = comp_mod.orwhere(k << v)
+        vals = {
+            models.SourcesMaterialized.id: [1, 2, 5],
+            models.SourcesMaterialized.url: ["https://youtube.com/source1"],
+        }
+        mod = self.base.by_id(models.SourcesMaterialized, vals)
+        self.assertEqual(len(mod), 2)
 
-        self.assertEqual(str(mod), str(comp_mod))
-
-        self.assertRaises(
-            Exception, self.base.by_id(models.Sources, {models.Workouts.id: [1]})
-        )
+        vals = {}
+        mod = self.base.by_id(models.SourcesMaterialized, vals)
+        self.assertEqual(len(mod), 3)
 
     def test_get_all(self):
-        self.assertEqual(
-            str(models.Sources.select()), self.base.get_all(models.Sources)
-        )
+        results = self.base.get_all(models.WorkoutsMaterialized)
+        self.assertEqual(len(results), 4)
+        # Ensure [None] gets converted to []
+        self.assertEqual(results[2]["equipment"], [])
 
-    def test_query(self):
-        with patch(
-            "src.api.db_base.ComplexQuery",
-            return_value=MagicMock(execute=MagicMock(side_effect=lambda: {})),
-        ) as mock_query:
-            self.assertEqual(self.base.query(models.Sources, MagicMock()), {})
-
-            mock_query.return_value.execute.side_effect = lambda: None
-            self.assertEqual(self.base.query(models.Sources, MagicMock()), {})
+        # We haven't defined a handler for this model
+        results = self.base.get_all(models.Workouts.sources.get_through_model())
+        self.assertEqual(results, [])
