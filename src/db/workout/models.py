@@ -170,7 +170,6 @@ class SourcesMaterialized(Sources):
 
 def get_all_models():
     return [
-        HRZones,
         Equipment,
         Tags,
         Sources,
@@ -179,7 +178,6 @@ def get_all_models():
         Workouts.sources.get_through_model(),
         Workouts.equipment.get_through_model(),
         Workouts.tags.get_through_model(),
-        Samples,
     ]
 
 
