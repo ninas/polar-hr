@@ -134,9 +134,10 @@ class Workouts(WorkoutBaseModel):
     zone_90_100_duration = IntervalField(null=True)
     zone_90_100_percentspentabove = FloatField(null=True)
 
-    @cache
     def json_friendly(self):
         j = super().json_friendly()
+        if j["samples"] == None:
+            del j["samples"]
         j["hrzones"] = defaultdict(dict)
         to_delete = []
         for k, v in j.items():

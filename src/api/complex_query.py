@@ -12,63 +12,66 @@ from swagger_server.models.equipment_type import EquipmentType as APIEquipmentTy
 
 
 class ComplexQuery:
-    def __init__(self, query, model, logger=None, is_dev=False):
+    def __init__(self, logger=None, is_dev=False):
         self.logger = logger
-        self.full_query = query
-        self.model = model
 
-    def _gen_workouts_query(self, query):
-        wrkouts = models.Workouts.select(models.Workouts.id)
+    def _in_or_equal(self, field, vals):
+        if len(vals) > 1:
+            return field << set(vals)
+        return field == vals.pop()
+
+    def _gen_workouts_query(self, query, wrkouts=None):
+        if wrkouts is None:
+            wrkouts = models.Workouts.select(models.Workouts.id)
+        wrk_model = wrkouts.model
+        expressions = None
 
         if query.sport is not None and len(query.sport) > 0:
-            wrkouts = wrkouts.where(models.Workouts.sport << set(query.sport))
+
+            wrkouts = wrkouts.where(self._in_or_equal(wrk_model.sport, query.sport))
 
         if query.equipment is not None and len(query.equipment) > 0:
             equip_query = self._build_equipment_query(query.equipment)
             if equip_query is not None:
-                wrkouts = wrkouts.where(models.Workouts.id << equip_query)
+                wrkouts = wrkouts.where(wrk_model.id << equip_query)
 
         if query.hr_range is not None:
             if query.hr_range.min is not None:
-                wrkouts = wrkouts.where(models.Workouts.minhr >= query.hr_range.min)
+                wrkouts = wrkouts.where(wrk_model.minhr >= query.hr_range.min)
             if query.hr_range.max is not None:
-                wrkouts = wrkouts.where(models.Workouts.maxhr <= query.hr_range.max)
+                wrkouts = wrkouts.where(wrk_model.maxhr <= query.hr_range.max)
 
         if query.avg_hr_range is not None:
             if query.avg_hr_range.min is not None:
-                wrkouts = wrkouts.where(models.Workouts.avghr >= query.avg_hr_range.min)
+                wrkouts = wrkouts.where(wrk_model.avghr >= query.avg_hr_range.min)
             if query.avg_hr_range.max is not None:
-                wrkouts = wrkouts.where(models.Workouts.avghr <= query.avg_hr_range.max)
-        hr_zones_query = None
+                wrkouts = wrkouts.where(wrk_model.avghr <= query.avg_hr_range.max)
         if query.in_hr_zone is not None and len(query.in_hr_zone) > 0:
-            hr_zones_query = self._build_hr_zones_query(
+            wrkouts = self._build_hr_zones_query(
                 query.in_hr_zone,
                 "max_time",
                 timedelta(seconds=0),
                 isodate.parse_duration,
                 operator.le,
-                models.HRZones.duration,
+                "duration",
                 False,
+                wrkouts,
             )
 
         if query.above_hr_zone is not None and len(query.above_hr_zone) > 0:
-            quer = self._build_hr_zones_query(
+            wrkouts = self._build_hr_zones_query(
                 query.above_hr_zone,
                 "percent_spent_above",
                 -1,
                 float,
                 operator.ge,
-                models.HRZones.percentspentabove,
+                "percentspentabove",
                 True,
+                wrkouts,
             )
-            if hr_zones_query is not None:
-                hr_zones_query.union(quer)
-            else:
-                hr_zones_query = quer
 
-        if hr_zones_query is not None:
-            wrkouts = wrkouts.where(models.Workouts.id << hr_zones_query)
-
+        if wrkouts._where is None:
+            return None
         return wrkouts
 
     def _build_hr_zones_query(
@@ -80,7 +83,9 @@ class ComplexQuery:
         second_comparison,
         second_model_field,
         second_exclusive,
+        model_select,
     ):
+        hr_model = model_select.model
         zones = defaultdict(dict)
 
         defaults = {
@@ -107,22 +112,31 @@ class ComplexQuery:
         if len(zones) == 0:
             return None
 
-        hr = models.HRZones.select(models.HRZones.workout_id)
+        hr = model_select
         count = 0
         for k, v in zones.items():
-            exp = models.HRZones.zonetype == k
+            field_name_prefix = f"zone_{k}_"
             skip = False
+            exp = None
             if second_name in v:
-                exp &= second_comparison(second_model_field, v[second_name])
+                exp = second_comparison(
+                    getattr(hr_model, field_name_prefix + second_model_field),
+                    v[second_name],
+                )
                 if second_exclusive:
                     skip = True
             if not skip and "min_time" in v:
-                exp &= models.HRZones.duration >= v["min_time"]
+                exp2 = (
+                    getattr(hr_model, field_name_prefix + "duration") >= v["min_time"]
+                )
+                if exp is None:
+                    exp = exp2
+                else:
+                    exp &= exp2
+
             count += 1
-            hr = hr.orwhere(exp)
-        hr = hr.group_by(models.HRZones.workout_id).having(
-            fn.COUNT(models.HRZones.workout_id) == count
-        )
+            if exp is not None:
+                hr = hr.where(exp)
 
         if hr._where is None:
             # If we have no valid search params, don't bother adding the clause
@@ -177,10 +191,10 @@ class ComplexQuery:
             equipment = equipment.orwhere(exp)
 
         if len(ids) > 0:
-            equipment = equipment.orwhere(models.Equipment.id << ids)
+            equipment = equipment.orwhere(self._in_or_equal(models.Equipment.id, ids))
         if len(equipment_types) > 0:
             equipment = equipment.orwhere(
-                models.Equipment.equipmenttype << equipment_types
+                self._in_or_equal(models.Equipment.equipmenttype, equipment_types)
             )
         if has_no_equip:
             if equipment._where is None:
@@ -197,24 +211,22 @@ class ComplexQuery:
 
         return equipment
 
-    def _gen_sources_query(self, query):
-        srcs = models.Sources.select(models.Sources.id)
+    def _gen_sources_query(self, query, srcs=None):
+        if srcs is None:
+            srcs = models.Sources.select(models.Sources.id)
+        src_model = srcs.model
         source_tags_to_filter = set()
 
         if query.creator is not None:
-            srcs = srcs.where(models.Sources.creator == query.creator)
+            srcs = srcs.where(src_model.creator == query.creator)
 
         if query.length_min is not None:
-            srcs = srcs.where(
-                models.Sources.length >= timedelta(seconds=query.length_min)
-            )
+            srcs = srcs.where(src_model.length >= timedelta(seconds=query.length_min))
         if query.length_max is not None:
-            srcs = srcs.where(
-                models.Sources.length <= timedelta(seconds=query.length_max)
-            )
+            srcs = srcs.where(src_model.length <= timedelta(seconds=query.length_max))
 
         if query.source_type is not None:
-            srcs = srcs.where(models.Sources.sourcettype == query.source_type)
+            srcs = srcs.where(src_model.sourcettype == query.source_type)
 
         if query.exercises is not None:
             source_tags_to_filter.update(set(query.exercises))
@@ -230,57 +242,66 @@ class ComplexQuery:
                 .group_by(models.Sources.id)
                 .having(fn.COUNT(models.Sources.id) == len(source_tags_to_filter))
             )
-            srcs = srcs.where(models.Sources.id << sub_query)
+            srcs = srcs.where(src_model.id << sub_query)
+
+        if srcs._where is None:
+            return None
 
         return srcs
 
     @cache
     def _query_ordering(self, model_name):
         return {
-            "Sources": ["sources", "workouts"],
-            "Workouts": ["workouts", "sources"],
+            "SourcesMaterialized": ["sources", "workouts"],
+            "WorkoutsMaterialized": ["workouts", "sources"],
         }[model_name]
 
-    def execute(self):
-        name1, name2 = self._query_ordering(self.model.__name__)
+    @cache
+    def _materialized_source(self, name):
+        return {"sources": models.Sources, "workouts": models.Workouts,}[name]
+
+    def execute(self, query, model):
+        name1, name2 = self._query_ordering(model.__name__)
         q1, q2 = [
-            getattr(self.full_query, f"{i}_attributes")
-            for i in self._query_ordering(self.model.__name__)
+            getattr(query, f"{i}_attributes")
+            for i in self._query_ordering(model.__name__)
         ]
-        self.logger.info("Starting query", model=name1, query=str(self.full_query))
+        self.logger.info("Starting query", model=name1, query=str(query))
+        mm_select = model.select()
+        if model.__name__ == "WorkoutsMaterialized" and not q1.samples:
+            self.logger.debug("Excluding samples")
+            mm_select = self._exclude_samples()
 
         one = None
         if q1 is not None:
-            one = getattr(self, f"_gen_{name1}_query")(q1)
+            one = getattr(self, f"_gen_{name1}_query")(q1, mm_select)
 
         if q2 is not None:
-            through = getattr(self.model, f"{name2}").get_through_model()
-            two = (
-                through.select(getattr(through, f"{name1}_id"))
-                .join(self.model)
-                .where(
-                    getattr(through, f"{name2}_id")
-                    << getattr(self, f"_gen_{name2}_query")(q2)
+            through = getattr(
+                self._materialized_source(name1), f"{name2}"
+            ).get_through_model()
+            genned = getattr(self, f"_gen_{name2}_query")(q2)
+            if genned is not None:
+                two = (
+                    through.select(getattr(through, f"{name1}_id"))
+                    .join(self._materialized_source(name1))
+                    .where(getattr(through, f"{name2}_id") << genned)
                 )
-            )
-            if one is None:
-                one = two
-            else:
-                one = one.intersect(two)
+                if one is None:
+                    one = mm_select
+                one = one.where(model.id << two)
 
-        if one is not None:
-            select = self.model.select()
-            if self.model.__name__ == "Workouts" and q1.samples:
-                select = models.Workouts.select(
-                    models.Workouts, models.Samples.samples
-                ).join(
-                    models.Samples,
-                    on=(models.Samples.workout_id == models.Workouts.id),
-                    attr="samples",
-                )
-            quer = select.where(self.model.id << one)
-            self.logger.info("Generated DB query", db_query=str(quer))
-            return quer
+        if one is None or one._where is None:
+            self.logger.info("No valid DB query")
+            return None
 
-        self.logger.info("No valid DB query")
-        return None
+        self.logger.info("Generated DB query", db_query=str(one))
+        return one
+
+    @cache
+    def _exclude_samples(self):
+        fields = []
+        for name, field in models.WorkoutsMaterialized._meta.fields.items():
+            if name != "samples":
+                fields.append(field)
+        return models.WorkoutsMaterialized.select(*fields)
