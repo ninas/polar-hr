@@ -180,3 +180,25 @@ def get_all_models():
         Workouts.tags.get_through_model(),
         Samples,
     ]
+
+
+def create_materialized_views(
+    paths=[
+        "src/db/workout/sql/workouts_materialized_view.sql",
+        "src/db/workout/sql/sources_materialized_view.sql",
+    ]
+):
+    queries = []
+    for i in paths:
+        with open(i) as f:
+            queries.append(f.read().replace("\n", " "))
+
+    with database.atomic():
+        for i in queries:
+            database.execute_sql(i)
+
+
+def refresh_materialized_views():
+    with database.atomic():
+        database.execute_sql("REFRESH MATERIALIZED VIEW workouts_materialized")
+        database.execute_sql("REFRESH MATERIALIZED VIEW sources_materialized")
