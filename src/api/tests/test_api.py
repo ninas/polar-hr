@@ -20,7 +20,7 @@ class TestAPI(TestBase):
         )
         self.model = MagicMock(a=MagicMock())
         self.db = MagicMock()
-        self.api = API(self.request, self.db, self.model, {"a": str}, self.logger)
+        self.api = API(self.db, self.logger)
 
     def test_flatten_args(self):
         args = self.request.args
@@ -41,28 +41,28 @@ class TestAPI(TestBase):
             __name__ + ".API.methods", new_callable=PropertyMock,
         ) as mock_methods:
             mock_methods.return_value = {"something": None}
-            vals = self.api.parse()
+            vals = self.api.parse(self.request, self.model, {"a": int})
             loaded = json.loads(vals)
             self.assertEqual(loaded["statusCode"], 400)
 
         self.api._get = MagicMock(return_value=self.api._result([]))
-        vals = self.api.parse()
+        vals = self.api.parse(self.request, self.model)
         loaded = json.loads(vals)
         self.assertEqual(loaded["statusCode"], 204)
 
         self.api._get.return_value = self.api._result(["aa", "bb"])
-        vals = self.api.parse()
+        vals = self.api.parse(self.request, self.model)
         self.api._get.assert_called()
 
     def test_parse_get(self):
         self.api.db_api = MagicMock(get_all=MagicMock(), by_id=MagicMock())
-        self.api.parse()
+        self.api.parse(self.request, self.model, {"a": str})
         self.api.db_api.by_id.assert_called_with(
             self.model, {self.model.a: ["aa", "bb"]}
         )
 
         self.api.get_query_params = {"c": str}
-        self.api.parse()
+        self.api.parse(self.request, self.model)
         self.api.db_api.get_all.assert_called()
 
 
@@ -88,9 +88,9 @@ class TestQueryAPI(TestBase):
         if has_request_data:
             request.data = request_data
 
-        api = QueryAPI(request, self.db, self.model, logger=self.logger)
+        api = QueryAPI(self.db, logger=self.logger)
         api.db_api = self.mock_db_return
-        vals = api.parse()
+        vals = api.parse(request, self.model)
 
         loaded = json.loads(vals)
 

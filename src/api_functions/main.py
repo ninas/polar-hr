@@ -9,6 +9,8 @@ WORKOUT_DB = None
 
 LOGGER = log.new_logger()
 
+STORED_APIS = {"API": None, "TagAPI": None, "QueryAPI": None}
+
 
 def get_db():
     global WORKOUT_DB, LOGGER
@@ -21,11 +23,19 @@ def get_db():
     return WORKOUT_DB
 
 
+def get_api(api_type=API):
+    name = api_type.__name__
+    if name in STORED_APIS and STORED_APIS[name] is not None:
+        return STORED_APIS[name]
+    STORED_APIS[name] = api_type(get_db(), LOGGER)
+    return STORED_APIS[name]
+
+
 def equipment_http(request):
     """
     /equipment
     """
-    return API(request, get_db(), models.Equipment, LOGGER).parse()
+    return get_api().parse(request, models.Equipment)
 
 
 def tags_http(request, is_dev=False):
@@ -34,7 +44,6 @@ def tags_http(request, is_dev=False):
 
     """
     return TagAPI(
-        request,
         get_db(),
         [
             models.TagType.TAG,
@@ -43,7 +52,7 @@ def tags_http(request, is_dev=False):
             models.TagType.EQUIPMENT,
         ],
         LOGGER,
-    ).parse()
+    ).parse(request, models.Tags)
 
 
 def exercises_http(request, is_dev=False):
@@ -51,7 +60,9 @@ def exercises_http(request, is_dev=False):
     /exercises
 
     """
-    return TagAPI(request, get_db(), [models.TagType.EXERCISE], LOGGER).parse()
+    return TagAPI(get_db(), [models.TagType.EXERCISE], LOGGER).parse(
+        request, models.Tags
+    )
 
 
 def everything_http(request, is_dev=False):
@@ -74,15 +85,15 @@ def everything_http(request, is_dev=False):
 
 
 def sources_http(request, is_dev=False):
-    return QueryAPI(
-        request, get_db(), models.Sources, {"id": int, "url": str,}, LOGGER
-    ).parse()
+    return get_api(QueryAPI).parse(
+        request, models.SourcesMaterialized, {"id": int, "url": str,}
+    )
 
 
 def workouts_http(request, is_dev=False):
-    return QueryAPI(
-        request, get_db(), models.Workouts, {"id": int, "url": str,}, LOGGER
-    ).parse()
+    return get_api(QueryAPI).parse(
+        request, models.WorkoutsMaterialized, {"id": int, "url": str,}
+    )
 
 
 if __name__ == "__main__":

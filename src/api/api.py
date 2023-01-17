@@ -9,16 +9,11 @@ from src.utils import log
 
 
 class API:
-    def __init__(self, request, db, model, get_query_params={}, logger=None):
-        if logger is None:
-            logger = log.new_logger(is_dev=False)
+    def __init__(self, db, logger=None):
+        self.logger = logger
+        if self.logger is None:
+            self.logger = log.new_logger(is_dev=False)
         self.db = db
-        self.logger = logger.bind(
-            url=request.base_url, method=request.method, model=model.__class__
-        )
-        self.request = request
-        self.model = model
-        self.get_query_params = get_query_params
 
     @cached_property
     def db_api(self):
@@ -45,16 +40,25 @@ class API:
     def _result(self, vals, func=None):
         return vals, func if func is not None else self.success
 
-    def parse(self):
-        if self.request.method not in self.methods:
+    def parse(self, request, model, get_query_params={}):
+        l = self.logger
+        self.logger = self.logger.bind(
+            url=request.base_url, method=request.method, model=model.__class__
+        )
+        self.logger.info("Starting request")
+        if request.method not in self.methods:
             return self.error(
-                f"Endpoint does not support {self.request.method} requests. Try: {self.methods.keys()}"
+                f"Endpoint does not support {request.method} requests. Try: {self.methods.keys()}"
             )
 
-        results, res_func = self.methods[self.request.method]()
+        results, res_func = self.methods[request.method](
+            request, model, get_query_params
+        )
 
+        self.logger = l
         if results is None or len(results) == 0:
             return self.empty_result()
+        # recur(results, "")
         return res_func(results)
 
     def _flatten_args(self, args):
@@ -66,32 +70,31 @@ class API:
                     data[k].extend(l.split(","))
         return data
 
-    def _get(self):
-        data = self._flatten_args(self.request.args)
+    def _get(self, request, model, get_query_params):
+
+        data = self._flatten_args(request.args)
 
         is_invalid_arg = lambda arg: arg not in data or len(data[arg]) == 0
 
-        if len(data) == 0 or all(
-            is_invalid_arg(i) for i in self.get_query_params.keys()
-        ):
-            return self._result(self.db_api.get_all(self.model))
+        if len(data) == 0 or all(is_invalid_arg(i) for i in get_query_params.keys()):
+            return self._result(self.db_api.get_all(model))
 
-        return self._parse_get(data)
+        return self._parse_get(data, model, get_query_params)
 
-    def _parse_get(self, data):
+    def _parse_get(self, data, model, get_query_params):
         params = {}
-        for name, typ in self.get_query_params.items():
+        for name, typ in get_query_params.items():
             if name in data:
-                params[getattr(self.model, name)] = [typ(i) for i in data[name]]
-        return self._result(self.db_api.by_id(self.model, params))
+                params[getattr(model, name)] = [typ(i) for i in data[name]]
+        return self._result(self.db_api.by_id(model, params))
 
 
 class TagAPI(API):
-    def __init__(self, request, db, tag_types, logger):
-        super().__init__(request, db, models.Tags, logger=logger)
+    def __init__(self, db, tag_types, logger):
+        super().__init__(db, logger=logger)
         self.tag_types = tag_types
 
-    def _get(self):
+    def _get(self, request, model, get_query_params):
         return self._result(
             self.db_api.by_id(models.Tags, {models.Tags.tagtype: self.tag_types},)
         )
@@ -150,26 +153,26 @@ class QueryAPI(API):
                     return f"{model.__name__}: Invalid parameter {i}. Valid options are: {valid}"
         return None
 
-    def _post(self):
+    def _post(self, request, model, get_query_params):
         if (
-            self.request.mimetype != "application/json"
-            or self.request.data is None
-            or len(self.request.data) == 0
+            request.mimetype != "application/json"
+            or request.data is None
+            or len(request.data) == 0
         ):
             return self._result(
                 "Invalid post request: make sure you're sending json", self.error
             )
         try:
-            data = json.loads(self.request.data)
+            data = json.loads(request.data)
             if len(data) == 0:
                 raise json.decoder.JSONDecodeError()
             self.logger.info("API query", query=data)
         except json.decoder.JSONDecodeError as e:
             return self._result("Invalid or empty json object passed", self.error)
 
-        return self._parse_post(data)
+        return self._parse_post(data, model)
 
-    def _parse_post(self, data):
+    def _parse_post(self, data, model):
         query = api_models.Query.from_dict(data)
         # Should prob enable typing to validate all API types
         errs = self._validate_api_enum_fields(query)
@@ -177,4 +180,4 @@ class QueryAPI(API):
             if i is not None:
                 return self._result(i, self.error)
 
-        return self._result(self.db_api.query(self.model, query))
+        return self._result(self.db_api.query(model, query))
