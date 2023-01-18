@@ -72,7 +72,7 @@ class DBBase:
             "data": data,
         }
 
-    def query(self, model, query):
+    def query(self, model, query, pagination_id=None):
         model_select = self.cq.execute(query, model)
         self.logger.debug(
             "SQL Query", method="query", model=model.__name__, query=str(model_select)
@@ -80,7 +80,7 @@ class DBBase:
 
         if model_select is None:
             return {}
-        return self._fetch_from_model(model_select, None)
+        return self._fetch_from_model(model_select, pagination_id)
 
     def by_id(self, model, identifiers, pagination_id=None):
         model_select = model.select()

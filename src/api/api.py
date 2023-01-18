@@ -194,4 +194,9 @@ class QueryAPI(API):
             if i is not None:
                 return self._result(i, self.error)
 
-        return self._result(self.db_api.query(model, query))
+        paginate = bool(query.paginate)
+        pagination_id = query.pagination_id
+        if paginate and pagination_id is None:
+            pagination_id = 1
+
+        return self._result(self.db_api.query(model, query, pagination_id))

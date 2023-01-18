@@ -124,6 +124,7 @@ class TestQueryAPI(TestBase):
         status_code,
         request_data=None,
         query={"workoutsAttributes": {"sport": ["sport1"]}},
+        pagination_id=None,
         has_request_data=True,
     ):
         request = MagicMock(method="POST", mimetype="application/json")
@@ -142,8 +143,38 @@ class TestQueryAPI(TestBase):
         self.assertEqual(loaded["statusCode"], status_code)
         if status_code != 400:
             api.db_api.query.assert_called_with(
-                self.model, api_models.Query.from_dict(query)
+                self.model, api_models.Query.from_dict(query), pagination_id
             )
+
+    def test_pagination(self):
+        self.mock_db_return.query.return_value = {
+            "data": {"something": "yup"},
+            "nextPage": -1,
+        }
+        self._run(
+            200,
+            query={"paginate": True, "workoutsAttributes": {"sport": ["sport1"]}},
+            pagination_id=1,
+        )
+        self._run(
+            200,
+            query={"paginate": False, "workoutsAttributes": {"sport": ["sport1"]}},
+            pagination_id=None,
+        )
+        self._run(
+            200,
+            query={"paginationId": 2, "workoutsAttributes": {"sport": ["sport1"]}},
+            pagination_id=2,
+        )
+        self._run(
+            200,
+            query={
+                "paginate": False,
+                "paginationId": 2,
+                "workoutsAttributes": {"sport": ["sport1"]},
+            },
+            pagination_id=2,
+        )
 
     def test_parse_post(self):
         # didn't define a return so this should give us a 204
