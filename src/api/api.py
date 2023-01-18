@@ -56,9 +56,10 @@ class API:
         )
 
         self.logger = l
-        if results is None or len(results) == 0:
+        if res_func == self.success and (
+            results is None or len(results) == 0 or len(results["data"]) == 0
+        ):
             return self.empty_result()
-        # recur(results, "")
         return res_func(results)
 
     def _flatten_args(self, args):
@@ -71,22 +72,35 @@ class API:
         return data
 
     def _get(self, request, model, get_query_params):
-
         data = self._flatten_args(request.args)
+
+        paginate = data.get("paginate", [""])[0].lower() == "true"
+        pagination_id = data.get("paginationId", [None])[0]
+        if pagination_id is None and paginate:
+            pagination_id = 1
+        elif pagination_id:
+            try:
+                pagination_id = int(pagination_id)
+                if pagination_id < 1:
+                    raise ValueError()
+            except ValueError:
+                return self._result(
+                    "Invalid paginationId, must be an integer", self.error
+                )
 
         is_invalid_arg = lambda arg: arg not in data or len(data[arg]) == 0
 
         if len(data) == 0 or all(is_invalid_arg(i) for i in get_query_params.keys()):
-            return self._result(self.db_api.get_all(model))
+            return self._result(self.db_api.get_all(model, pagination_id))
 
-        return self._parse_get(data, model, get_query_params)
+        return self._parse_get(data, model, get_query_params, pagination_id)
 
-    def _parse_get(self, data, model, get_query_params):
+    def _parse_get(self, data, model, get_query_params, pagination_id):
         params = {}
         for name, typ in get_query_params.items():
             if name in data:
                 params[getattr(model, name)] = [typ(i) for i in data[name]]
-        return self._result(self.db_api.by_id(model, params))
+        return self._result(self.db_api.by_id(model, params, pagination_id))
 
 
 class TagAPI(API):

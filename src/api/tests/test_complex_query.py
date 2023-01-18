@@ -4,13 +4,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 import testing.postgresql
 
-import src.db.workout.models as models
 from src.utils import log
 from src.utils.test_base import TestBase
 from src.api.complex_query import ComplexQuery
 from swagger_server.models import *
 from src.db.workout import models
-from src.api.tests.fake_db import insert_data
 from src.api.db_base import DBBase
 
 
@@ -38,56 +36,56 @@ class TestComplexQuery(TestBase):
         # tags should be ANDed not ORed
         cq = self._gen_query({"tags": ["tag1", "tag2"]}, {},)
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 1)
+        self.assertEqual(len(quer["data"]), 1)
 
         cq = self._gen_query({"tags": ["tag2"]}, {},)
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
 
     def test_query_sources_basic(self):
         cq = self._gen_query(
             {"tags": ["tag2"], "length_min": 20 * 60}, {"sport": ["sport1"]},
         )
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 2)
+        self.assertEqual(len(quer["data"]), 2)
 
         # query params are ANDed
         cq = self._gen_query(
             {"tags": ["tag2"], "length_min": 20 * 60, "exercises": ["exercise5"]}, {}
         )
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 1)
+        self.assertEqual(len(quer["data"]), 1)
 
         cq = self._gen_query(
             {"tags": ["tag2"], "length_min": 20 * 60, "exercises": ["exercise5"]},
             {"sport": ["sport1"]},
         )
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 0)
+        self.assertEqual(len(quer["data"]), 0)
 
     def test_query_sources_on_workout(self):
         cq = self._gen_query({}, {"sport": ["sport1"]},)
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 2)
+        self.assertEqual(len(quer["data"]), 2)
 
         cq = self._gen_query({}, {"hr_range": HRRange(101, 180)})
         quer = self.base.query(models.SourcesMaterialized, cq)
-        self.assertEqual(len(quer), 1)
+        self.assertEqual(len(quer["data"]), 1)
 
     def test_query_workouts_filter_on_sources(self):
         cq = self._gen_query({"tags": ["tag2"]}, {"sport": ["sport1"]},)
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
 
     def test_query_workouts_samples(self):
         cq = self._gen_query({}, {"sport": ["sport1"], "samples": True})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        for i in quer:
+        for i in quer["data"]:
             self.assertTrue("samples" in i)
 
         cq = self._gen_query({}, {"sport": ["sport1"], "samples": False})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        for i in quer:
+        for i in quer["data"]:
             self.assertTrue("samples" not in i)
 
     def test_query_workouts_in_hr_zones(self):
@@ -100,7 +98,7 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 2)
+        self.assertEqual(len(quer["data"]), 2)
 
         # If the same field is provided more than once, the max/min should be used
         cq = self._gen_query(
@@ -114,7 +112,7 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 2)
+        self.assertEqual(len(quer["data"]), 2)
 
         # Queries should be ANDed - a workout must have HRZones that match all the ones specified
         cq = self._gen_query(
@@ -127,14 +125,14 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 1)
+        self.assertEqual(len(quer["data"]), 1)
 
     def test_query_workouts_above_hr_zones(self):
         cq = self._gen_query(
             {}, {"above_hr_zone": [HRZoneAbove(zone_type="70_80", min_time="PT11M",)]},
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 1)
+        self.assertEqual(len(quer["data"]), 1)
 
         # if percentage is provided, the time fields should be ignored
         cq = self._gen_query(
@@ -148,7 +146,7 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
 
         # If the same field is provided more than once, the max/min should be used
         # If percent is provided once, then that should be used instead of any min times
@@ -163,7 +161,7 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
 
         # Queries should be ANDed - a workout must have HRZones that match all the ones specified
         cq = self._gen_query(
@@ -176,29 +174,29 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 2)
+        self.assertEqual(len(quer["data"]), 2)
 
     def test_query_workouts_equipment(self):
         # If only equipment type is specified, fetch all that use any magnitude of that type
         cq = self._gen_query({}, {"equipment": [Equipment(equipment_type="weights")]})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
 
         # If no equipment params specified, fetch all
         cq = self._gen_query({}, {"sport": ["sport1"]})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
         cq = self._gen_query({}, {"sport": ["sport1"], "equipment": []})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
         cq = self._gen_query({}, {"sport": ["sport1"], "equipment": [Equipment()]})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)
 
         # Which is different to when "No equipment" is specifically searched for
         cq = self._gen_query({}, {"equipment": [Equipment(equipment_type="none")]})
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 1)
+        self.assertEqual(len(quer["data"]), 1)
 
         # Different searches are ORed
         cq = self._gen_query(
@@ -211,7 +209,7 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 2)
+        self.assertEqual(len(quer["data"]), 2)
 
         cq = self._gen_query(
             {},
@@ -223,4 +221,4 @@ class TestComplexQuery(TestBase):
             },
         )
         quer = self.base.query(models.WorkoutsMaterialized, cq)
-        self.assertEqual(len(quer), 3)
+        self.assertEqual(len(quer["data"]), 3)

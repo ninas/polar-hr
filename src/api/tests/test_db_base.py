@@ -31,25 +31,25 @@ class TestDBBase(TestBase):
             models.SourcesMaterialized.url: ["https://youtube.com/source1"],
         }
         mod = self.base.by_id(models.SourcesMaterialized, vals)
-        self.assertEqual(len(mod), 2)
+        self.assertEqual(len(mod["data"]), 2)
 
         vals = {
             models.SourcesMaterialized.id: [1, 2, 5],
             models.SourcesMaterialized.url: ["https://youtube.com/source1"],
         }
         mod = self.base.by_id(models.SourcesMaterialized, vals)
-        self.assertEqual(len(mod), 2)
+        self.assertEqual(len(mod["data"]), 2)
 
         vals = {}
         mod = self.base.by_id(models.SourcesMaterialized, vals)
-        self.assertEqual(len(mod), 3)
+        self.assertEqual(len(mod["data"]), 3)
 
     def test_get_all(self):
         results = self.base.get_all(models.WorkoutsMaterialized)
-        self.assertEqual(len(results), 4)
+        self.assertEqual(len(results["data"]), 4)
         # Ensure [None] gets converted to []
-        self.assertEqual(results[2]["equipment"], [])
+        self.assertEqual(results["data"][2]["equipment"], [])
 
         # We haven't defined a handler for this model
         results = self.base.get_all(models.Workouts.sources.get_through_model())
-        self.assertEqual(results, [])
+        self.assertEqual(results["data"], [])

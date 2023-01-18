@@ -1,7 +1,7 @@
 import unittest
 import json
 from datetime import timedelta
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch, ANY
 
 import src.db.workout.models as models
 from src.utils import log
@@ -21,6 +21,7 @@ class TestAPI(TestBase):
         self.model = MagicMock(a=MagicMock())
         self.db = MagicMock()
         self.api = API(self.db, self.logger)
+        self.api.db_api = MagicMock(get_all=MagicMock(), by_id=MagicMock())
 
     def test_flatten_args(self):
         args = self.request.args
@@ -50,15 +51,59 @@ class TestAPI(TestBase):
         loaded = json.loads(vals)
         self.assertEqual(loaded["statusCode"], 204)
 
-        self.api._get.return_value = self.api._result(["aa", "bb"])
+        self.api._get.return_value = self.api._result(
+            {"data": ["aa", "bb"], "nextPage": -1}
+        )
         vals = self.api.parse(self.request, self.model)
         self.api._get.assert_called()
 
+    def test_pagination_parsing(self):
+        self.api._parse_get = MagicMock(
+            return_value=self.api._result({"data": ["something"], "nextPage": 2})
+        )
+
+        self.request.args = MagicMock(
+            keys=MagicMock(return_value=["id"]), getlist=MagicMock(side_effect=[["1"]]),
+        )
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, None)
+
+        self.request.args.keys.return_value.append("paginate")
+        self.request.args.getlist.side_effect = [["1"], ["true"]]
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 1)
+
+        self.request.args.getlist.side_effect = [["1"], ["false"]]
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, None)
+        self.request.args.getlist.side_effect = [["1"], ["aaa"]]
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, None)
+        self.request.args.getlist.side_effect = [["1"], ["false,true,true", "true"]]
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, None)
+
+        self.request.args.keys.return_value = ["id", "paginationId"]
+        self.request.args.getlist.side_effect = [["1"], ["2"]]
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 2)
+
+        self.request.args.getlist.side_effect = [["1"], ["a"]]
+        res = json.loads(self.api.parse(self.request, self.model, {"id": str}))
+        self.assertEqual(res["statusCode"], 400)
+        self.request.args.getlist.side_effect = [["1"], ["0"]]
+        res = json.loads(self.api.parse(self.request, self.model, {"id": str}))
+        self.assertEqual(res["statusCode"], 400)
+
+        self.request.args.keys.return_value = ["id", "paginate", "paginationId"]
+        self.request.args.getlist.side_effect = [["1"], ["false"], ["2"]]
+        self.api.parse(self.request, self.model, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 2)
+
     def test_parse_get(self):
-        self.api.db_api = MagicMock(get_all=MagicMock(), by_id=MagicMock())
         self.api.parse(self.request, self.model, {"a": str})
         self.api.db_api.by_id.assert_called_with(
-            self.model, {self.model.a: ["aa", "bb"]}
+            self.model, {self.model.a: ["aa", "bb"]}, None
         )
 
         self.api.get_query_params = {"c": str}
@@ -104,7 +149,10 @@ class TestQueryAPI(TestBase):
         # didn't define a return so this should give us a 204
         self._run(204)
 
-        self.mock_db_return.query.return_value = {"something": "yup"}
+        self.mock_db_return.query.return_value = {
+            "data": {"something": "yup"},
+            "nextPage": -1,
+        }
         self._run(200)
 
         self._run(400, has_request_data=False)
@@ -114,11 +162,13 @@ class TestQueryAPI(TestBase):
 
     def test_enum_typing(self):
         query = {"workoutsAttributes": {"equipment": [{"equipmentType": "weights"}]}}
-        self.mock_db_return.query.return_value = {"something": "yup"}
+        self.mock_db_return.query.return_value = {
+            "data": {"something": "yup"},
+            "nextPage": -1,
+        }
         self._run(200, query=query)
 
         query = {"workoutsAttributes": {"equipment": [{"equipmentType": "invalid"}]}}
-        self.mock_db_return.query.return_value = {"something": "yup"}
         self._run(400, query=query)
 
         # Test when not nested in outer obj
