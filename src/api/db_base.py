@@ -33,7 +33,7 @@ class DBBase:
             return {"data": [], "nextPage": -1}
         if pagination_id is not None:
             model_select = model_select.order_by(model_select.model.id).paginate(
-                pagination_id, self.PAGINATION_STEP + 1
+                pagination_id, self.PAGINATION_STEP
             )
         return model_to_func[model_select.model.__name__](model_select, pagination_id)
 
@@ -56,15 +56,11 @@ class DBBase:
         with self.db.atomic():
             data = self._remove_none_lists([m.json_friendly() for m in model_select])
         results = {}
-        if pagination_id is not None:
-            if len(data) > self.PAGINATION_STEP:
-                pagination_id += 1
-                data.pop()
-            else:
-                pagination_id = -1
-        return self._pag_result(
-            data, pagination_id if pagination_id is not None else -1
-        )
+        if pagination_id is not None and len(data) == self.PAGINATION_STEP:
+            pagination_id += 1
+        else:
+            pagination_id = -1
+        return self._pag_result(data, pagination_id)
 
     def _pag_result(self, data, next_page=-1):
         return {

@@ -53,3 +53,30 @@ class TestDBBase(TestBase):
         # We haven't defined a handler for this model
         results = self.base.get_all(models.Workouts.sources.get_through_model())
         self.assertEqual(results["data"], [])
+
+    def test_pagination(self):
+        self.base.PAGINATION_STEP = 2
+        results = self.base.get_all(models.WorkoutsMaterialized, None)
+        self.assertEqual(len(results["data"]), 4)
+
+        results = self.base.get_all(models.WorkoutsMaterialized, 1)
+        self.assertEqual(len(results["data"]), 2)
+        self.assertEqual(results["nextPage"], 2)
+
+        results = self.base.get_all(models.WorkoutsMaterialized, 2)
+        self.assertEqual(len(results["data"]), 2)
+        self.assertEqual(results["nextPage"], 3)
+
+        results = self.base.get_all(models.WorkoutsMaterialized, 3)
+        self.assertEqual(len(results["data"]), 0)
+        self.assertEqual(results["nextPage"], -1)
+
+        self.base.PAGINATION_STEP = 3
+        self.base.get_all.cache_clear()
+        results = self.base.get_all(models.WorkoutsMaterialized, 1)
+        self.assertEqual(len(results["data"]), 3)
+        self.assertEqual(results["nextPage"], 2)
+
+        results = self.base.get_all(models.WorkoutsMaterialized, 2)
+        self.assertEqual(len(results["data"]), 1)
+        self.assertEqual(results["nextPage"], -1)
