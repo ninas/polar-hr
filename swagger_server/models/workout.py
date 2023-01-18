@@ -1,15 +1,15 @@
 # coding: utf-8
 
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
+
 from datetime import date, datetime  # noqa: F401
+from typing import Dict, List  # noqa: F401
 
-from typing import List, Dict  # noqa: F401
-
+import swagger_server.models.source as source
+from swagger_server import util
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.equipment import Equipment
 from swagger_server.models.hr_zone import HRZone
-from swagger_server.models.source import Source
-from swagger_server import util
 
 
 class Workout(Model):
@@ -18,7 +18,22 @@ class Workout(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id: int=None, start_time: datetime=None, end_time: datetime=None, samples: List[int]=None, sport: str=None, calories: int=None, avg_hr: int=None, min_hr: int=None, max_hr: int=None, notes: str=None, equipment: List[Equipment]=None, sources: List[Source]=None, hr_zones: List[HRZone]=None):  # noqa: E501
+    def __init__(
+        self,
+        id: int = None,
+        start_time: datetime = None,
+        end_time: datetime = None,
+        samples: List[int] = None,
+        sport: str = None,
+        calories: int = None,
+        avg_hr: int = None,
+        min_hr: int = None,
+        max_hr: int = None,
+        notes: str = None,
+        equipment: List[Equipment] = None,
+        sources: List[source.Source] = None,
+        hr_zones: List[HRZone] = None,
+    ):  # noqa: E501
         """Workout - a model defined in Swagger
 
         :param id: The id of this Workout.  # noqa: E501
@@ -44,40 +59,40 @@ class Workout(Model):
         :param equipment: The equipment of this Workout.  # noqa: E501
         :type equipment: List[Equipment]
         :param sources: The sources of this Workout.  # noqa: E501
-        :type sources: List[Source]
+        :type sources: List[source.Source]
         :param hr_zones: The hr_zones of this Workout.  # noqa: E501
         :type hr_zones: List[HRZone]
         """
         self.swagger_types = {
-            'id': int,
-            'start_time': datetime,
-            'end_time': datetime,
-            'samples': List[int],
-            'sport': str,
-            'calories': int,
-            'avg_hr': int,
-            'min_hr': int,
-            'max_hr': int,
-            'notes': str,
-            'equipment': List[Equipment],
-            'sources': List[Source],
-            'hr_zones': List[HRZone]
+            "id": int,
+            "start_time": datetime,
+            "end_time": datetime,
+            "samples": List[int],
+            "sport": str,
+            "calories": int,
+            "avg_hr": int,
+            "min_hr": int,
+            "max_hr": int,
+            "notes": str,
+            "equipment": List[Equipment],
+            "sources": List[source.Source],
+            "hr_zones": List[HRZone],
         }
 
         self.attribute_map = {
-            'id': 'id',
-            'start_time': 'startTime',
-            'end_time': 'endTime',
-            'samples': 'samples',
-            'sport': 'sport',
-            'calories': 'calories',
-            'avg_hr': 'avgHR',
-            'min_hr': 'minHR',
-            'max_hr': 'maxHR',
-            'notes': 'notes',
-            'equipment': 'equipment',
-            'sources': 'sources',
-            'hr_zones': 'hrZones'
+            "id": "id",
+            "start_time": "startTime",
+            "end_time": "endTime",
+            "samples": "samples",
+            "sport": "sport",
+            "calories": "calories",
+            "avg_hr": "avgHR",
+            "min_hr": "minHR",
+            "max_hr": "maxHR",
+            "notes": "notes",
+            "equipment": "equipment",
+            "sources": "sources",
+            "hr_zones": "hrZones",
         }
 
         self._id = id
@@ -95,7 +110,7 @@ class Workout(Model):
         self._hr_zones = hr_zones
 
     @classmethod
-    def from_dict(cls, dikt) -> 'Workout':
+    def from_dict(cls, dikt) -> "Workout":
         """Returns the dict as a model
 
         :param dikt: A dict.
@@ -145,7 +160,9 @@ class Workout(Model):
         :type start_time: datetime
         """
         if start_time is None:
-            raise ValueError("Invalid value for `start_time`, must not be `None`")  # noqa: E501
+            raise ValueError(
+                "Invalid value for `start_time`, must not be `None`"
+            )  # noqa: E501
 
         self._start_time = start_time
 
@@ -339,22 +356,22 @@ class Workout(Model):
         self._equipment = equipment
 
     @property
-    def sources(self) -> List[Source]:
+    def sources(self) -> List[source.Source]:
         """Gets the sources of this Workout.
 
 
         :return: The sources of this Workout.
-        :rtype: List[Source]
+        :rtype: List[source.Source]
         """
         return self._sources
 
     @sources.setter
-    def sources(self, sources: List[Source]):
+    def sources(self, sources: List[source.Source]):
         """Sets the sources of this Workout.
 
 
         :param sources: The sources of this Workout.
-        :type sources: List[Source]
+        :type sources: List[source.Source]
         """
 
         self._sources = sources

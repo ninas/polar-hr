@@ -7,6 +7,7 @@ from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.source_type import SourceType
+from swagger_server.models.workout import Workout
 from swagger_server import util
 
 
@@ -16,7 +17,7 @@ class Source(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id: int=None, url: str=None, name: str=None, creator: str=None, duration: str=None, source_type: SourceType=None, extra_info: str=None, tags: List[str]=None, exercises: List[str]=None):  # noqa: E501
+    def __init__(self, id: int=None, url: str=None, name: str=None, creator: str=None, duration: str=None, source_type: SourceType=None, extra_info: str=None, tags: List[str]=None, exercises: List[str]=None, workouts: List[Workout]=None):  # noqa: E501
         """Source - a model defined in Swagger
 
         :param id: The id of this Source.  # noqa: E501
@@ -37,6 +38,8 @@ class Source(Model):
         :type tags: List[str]
         :param exercises: The exercises of this Source.  # noqa: E501
         :type exercises: List[str]
+        :param workouts: The workouts of this Source.  # noqa: E501
+        :type workouts: List[Workout]
         """
         self.swagger_types = {
             'id': int,
@@ -47,7 +50,8 @@ class Source(Model):
             'source_type': SourceType,
             'extra_info': str,
             'tags': List[str],
-            'exercises': List[str]
+            'exercises': List[str],
+            'workouts': List[Workout]
         }
 
         self.attribute_map = {
@@ -59,7 +63,8 @@ class Source(Model):
             'source_type': 'sourceType',
             'extra_info': 'extraInfo',
             'tags': 'tags',
-            'exercises': 'exercises'
+            'exercises': 'exercises',
+            'workouts': 'workouts'
         }
 
         self._id = id
@@ -71,6 +76,7 @@ class Source(Model):
         self._extra_info = extra_info
         self._tags = tags
         self._exercises = exercises
+        self._workouts = workouts
 
     @classmethod
     def from_dict(cls, dikt) -> 'Source':
@@ -279,3 +285,24 @@ class Source(Model):
         """
 
         self._exercises = exercises
+
+    @property
+    def workouts(self) -> List[Workout]:
+        """Gets the workouts of this Source.
+
+
+        :return: The workouts of this Source.
+        :rtype: List[Workout]
+        """
+        return self._workouts
+
+    @workouts.setter
+    def workouts(self, workouts: List[Workout]):
+        """Sets the workouts of this Source.
+
+
+        :param workouts: The workouts of this Source.
+        :type workouts: List[Workout]
+        """
+
+        self._workouts = workouts

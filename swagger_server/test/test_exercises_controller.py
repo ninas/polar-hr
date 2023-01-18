@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from swagger_server.models.paginated_result import PaginatedResult  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
@@ -17,7 +18,7 @@ class TestExercisesController(BaseTestCase):
         Return all exercises
         """
         response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/exercises',
+            '/ninas2/workout/1.0.0/exercises',
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

@@ -5,7 +5,7 @@ info:
   version: "1.0.0"
   title: "Workout API"
 host: "virtserver.swaggerhub.com"
-basePath: "/NINASCHIFF/workout-api/1.0.0"
+basePath: "/ninas2/workout/1.0.0"
 tags:
 - name: "workout"
   description: "Info around a specific workout"
@@ -34,20 +34,34 @@ paths:
           type: "integer"
         collectionFormat: "multi"
         format: "int64"
-      - name: "samples"
+      - name: "includeSamples"
         in: "query"
         description: "Whether to include samples in return"
         required: false
         type: "boolean"
+      - name: "paginate"
+        in: "query"
+        description: "Paginate results"
+        required: false
+        type: "boolean"
+      - name: "paginationId"
+        in: "query"
+        description: "ID of next page to return. If not set, but paginate is True,\
+          \ the first page will be returned (and will include the ID of the next page).\
+          \ If this is set, it supersedes any value passed as paginate."
+        required: false
+        type: "integer"
       responses:
         "200":
           description: "successful operation"
           schema:
-            $ref: "#/definitions/Workout"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
         "400":
           description: "Invalid ID supplied"
+      x-google-backend:
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-workouts"
       x-swagger-router-controller: "swagger_server.controllers.workout_controller"
     post:
       tags:
@@ -69,13 +83,13 @@ paths:
         "200":
           description: "successful operation"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Workout"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
         "400":
           description: "Invalid search values"
+      x-google-backend:
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-workouts"
       x-swagger-router-controller: "swagger_server.controllers.workout_controller"
   /sources:
     get:
@@ -105,15 +119,28 @@ paths:
           type: "integer"
         collectionFormat: "multi"
         format: "string"
+      - name: "paginate"
+        in: "query"
+        description: "Paginate results"
+        required: false
+        type: "boolean"
+      - name: "paginationId"
+        in: "query"
+        description: "ID of next page to return. If not set, but paginate is True,\
+          \ the first page will be returned (and will include the ID of the next page)"
+        required: false
+        type: "integer"
       responses:
         "200":
           description: "successful operation"
           schema:
-            $ref: "#/definitions/Source"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
         "400":
           description: "Invalid ID supplied"
+      x-google-backend:
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-sources"
       x-swagger-router-controller: "swagger_server.controllers.source_controller"
     post:
       tags:
@@ -135,15 +162,13 @@ paths:
         "200":
           description: "successful operation"
           schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/Source"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
         "400":
           description: "Invalid search values"
       x-google-backend:
-        address: "https://us-central1-workout-368502.cloudfunctions.net/sourcesq-dev-sourcesq"
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-sources"
       x-swagger-router-controller: "swagger_server.controllers.source_controller"
   /tags:
     get:
@@ -159,13 +184,11 @@ paths:
         "200":
           description: "successful operation"
           schema:
-            type: "array"
-            items:
-              type: "string"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
       x-google-backend:
-        address: "https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags"
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-tags"
       x-swagger-router-controller: "swagger_server.controllers.tags_controller"
   /exercises:
     get:
@@ -181,13 +204,11 @@ paths:
         "200":
           description: "successful operation"
           schema:
-            type: "array"
-            items:
-              type: "string"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
       x-google-backend:
-        address: "https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags"
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-exercises"
       x-swagger-router-controller: "swagger_server.controllers.exercises_controller"
   /equipment:
     get:
@@ -203,13 +224,11 @@ paths:
         "200":
           description: "successful operation"
           schema:
-            type: "array"
-            items:
-              type: "string"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
       x-google-backend:
-        address: "https://us-central1-workout-368502.cloudfunctions.net/tags-dev-tags"
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-equipment"
       x-swagger-router-controller: "swagger_server.controllers.equipment_controller"
   /refresh:
     post:
@@ -243,11 +262,11 @@ paths:
         "200":
           description: "successful operation"
           schema:
-            $ref: "#/definitions/Everything"
+            $ref: "#/definitions/PaginatedResult"
         "204":
           description: "No items found"
       x-google-backend:
-        address: "https://us-central1-workout-368502.cloudfunctions.net/everything-dev-everything"
+        address: "https://us-central1-workout-368502.cloudfunctions.net/api-dev-everything"
       x-swagger-router-controller: "swagger_server.controllers.utils_controller"
 definitions:
   Everything:
@@ -264,189 +283,15 @@ definitions:
       tags:
         type: "array"
         items:
-          $ref: "#/definitions/Tag"
+          type: "string"
+      exercises:
+        type: "array"
+        items:
+          type: "string"
       equipment:
         type: "array"
         items:
           $ref: "#/definitions/Equipment"
-    example:
-      sources:
-      - duration: "P1DT12H"
-        creator: "creator"
-        exercises:
-        - "exercises"
-        - "exercises"
-        sourceType: {}
-        name: "name"
-        id: 3
-        url: "url"
-        extraInfo: "extraInfo"
-        tags:
-        - "tags"
-        - "tags"
-      - duration: "P1DT12H"
-        creator: "creator"
-        exercises:
-        - "exercises"
-        - "exercises"
-        sourceType: {}
-        name: "name"
-        id: 3
-        url: "url"
-        extraInfo: "extraInfo"
-        tags:
-        - "tags"
-        - "tags"
-      workouts:
-      - maxHR: 2
-        notes: "notes"
-        sources:
-        - duration: "P1DT12H"
-          creator: "creator"
-          exercises:
-          - "exercises"
-          - "exercises"
-          sourceType: {}
-          name: "name"
-          id: 3
-          url: "url"
-          extraInfo: "extraInfo"
-          tags:
-          - "tags"
-          - "tags"
-        - duration: "P1DT12H"
-          creator: "creator"
-          exercises:
-          - "exercises"
-          - "exercises"
-          sourceType: {}
-          name: "name"
-          id: 3
-          url: "url"
-          extraInfo: "extraInfo"
-          tags:
-          - "tags"
-          - "tags"
-        hrZones:
-        - duration: "P1DT12H"
-          zoneType: {}
-          upperLimit: 7
-          id: 2
-          lowerLimit: 4
-          percentSpentAbove: 1.2315135
-        - duration: "P1DT12H"
-          zoneType: {}
-          upperLimit: 7
-          id: 2
-          lowerLimit: 4
-          percentSpentAbove: 1.2315135
-        equipment:
-        - quantity: 9
-          magnitude: "5lbs"
-          id: 7
-          equipmentType: {}
-        - quantity: 9
-          magnitude: "5lbs"
-          id: 7
-          equipmentType: {}
-        calories: 1
-        minHR: 5
-        samples:
-        - 6
-        - 6
-        avgHR: 5
-        startTime: "2022-12-10T00:14:25-00:00"
-        id: 0
-        endTime: "2022-12-10T00:14:25-00:00"
-        sport: "sport"
-      - maxHR: 2
-        notes: "notes"
-        sources:
-        - duration: "P1DT12H"
-          creator: "creator"
-          exercises:
-          - "exercises"
-          - "exercises"
-          sourceType: {}
-          name: "name"
-          id: 3
-          url: "url"
-          extraInfo: "extraInfo"
-          tags:
-          - "tags"
-          - "tags"
-        - duration: "P1DT12H"
-          creator: "creator"
-          exercises:
-          - "exercises"
-          - "exercises"
-          sourceType: {}
-          name: "name"
-          id: 3
-          url: "url"
-          extraInfo: "extraInfo"
-          tags:
-          - "tags"
-          - "tags"
-        hrZones:
-        - duration: "P1DT12H"
-          zoneType: {}
-          upperLimit: 7
-          id: 2
-          lowerLimit: 4
-          percentSpentAbove: 1.2315135
-        - duration: "P1DT12H"
-          zoneType: {}
-          upperLimit: 7
-          id: 2
-          lowerLimit: 4
-          percentSpentAbove: 1.2315135
-        equipment:
-        - quantity: 9
-          magnitude: "5lbs"
-          id: 7
-          equipmentType: {}
-        - quantity: 9
-          magnitude: "5lbs"
-          id: 7
-          equipmentType: {}
-        calories: 1
-        minHR: 5
-        samples:
-        - 6
-        - 6
-        avgHR: 5
-        startTime: "2022-12-10T00:14:25-00:00"
-        id: 0
-        endTime: "2022-12-10T00:14:25-00:00"
-        sport: "sport"
-      equipment:
-      - quantity: 9
-        magnitude: "5lbs"
-        id: 7
-        equipmentType: {}
-      - quantity: 9
-        magnitude: "5lbs"
-        id: 7
-        equipmentType: {}
-      tags:
-      - name: "name"
-        id: 0
-      - name: "name"
-        id: 0
-  Tag:
-    type: "object"
-    required:
-    - "name"
-    properties:
-      id:
-        type: "integer"
-        format: "int64"
-      name:
-        type: "string"
-    example:
-      name: "name"
-      id: 0
   Equipment:
     type: "object"
     required:
@@ -465,11 +310,24 @@ definitions:
         type: "integer"
         description: "Only relvant for weights, e.g. used 1 or 2 dumbbells"
     description: "Type must be set otherwise parameters are invalid"
+  PaginatedResult:
+    type: "object"
+    properties:
+      nextPage:
+        type: "integer"
+        description: "The next page id, or -1 if not paginated/there are no more pages"
+      data:
+        type: "array"
+        description: "Will be an array of one of Source, Workout, Equipment, strings\
+          \ (for tags and exercises) or Everything"
+        items:
+          type: "object"
+          properties: {}
     example:
-      quantity: 9
-      magnitude: "5lbs"
-      id: 7
-      equipmentType: {}
+      data:
+      - "{}"
+      - "{}"
+      nextPage: 0
   Source:
     type: "object"
     required:
@@ -503,28 +361,15 @@ definitions:
         type: "array"
         items:
           type: "string"
-    example:
-      duration: "P1DT12H"
-      creator: "creator"
-      exercises:
-      - "exercises"
-      - "exercises"
-      sourceType: {}
-      name: "name"
-      id: 3
-      url: "url"
-      extraInfo: "extraInfo"
-      tags:
-      - "tags"
-      - "tags"
+      workouts:
+        type: "array"
+        items:
+          $ref: "#/definitions/Workout"
   HRZone:
     type: "object"
     required:
     - "zoneType"
     properties:
-      id:
-        type: "integer"
-        format: "int64"
       zoneType:
         $ref: "#/definitions/ZoneType"
       lowerLimit:
@@ -540,13 +385,6 @@ definitions:
         format: "float"
         description: "Convenience value to describe the total percentage of the workout\
           \ spent in this zone or higher"
-    example:
-      duration: "P1DT12H"
-      zoneType: {}
-      upperLimit: 7
-      id: 2
-      lowerLimit: 4
-      percentSpentAbove: 1.2315135
   Workout:
     type: "object"
     required:
@@ -558,11 +396,11 @@ definitions:
       startTime:
         type: "string"
         format: "date-time"
-        example: "2022-12-10T00:14:25-00:00"
+        example: "2022-12-10T00:14:25.000Z"
       endTime:
         type: "string"
         format: "date-time"
-        example: "2022-12-10T00:14:25-00:00"
+        example: "2022-12-10T00:14:25.000Z"
       samples:
         type: "array"
         items:
@@ -591,68 +429,6 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/HRZone"
-    example:
-      maxHR: 2
-      notes: "notes"
-      sources:
-      - duration: "P1DT12H"
-        creator: "creator"
-        exercises:
-        - "exercises"
-        - "exercises"
-        sourceType: {}
-        name: "name"
-        id: 3
-        url: "url"
-        extraInfo: "extraInfo"
-        tags:
-        - "tags"
-        - "tags"
-      - duration: "P1DT12H"
-        creator: "creator"
-        exercises:
-        - "exercises"
-        - "exercises"
-        sourceType: {}
-        name: "name"
-        id: 3
-        url: "url"
-        extraInfo: "extraInfo"
-        tags:
-        - "tags"
-        - "tags"
-      hrZones:
-      - duration: "P1DT12H"
-        zoneType: {}
-        upperLimit: 7
-        id: 2
-        lowerLimit: 4
-        percentSpentAbove: 1.2315135
-      - duration: "P1DT12H"
-        zoneType: {}
-        upperLimit: 7
-        id: 2
-        lowerLimit: 4
-        percentSpentAbove: 1.2315135
-      equipment:
-      - quantity: 9
-        magnitude: "5lbs"
-        id: 7
-        equipmentType: {}
-      - quantity: 9
-        magnitude: "5lbs"
-        id: 7
-        equipmentType: {}
-      calories: 1
-      minHR: 5
-      samples:
-      - 6
-      - 6
-      avgHR: 5
-      startTime: "2022-12-10T00:14:25-00:00"
-      id: 0
-      endTime: "2022-12-10T00:14:25-00:00"
-      sport: "sport"
   Query:
     type: "object"
     properties:
@@ -662,6 +438,8 @@ definitions:
         $ref: "#/definitions/WorkoutQueryParams"
       paginate:
         type: "boolean"
+      paginationId:
+        type: "integer"
     description: "Allow searching for resources using a wide range of parameters"
   SourceQueryParams:
     type: "object"
@@ -779,11 +557,11 @@ definitions:
     description: "The range (percentile relative to max HR) this zone covers"
     enum:
     - "below_50"
-    - "fifty_to_60"
-    - "sixty_to_70"
-    - "seventy_to_80"
-    - "eighty_to_90"
-    - "ninety_to_100"
+    - "50_60"
+    - "60_70"
+    - "70_80"
+    - "80_90"
+    - "90_100"
   EquipmentType:
     type: "string"
     enum:
@@ -794,4 +572,5 @@ definitions:
     type: "string"
     enum:
     - "youtube"
+    - "fiton"
     - "unknown"

@@ -5,8 +5,8 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
+from swagger_server.models.paginated_result import PaginatedResult  # noqa: E501
 from swagger_server.models.query import Query  # noqa: E501
-from swagger_server.models.workout import Workout  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
@@ -19,9 +19,11 @@ class TestWorkoutController(BaseTestCase):
         Retrieve a specific workout or all if no ids are specified
         """
         query_string = [('id', 56),
-                        ('samples', true)]
+                        ('includeSamples', true),
+                        ('paginate', true),
+                        ('paginationId', 56)]
         response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/workouts',
+            '/ninas2/workout/1.0.0/workouts',
             method='GET',
             query_string=query_string)
         self.assert200(response,
@@ -34,7 +36,7 @@ class TestWorkoutController(BaseTestCase):
         """
         body = Query()
         response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/workouts',
+            '/ninas2/workout/1.0.0/workouts',
             method='POST',
             data=json.dumps(body),
             content_type='application/json')

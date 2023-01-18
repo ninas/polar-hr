@@ -1,7 +1,7 @@
 import connexion
 import six
 
-from swagger_server.models.everything import Everything  # noqa: E501
+from swagger_server.models.paginated_result import PaginatedResult  # noqa: E501
 from swagger_server import util
 
 
@@ -11,7 +11,7 @@ def everything():  # noqa: E501
     Fetch everything # noqa: E501
 
 
-    :rtype: Everything
+    :rtype: PaginatedResult
     """
     return 'do some magic!'
 

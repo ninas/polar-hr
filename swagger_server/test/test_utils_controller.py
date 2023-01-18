@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
-from swagger_server.models.everything import Everything  # noqa: E501
+from swagger_server.models.paginated_result import PaginatedResult  # noqa: E501
 from swagger_server.test import BaseTestCase
 
 
@@ -18,7 +18,7 @@ class TestUtilsController(BaseTestCase):
         Return all data
         """
         response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/everything',
+            '/ninas2/workout/1.0.0/everything',
             method='GET')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
@@ -29,7 +29,7 @@ class TestUtilsController(BaseTestCase):
         Refresh workout data
         """
         response = self.client.open(
-            '/NINASCHIFF/workout-api/1.0.0/refresh',
+            '/ninas2/workout/1.0.0/refresh',
             method='POST')
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))

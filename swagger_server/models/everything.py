@@ -8,7 +8,6 @@ from typing import List, Dict  # noqa: F401
 from swagger_server.models.base_model_ import Model
 from swagger_server.models.equipment import Equipment
 from swagger_server.models.source import Source
-from swagger_server.models.tag import Tag
 from swagger_server.models.workout import Workout
 from swagger_server import util
 
@@ -19,7 +18,7 @@ class Everything(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, sources: List[Source]=None, workouts: List[Workout]=None, tags: List[Tag]=None, equipment: List[Equipment]=None):  # noqa: E501
+    def __init__(self, sources: List[Source]=None, workouts: List[Workout]=None, tags: List[str]=None, exercises: List[str]=None, equipment: List[Equipment]=None):  # noqa: E501
         """Everything - a model defined in Swagger
 
         :param sources: The sources of this Everything.  # noqa: E501
@@ -27,14 +26,17 @@ class Everything(Model):
         :param workouts: The workouts of this Everything.  # noqa: E501
         :type workouts: List[Workout]
         :param tags: The tags of this Everything.  # noqa: E501
-        :type tags: List[Tag]
+        :type tags: List[str]
+        :param exercises: The exercises of this Everything.  # noqa: E501
+        :type exercises: List[str]
         :param equipment: The equipment of this Everything.  # noqa: E501
         :type equipment: List[Equipment]
         """
         self.swagger_types = {
             'sources': List[Source],
             'workouts': List[Workout],
-            'tags': List[Tag],
+            'tags': List[str],
+            'exercises': List[str],
             'equipment': List[Equipment]
         }
 
@@ -42,12 +44,14 @@ class Everything(Model):
             'sources': 'sources',
             'workouts': 'workouts',
             'tags': 'tags',
+            'exercises': 'exercises',
             'equipment': 'equipment'
         }
 
         self._sources = sources
         self._workouts = workouts
         self._tags = tags
+        self._exercises = exercises
         self._equipment = equipment
 
     @classmethod
@@ -104,25 +108,46 @@ class Everything(Model):
         self._workouts = workouts
 
     @property
-    def tags(self) -> List[Tag]:
+    def tags(self) -> List[str]:
         """Gets the tags of this Everything.
 
 
         :return: The tags of this Everything.
-        :rtype: List[Tag]
+        :rtype: List[str]
         """
         return self._tags
 
     @tags.setter
-    def tags(self, tags: List[Tag]):
+    def tags(self, tags: List[str]):
         """Sets the tags of this Everything.
 
 
         :param tags: The tags of this Everything.
-        :type tags: List[Tag]
+        :type tags: List[str]
         """
 
         self._tags = tags
+
+    @property
+    def exercises(self) -> List[str]:
+        """Gets the exercises of this Everything.
+
+
+        :return: The exercises of this Everything.
+        :rtype: List[str]
+        """
+        return self._exercises
+
+    @exercises.setter
+    def exercises(self, exercises: List[str]):
+        """Sets the exercises of this Everything.
+
+
+        :param exercises: The exercises of this Everything.
+        :type exercises: List[str]
+        """
+
+        self._exercises = exercises
 
     @property
     def equipment(self) -> List[Equipment]:

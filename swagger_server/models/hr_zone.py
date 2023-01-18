@@ -16,11 +16,9 @@ class HRZone(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, id: int=None, zone_type: ZoneType=None, lower_limit: int=None, upper_limit: int=None, duration: str=None, percent_spent_above: float=None):  # noqa: E501
+    def __init__(self, zone_type: ZoneType=None, lower_limit: int=None, upper_limit: int=None, duration: str=None, percent_spent_above: float=None):  # noqa: E501
         """HRZone - a model defined in Swagger
 
-        :param id: The id of this HRZone.  # noqa: E501
-        :type id: int
         :param zone_type: The zone_type of this HRZone.  # noqa: E501
         :type zone_type: ZoneType
         :param lower_limit: The lower_limit of this HRZone.  # noqa: E501
@@ -33,7 +31,6 @@ class HRZone(Model):
         :type percent_spent_above: float
         """
         self.swagger_types = {
-            'id': int,
             'zone_type': ZoneType,
             'lower_limit': int,
             'upper_limit': int,
@@ -42,7 +39,6 @@ class HRZone(Model):
         }
 
         self.attribute_map = {
-            'id': 'id',
             'zone_type': 'zoneType',
             'lower_limit': 'lowerLimit',
             'upper_limit': 'upperLimit',
@@ -50,7 +46,6 @@ class HRZone(Model):
             'percent_spent_above': 'percentSpentAbove'
         }
 
-        self._id = id
         self._zone_type = zone_type
         self._lower_limit = lower_limit
         self._upper_limit = upper_limit
@@ -67,27 +62,6 @@ class HRZone(Model):
         :rtype: HRZone
         """
         return util.deserialize_model(dikt, cls)
-
-    @property
-    def id(self) -> int:
-        """Gets the id of this HRZone.
-
-
-        :return: The id of this HRZone.
-        :rtype: int
-        """
-        return self._id
-
-    @id.setter
-    def id(self, id: int):
-        """Sets the id of this HRZone.
-
-
-        :param id: The id of this HRZone.
-        :type id: int
-        """
-
-        self._id = id
 
     @property
     def zone_type(self) -> ZoneType:

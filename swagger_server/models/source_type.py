@@ -18,8 +18,8 @@ class SourceType(Model):
     """
     allowed enum values
     """
-    FITON = "fiton"
     YOUTUBE = "youtube"
+    FITON = "fiton"
     UNKNOWN = "unknown"
 
     def __init__(self):  # noqa: E501

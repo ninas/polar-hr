@@ -17,7 +17,7 @@ class Query(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, sources_attributes: SourceQueryParams=None, workouts_attributes: WorkoutQueryParams=None, paginate: bool=None):  # noqa: E501
+    def __init__(self, sources_attributes: SourceQueryParams=None, workouts_attributes: WorkoutQueryParams=None, paginate: bool=None, pagination_id: int=None):  # noqa: E501
         """Query - a model defined in Swagger
 
         :param sources_attributes: The sources_attributes of this Query.  # noqa: E501
@@ -26,22 +26,27 @@ class Query(Model):
         :type workouts_attributes: WorkoutQueryParams
         :param paginate: The paginate of this Query.  # noqa: E501
         :type paginate: bool
+        :param pagination_id: The pagination_id of this Query.  # noqa: E501
+        :type pagination_id: int
         """
         self.swagger_types = {
             'sources_attributes': SourceQueryParams,
             'workouts_attributes': WorkoutQueryParams,
-            'paginate': bool
+            'paginate': bool,
+            'pagination_id': int
         }
 
         self.attribute_map = {
             'sources_attributes': 'sourcesAttributes',
             'workouts_attributes': 'workoutsAttributes',
-            'paginate': 'paginate'
+            'paginate': 'paginate',
+            'pagination_id': 'paginationId'
         }
 
         self._sources_attributes = sources_attributes
         self._workouts_attributes = workouts_attributes
         self._paginate = paginate
+        self._pagination_id = pagination_id
 
     @classmethod
     def from_dict(cls, dikt) -> 'Query':
@@ -116,3 +121,24 @@ class Query(Model):
         """
 
         self._paginate = paginate
+
+    @property
+    def pagination_id(self) -> int:
+        """Gets the pagination_id of this Query.
+
+
+        :return: The pagination_id of this Query.
+        :rtype: int
+        """
+        return self._pagination_id
+
+    @pagination_id.setter
+    def pagination_id(self, pagination_id: int):
+        """Sets the pagination_id of this Query.
+
+
+        :param pagination_id: The pagination_id of this Query.
+        :type pagination_id: int
+        """
+
+        self._pagination_id = pagination_id

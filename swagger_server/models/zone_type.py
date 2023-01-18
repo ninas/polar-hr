@@ -19,11 +19,11 @@ class ZoneType(Model):
     allowed enum values
     """
     BELOW_50 = "below_50"
-    FIFTY_TO_60 = "fifty_to_60"
-    SIXTY_TO_70 = "sixty_to_70"
-    SEVENTY_TO_80 = "seventy_to_80"
-    EIGHTY_TO_90 = "eighty_to_90"
-    NINETY_TO_100 = "ninety_to_100"
+    _50_60 = "50_60"
+    _60_70 = "60_70"
+    _70_80 = "70_80"
+    _80_90 = "80_90"
+    _90_100 = "90_100"
 
     def __init__(self):  # noqa: E501
         """ZoneType - a model defined in Swagger
