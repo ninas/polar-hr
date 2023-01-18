@@ -18,7 +18,7 @@ class TestAPI(TestBase):
             keys=MagicMock(return_value=["a"]),
             getlist=MagicMock(return_value=["aa", "bb"]),
         )
-        self.model = MagicMock(a=MagicMock())
+        self.model = MagicMock(a=MagicMock(), __name__="Tags")
         self.db = MagicMock()
         self.api = API(self.db, self.logger)
         self.api.db_api = MagicMock(get_all=MagicMock(), by_id=MagicMock())
@@ -100,6 +100,53 @@ class TestAPI(TestBase):
         self.api.parse(self.request, self.model, {"id": str})
         self.api._parse_get.assert_called_with(ANY, ANY, ANY, 2)
 
+    def test_pagination_by_default(self):
+        self.api._parse_get = MagicMock(
+            return_value=self.api._result({"data": ["something"], "nextPage": 2})
+        )
+
+        self.request.args = MagicMock(
+            keys=MagicMock(return_value=["id"]), getlist=MagicMock(side_effect=[["1"]]),
+        )
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 1)
+
+        self.request.args.keys.return_value.append("paginate")
+        self.request.args.getlist.side_effect = [["1"], ["true"]]
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 1)
+
+        self.request.args.getlist.side_effect = [["1"], ["false"]]
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 1)
+        self.request.args.getlist.side_effect = [["1"], ["aaa"]]
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 1)
+        self.request.args.getlist.side_effect = [["1"], ["false,true,true", "true"]]
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 1)
+
+        self.request.args.keys.return_value = ["id", "paginationId"]
+        self.request.args.getlist.side_effect = [["1"], ["2"]]
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 2)
+
+        self.request.args.getlist.side_effect = [["1"], ["a"]]
+        res = json.loads(
+            self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        )
+        self.assertEqual(res["statusCode"], 400)
+        self.request.args.getlist.side_effect = [["1"], ["0"]]
+        res = json.loads(
+            self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        )
+        self.assertEqual(res["statusCode"], 400)
+
+        self.request.args.keys.return_value = ["id", "paginate", "paginationId"]
+        self.request.args.getlist.side_effect = [["1"], ["false"], ["2"]]
+        self.api.parse(self.request, models.SourcesMaterialized, {"id": str})
+        self.api._parse_get.assert_called_with(ANY, ANY, ANY, 2)
+
     def test_parse_get(self):
         self.api.parse(self.request, self.model, {"a": str})
         self.api.db_api.by_id.assert_called_with(
@@ -146,7 +193,7 @@ class TestQueryAPI(TestBase):
                 self.model, api_models.Query.from_dict(query), pagination_id
             )
 
-    def test_pagination(self):
+    def test_pagination_post(self):
         self.mock_db_return.query.return_value = {
             "data": {"something": "yup"},
             "nextPage": -1,

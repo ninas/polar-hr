@@ -16,7 +16,7 @@ def get_db():
     global WORKOUT_DB, LOGGER
     if not WORKOUT_DB:
         LOGGER.info("Instantiating new db connection", db_connection="new")
-        WORKOUT_DB = DBConnection().workout_db
+        WORKOUT_DB = DBConnection(LOGGER).workout_db
     else:
         LOGGER.info("Reusing DB connection", db_connection="reuse")
     LOGGER.info("Connection established")

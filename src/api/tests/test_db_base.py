@@ -72,7 +72,6 @@ class TestDBBase(TestBase):
         self.assertEqual(results["nextPage"], -1)
 
         self.base.PAGINATION_STEP = 3
-        self.base.get_all.cache_clear()
         results = self.base.get_all(models.WorkoutsMaterialized, 1)
         self.assertEqual(len(results["data"]), 3)
         self.assertEqual(results["nextPage"], 2)

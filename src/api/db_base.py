@@ -1,5 +1,4 @@
 import json
-from functools import cache, cached_property
 from datetime import datetime, timedelta
 import isodate
 
@@ -89,7 +88,6 @@ class DBBase:
 
         return self._fetch_from_model(model_select, pagination_id)
 
-    @cache
     def get_all(self, model, pagination_id=None):
         model_select = model.select().order_by(model.id)
         self.logger.debug(

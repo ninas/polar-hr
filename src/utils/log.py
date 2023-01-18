@@ -95,12 +95,10 @@ def config_structlog(is_dev=False):
 
 
 @cache
-def new_logger(name=None, is_dev=True):
+def new_logger(name=None, is_dev=False):
     if name is not None:
         structlog.contextvars.bind_contextvars(run_reason=name)
     config_structlog(is_dev)
-    if is_dev:
-        logger = logging.getLogger("peewee")
-        logger.addHandler(logging.StreamHandler())
-        logger.setLevel(logging.DEBUG)
+    logger = logging.getLogger("peewee")
+    logger.setLevel(logging.DEBUG)
     return structlog.get_logger()

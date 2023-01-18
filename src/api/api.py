@@ -37,6 +37,10 @@ class API:
     def methods(self):
         return {"GET": self._get}
 
+    @property
+    def _paginate_by_default(self):
+        return {"WorkoutsMaterialized", "SourcesMaterialized"}
+
     def _result(self, vals, func=None):
         return vals, func if func is not None else self.success
 
@@ -76,7 +80,9 @@ class API:
 
         paginate = data.get("paginate", [""])[0].lower() == "true"
         pagination_id = data.get("paginationId", [None])[0]
-        if pagination_id is None and paginate:
+        if pagination_id is None and (
+            paginate or model.__name__ in self._paginate_by_default
+        ):
             pagination_id = 1
         elif pagination_id:
             try:
