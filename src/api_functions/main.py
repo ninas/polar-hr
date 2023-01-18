@@ -13,7 +13,7 @@ STORED_APIS = {"API": None, "TagAPI": None, "QueryAPI": None}
 
 
 def get_db():
-    global WORKOUT_DB, LOGGER
+    global WORKOUT_DB
     if not WORKOUT_DB:
         LOGGER.info("Instantiating new db connection", db_connection="new")
         WORKOUT_DB = DBConnection(LOGGER).workout_db
@@ -24,6 +24,7 @@ def get_db():
 
 
 def get_api(api_type=API):
+    global STORED_APIS
     name = api_type.__name__
     if name in STORED_APIS and STORED_APIS[name] is not None:
         return STORED_APIS[name]
