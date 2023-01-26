@@ -26,11 +26,6 @@ def log_level():
     return logging.DEBUG if enable_debug_logging() else logging.INFO
 
 
-def set_default_log_level():
-    logger = logging.getLogger()
-    logger.setLevel(log_level())
-
-
 # Cheating and using this to ensure it is only run once
 @cache
 def init_cloud_logging():
@@ -41,7 +36,9 @@ def init_cloud_logging():
     client = Client()
     handler = StructuredLogHandler()
     setup_logging(handler)
-    set_default_log_level()
+
+    logger = logging.getLogger()
+    logger.setLevel(log_level())
 
 
 @cache
@@ -73,7 +70,7 @@ def config_structlog(is_dev=False):
             ]
         )
     else:
-        init_cloud_logging()
+        # init_cloud_logging()
         structlog.configure_once(
             wrapper_class=structlog.make_filtering_bound_logger(log_level()),
             processors=[
@@ -96,9 +93,10 @@ def config_structlog(is_dev=False):
 
 @cache
 def new_logger(name=None, is_dev=False):
+    logger = logging.getLogger("peewee")
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.StreamHandler())
     if name is not None:
         structlog.contextvars.bind_contextvars(run_reason=name)
     config_structlog(is_dev)
-    logger = logging.getLogger("peewee")
-    logger.setLevel(logging.DEBUG)
     return structlog.get_logger()

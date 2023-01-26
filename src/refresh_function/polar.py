@@ -1,14 +1,10 @@
 from datetime import timedelta
-from functools import cache, cached_property
 
 from peewee import fn
-from playhouse.db_url import connect
 
 from src.db.sources import models as source_models
 from src.db.workout import models as workout_models
 from src.db.workout.workout import Workout
-from src.polar_api.polar_api import PolarAPI
-from src.utils import gcp_utils, log
 from src.utils.db_utils import DBConnection
 
 

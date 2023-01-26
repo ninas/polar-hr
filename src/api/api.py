@@ -47,7 +47,7 @@ class API:
     def parse(self, request, model, get_query_params={}):
         l = self.logger
         self.logger = self.logger.bind(
-            url=request.base_url, method=request.method, model=model.__class__
+            url=request.base_url, method=request.method, model=model.__name__
         )
         self.logger.info("Starting request")
         if request.method not in self.methods:

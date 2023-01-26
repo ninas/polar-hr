@@ -1,5 +1,7 @@
 import json
-from polar import *
+
+from src.polar_api.polar_api import PolarAPI
+from polar import ProcessData
 
 from src.utils import gcp_utils, log
 
