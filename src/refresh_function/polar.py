@@ -78,4 +78,4 @@ class ProcessData:
         for workout in workouts:
             w = Workout(self.db.workout_db, workout, self.logger)
             w.insert_row()
-            self.workout_models.refresh_materialized_views()
+            workout_models.refresh_materialized_views()

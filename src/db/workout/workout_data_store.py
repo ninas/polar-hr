@@ -1,14 +1,18 @@
 import json
 from datetime import datetime, timedelta, timezone
 from functools import cache, cached_property
+from src.utils import log
 
 import isodate
 from overrides import EnforceOverrides
 
 
 class WorkoutDataStore(EnforceOverrides):
-    def __init__(self, input_data):
+    def __init__(self, input_data, logger=None):
         self._i_data = input_data
+        if logger is None:
+            logger = log.new_logger()
+        self.logger = logger
 
     @property
     def start_time(self):

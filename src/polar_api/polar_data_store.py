@@ -10,8 +10,8 @@ from src.utils.equipment_parsing_mixin import EquipmentParsingMixin
 
 
 class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
-    def __init__(self, input_data):
-        self._i_data = input_data
+    def __init__(self, input_data, logger=None):
+        super().__init__(input_data, logger)
         self._sources = set()
         self._equipment = defaultdict(list)
         self._note = None
@@ -70,6 +70,12 @@ class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
     @cached_property
     @override(check_signature=False)
     def samples(self):
+        if len(self._i_data["samples"]) != 1:
+            self.logger.debug(
+                "Unexpectedly shaped samples object", data=self._i_data["samples"]
+            )
+            return []
+
         return [int(i) for i in self._i_data["samples"][0]["data"].split(",")]
 
     @cache

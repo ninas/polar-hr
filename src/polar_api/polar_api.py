@@ -51,5 +51,5 @@ class PolarAPI:
             with open("cache") as f:
                 data = json.loads(f.read())
 
-        exer = [PolarDataStore(i) for i in data]
+        exer = [PolarDataStore(i, self.logger) for i in data]
         return sorted(exer, key=lambda x: x.start_time)
