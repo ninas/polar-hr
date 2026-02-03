@@ -122,13 +122,16 @@ class Youtube(VideoSource):
         for e in SourceConsts.exercises_strip:
             val = re.sub(r"(" + e + r")\b", "", val)
 
+        # standardise on the plural form
+        for e in SourceConsts.exercise_plurals:
+            val = re.sub(r"(" + e + r")\b", f"{e}s", val)
+
         # standardise names (but only if they're not in the middle of a word"
         for k, v in SourceConsts.exercise_dupes.items():
             val = re.sub(r"(" + k + r")\b", v, val)
 
-        # standardise on the plural form
-        for e in SourceConsts.exercise_plurals:
-            val = re.sub(r"(" + e + r")\b", f"{e}s", val)
+        for k, v in SourceConsts.exercise_dupes_regex.items():
+            val = re.sub(k, v, val)
 
         # remove any bracketed extra info - i.e. (L) or (R)
         val = re.sub("\(.+\)", "", val)
@@ -138,6 +141,9 @@ class Youtube(VideoSource):
         val = re.sub("^\W+", "", val)
         # standardise on '+' instead of '&' in descriptions
         val = val.replace("&", "+")
+
+        for e in SourceConsts.depluralise:
+            val = re.sub(r"(" + e + " \+)", f"{e[:-1]} +", val)
 
         return val.strip()
 
