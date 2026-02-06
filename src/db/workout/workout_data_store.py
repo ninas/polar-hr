@@ -4,10 +4,9 @@ from functools import cache, cached_property
 from src.utils import log
 
 import isodate
-from overrides import EnforceOverrides
 
 
-class WorkoutDataStore(EnforceOverrides):
+class WorkoutDataStore:
     def __init__(self, input_data, logger=None):
         self._i_data = input_data
         if logger is None:

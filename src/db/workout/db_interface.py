@@ -1,14 +1,12 @@
 import abc
 from functools import cached_property
 
-from overrides import EnforceOverrides
-
 import src.db.workout.models as models
 from src.db.workout.workout_data_store import WorkoutDataStore
 from src.utils import log
 
 
-class DBInterface(EnforceOverrides, abc.ABC):
+class DBInterface(abc.ABC):
     def __init__(self, db, logger=None):
         self.db = db
         self.model = None

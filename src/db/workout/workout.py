@@ -5,7 +5,7 @@ from functools import cache, cached_property
 
 import isodate
 import structlog
-from overrides import override
+from typing import override
 
 import src.db.workout.models as models
 from src.db.workout.db_interface import DBInterface

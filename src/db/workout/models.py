@@ -22,7 +22,7 @@ from functools import cache
 from src.db.base_model import BaseModel
 from src.db.enum_field import EnumField, ExtendedEnum
 
-database = PostgresqlExtDatabase(None, autorollback=True)
+database = PostgresqlExtDatabase(None)
 
 # types
 
@@ -152,7 +152,7 @@ class Workouts(WorkoutBaseModel):
 
 class WorkoutsMaterialized(Workouts):
     class Meta:
-        db_table = "workouts_materialized"
+        table_name = "workouts_materialized"
 
     sources = BinaryJSONField(null=True)
     tags = ArrayField(TextField)
@@ -161,7 +161,7 @@ class WorkoutsMaterialized(Workouts):
 
 class SourcesMaterialized(Sources):
     class Meta:
-        db_table = "sources_materialized"
+        table_name = "sources_materialized"
 
     workouts = BinaryJSONField(null=True)
     tags = ArrayField(TextField)

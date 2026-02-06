@@ -133,3 +133,4 @@ output/
 secrets.yml
 data/
 app_config.json
+.claude/settings.local.json

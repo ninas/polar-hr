@@ -1,7 +1,7 @@
 import math
 from functools import cache, cached_property
 
-from overrides import override
+from typing import override
 
 import src.db.workout.models as models
 from src.db.workout.db_interface import DBInterface
@@ -83,8 +83,8 @@ class Source(DBInterface):
     def creator(self):
         return self._model_val("creator")
 
+    @override
     @classmethod
-    @property
     def source_type(cls):
         return None
 
@@ -107,7 +107,7 @@ class Source(DBInterface):
         with self.db.atomic():
             self.model = models.Sources.create(
                 url=self.url,
-                sourcetype=self.source_type,
+                sourcetype=self.source_type(),
                 name=self.title,
                 length=self.duration,
                 creator=self.creator,
@@ -125,8 +125,8 @@ class UnknownSource(Source):
     def normalise_url(url):
         return url
 
+    @override
     @classmethod
-    @property
     def source_type(cls):
         return models.SourceType.UNKNOWN
 
@@ -146,6 +146,7 @@ class ExistingSource(Source):
     def insert_row(self):
         return self.model
 
-    @property
+    @override
+    @classmethod
     def source_type(cls):
         return cls.model.sourcetype

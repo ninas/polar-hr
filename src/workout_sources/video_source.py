@@ -3,7 +3,7 @@ import math
 import re
 from functools import cache, cached_property
 
-from overrides import override
+from typing import override
 
 from src.db.workout.source import Source
 from src.workout_sources.source_consts import SourceConsts
@@ -11,7 +11,7 @@ from src.workout_sources.source_consts import SourceConsts
 
 class VideoSource(Source):
     @cached_property
-    @override(check_signature=False)
+    @override
     def tags(self):
         tags = self._gen_tags()
         return self._clean_tags(tags)

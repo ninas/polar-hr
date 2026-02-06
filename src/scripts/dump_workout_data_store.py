@@ -1,7 +1,7 @@
 from collections import defaultdict
 from functools import cache, cached_property
 
-from overrides import override
+from typing import override
 
 from src.db.workout import models
 from src.db.workout.workout_data_store import WorkoutDataStore
@@ -29,17 +29,17 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
         self._note = self._parse_original_note()
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def start_time(self):
         return self.get_datetime("startTime")
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def end_time(self):
         return self.get_datetime("stopTime")
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def sport(self):
         self._i_data["sport"] = self._i_data.get(
             "name", self._i_data["exercises"][0].get("sport", "Unknown")
@@ -52,13 +52,13 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
         return int(self._i_data.get("kiloCalories", 0))
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def heart_rate_range(self):
         self._i_data["heart_rate"] = self._i_data["exercises"][0].get("heartRate", None)
         return super().heart_rate_range
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def hr_zones(self):
         # their stuff is so inconsistent
         hr = (
@@ -98,7 +98,7 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
         return self._equipment
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def samples(self):
         data = []
         for i in self._i_data["exercises"][0]["samples"]["heartRate"]:
@@ -106,7 +106,7 @@ class DumpWorkoutDataStore(WorkoutDataWithFilenameStore, EquipmentParsingMixin):
         return data
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def _timezone_offset(self):
         return self._i_data.get("timeZoneOffset", -420)
 

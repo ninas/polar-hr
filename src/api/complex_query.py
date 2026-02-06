@@ -225,8 +225,8 @@ class ComplexQuery:
         if query.length_max is not None:
             srcs = srcs.where(src_model.length <= timedelta(seconds=query.length_max))
 
-        if query.source_type is not None:
-            srcs = srcs.where(src_model.sourcettype == query.source_type)
+        if query.source_type() is not None:
+            srcs = srcs.where(src_model.sourcettype == query.source_type())
 
         if query.exercises is not None:
             source_tags_to_filter.update(set(query.exercises))

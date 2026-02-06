@@ -2,7 +2,7 @@ import sys
 from collections import defaultdict
 from functools import cache, cached_property
 
-from overrides import override
+from typing import override
 
 from src.db.workout import models
 from src.db.workout.workout_data_store import WorkoutDataStore
@@ -40,7 +40,7 @@ class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
         return self._equipment
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def end_time(self):
         return self.start_time + self.duration
 
@@ -50,13 +50,13 @@ class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
         return self._note
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def sport(self):
         self._i_data["sport"] = self._i_data.get("detailed_sport_info", "unknown")
         return super().sport
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def heart_rate_range(self):
         if "heart_rate" not in self._i_data or self._i_data["heart_rate"] is None:
             return super().heart_rate_range
@@ -68,7 +68,7 @@ class PolarDataStore(WorkoutDataStore, EquipmentParsingMixin):
         return super().heart_rate_range
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def samples(self):
         if len(self._i_data["samples"]) != 1:
             self.logger.debug(

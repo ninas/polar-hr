@@ -26,7 +26,7 @@ class TestSource(TestBase):
     def test_get_source_type(self):
         for i in TestConsts.YOUTUBE_URLS:
             self.assertEqual(
-                Source.get_source_type(i).source_type, models.SourceType.YOUTUBE
+                Source.get_source_type(i).source_type(), models.SourceType.YOUTUBE
             )
 
         for i in [
@@ -35,16 +35,16 @@ class TestSource(TestBase):
             "https://share.fitonapp.com/html/invite-message/5600d08ac57544ab829c680df6a87f04",
         ]:
             self.assertEqual(
-                Source.get_source_type(i).source_type, models.SourceType.FITON
+                Source.get_source_type(i).source_type(), models.SourceType.FITON
             )
 
         self.assertEqual(
-            Source.get_source_type("www,youtube.com/fiton/something").source_type,
+            Source.get_source_type("www,youtube.com/fiton/something").source_type(),
             models.SourceType.YOUTUBE,
         )
 
         self.assertEqual(
-            Source.get_source_type("test").source_type, models.SourceType.UNKNOWN
+            Source.get_source_type("test").source_type(), models.SourceType.UNKNOWN
         )
 
     @patch("src.db.workout.source.DBInterface.find", return_value=None)

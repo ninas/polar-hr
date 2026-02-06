@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a personal workout tracking system that pulls heart-rate data from the Polar AccessLink API, matches workouts with video sources (YouTube, FitOn), stores everything in PostgreSQL, and exposes a query API via Google Cloud Functions. The repo uses **Sapling** (not git) for version control.
+This is a personal workout tracking system. When triggered, a Google Cloud Function pulls heart-rate data from the Polar AccessLink API, combines them with data in an existing PostgresSQL database, enriches this data based on their source (YouTube, FitOn), and inserts into a different PostgreSQL database. It also exposes a query API via Google Cloud Functions. The repo uses **Sapling** (not git) for version control.
 
 ## Development Setup
 
@@ -63,6 +63,8 @@ functions-framework --target sources_http
 
 2. **`src/refresh_function/`** — Data ingestion. Pulls new exercises from Polar API, matches them with video sources from the `source_input` DB, and saves to the `workouts` DB. Entry point: `main.py:http`. Uses `ProcessData` in `polar.py` to coordinate the pipeline.
 
+Because of how Serverless works, a copy of shared code (utils/, db/, polar_api/ is symlinked into this folder so that it is included at build time).
+
 ### Database Layer (`src/db/`)
 
 Uses **Peewee ORM** with `playhouse.postgres_ext` for PostgreSQL-specific types.
@@ -94,6 +96,7 @@ Parsers for video workout platforms. `youtube.py` extracts video IDs from URLs a
 - `src/utils/config.py` — reads `app_config.json` (cached)
 - `secrets.yml` — GCP credentials paths (gitignored)
 - DB connections go through Unix sockets via Cloud SQL Proxy (`/cloudsql/`)
+- utils/ contains helper functions and utilities for interacting with GCP, doing logging and so on.
 
 ### Import Style
 

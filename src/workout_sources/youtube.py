@@ -5,7 +5,7 @@ from functools import cache, cached_property
 import isodate
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from overrides import override
+from typing import override
 
 import src.db.workout.models as models
 from src.utils.gcp_utils import get_secret
@@ -67,8 +67,8 @@ class Youtube(VideoSource):
 
         return results["items"][0]
 
+    @override
     @classmethod
-    @property
     def source_type(cls):
         return models.SourceType.YOUTUBE
 
@@ -87,12 +87,12 @@ class Youtube(VideoSource):
         return self.data["snippet"]["channelTitle"].lower()
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def duration(self):
         return isodate.parse_duration(self.data["contentDetails"]["duration"])
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def exercises(self):
 
         description = self.data["snippet"]["description"].lower()
@@ -134,23 +134,23 @@ class Youtube(VideoSource):
             val = re.sub(k, v, val)
 
         # remove any bracketed extra info - i.e. (L) or (R)
-        val = re.sub("\(.+\)", "", val)
+        val = re.sub(r"\(.+\)", "", val)
         # remove any frequencies - i.e. x3
         val = re.sub(" x[0-9]", "", val)
         # make sure we start with the exercise, i.e. remove bulletpoints (-, *, etc)
-        val = re.sub("^\W+", "", val)
+        val = re.sub(r"^\W+", "", val)
         # standardise on '+' instead of '&' in descriptions
         val = val.replace("&", "+")
 
         for e in SourceConsts.depluralise:
-            val = re.sub(r"(" + e + " \+)", f"{e[:-1]} +", val)
+            val = re.sub(r"(" + e + r" \+)", f"{e[:-1]} +", val)
 
         return val.strip()
 
 
 class HeatherRobertsonYoutube(Youtube):
     @cached_property
-    @override(check_signature=False)
+    @override
     def exercises(self):
         description = self.data["snippet"]["description"].lower()
 
@@ -206,7 +206,7 @@ class HeatherRobertsonYoutube(Youtube):
 
     def _hiit_intervals(self):
         # e.g. 40s work + 20s rest
-        on_off = re.compile("(\d{2}s.+\d{2}s rest)")
+        on_off = re.compile(r"(\d{2}s.+\d{2}s rest)")
         res = on_off.search(self.data["snippet"]["description"])
         if res is None:
             return set()

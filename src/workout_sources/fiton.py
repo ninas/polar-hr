@@ -7,7 +7,7 @@ from functools import cache, cached_property
 import isodate
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from overrides import override
+from typing import override
 
 import src.db.workout.models as models
 from src.utils.gcp_utils import get_secret
@@ -38,12 +38,12 @@ class Fiton(VideoSource):
         return json.loads(fetch_from_cloud_storage(Fiton.BUCKET))
 
     @classmethod
-    @property
+    @override
     def source_type(cls):
         return models.SourceType.FITON
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def data(self):
         all_data = Fiton.fetch_all_workout_data()
         if self.workout_id not in all_data:
@@ -61,7 +61,7 @@ class Fiton(VideoSource):
         return f"{self.data['trainerName'].lower()}"
 
     @cached_property
-    @override(check_signature=False)
+    @override
     def duration(self):
         return timedelta(seconds=self.data["workoutData"]["part"]["continueTime"])
 
